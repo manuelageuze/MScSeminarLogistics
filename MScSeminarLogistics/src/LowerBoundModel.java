@@ -33,7 +33,7 @@ public class LowerBoundModel {
 		IloNumVar[] n = new IloNumVar[order.getItems().size()];
 		IloNumVar delta = cplex.boolVar("delta");
 		IloNumVar[][] s = new IloNumVar[order.getItems().size()][order.getItems().size()];
-		double M = order.getItems().size() + 1;
+		double M = 1000;//order.getItems().size() + 1;
 
 		for(int i = 0; i < order.getItems().size(); i++) {
 			n[i] = cplex.intVar(1, order.getItems().size() + 1, "n"+i);
@@ -137,20 +137,24 @@ public class LowerBoundModel {
 		cplex.solve();
 		// Solve
 		System.out.print(cplex.isPrimalFeasible());
+		double volume = 0;
+		for(int i = 0 ; i < order.getItems().size() ; i++)
+		{
+			volume += order.getItems().get(i).getVolume();
+		}
+		System.out.print("Volume items: "+ volume + " ");
+		System.out.println("Crate volume: " + crate.getVolume());
 		if(cplex.isPrimalFeasible()) {
 			
-			double volume = 0;
+//			double volume = 0;
 			for(int i = 0 ; i < order.getItems().size(); i++) {
-				volume = volume + order.getItems().get(i).getVolume();
+//				volume = volume + order.getItems().get(i).getVolume();
 				for(int j = 0; j < order.getItems().size(); j++) {
 					if( i != j) {
 					System.out.println(i + " " + j + " " + cplex.getValue(s[i][j]) + " ");
 					}
 				}
 			}
-			
-			System.out.print("Volume items: "+ volume + " ");
-			System.out.println("Crate volume: " + crate.getVolume());
 			System.out.println("delta: " + cplex.getValue(delta));
 			System.out.print("Solution value: " + cplex.getObjValue() + " ");
 			
