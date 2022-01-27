@@ -13,7 +13,7 @@ public class Main {
 		List<Order> orders = readOrders(items);
 		
 		//for(int i = 0; i < orders.size(); i++) {
-			LowerBoundModel.findLowerBound(orders.get(35), items);	
+			LowerBoundModel.findLowerBound(orders.get(816), items);	
 		//}
 	}
 	
