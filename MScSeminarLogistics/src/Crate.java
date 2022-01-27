@@ -6,9 +6,9 @@
 public class Crate {
 		final private double length = 501;
 		final private double width = 321;
-		final private double heigth = 273;
-		final private double maxWeight = 117000;
-		final private double volume = length*width*heigth;
+		final private double height = 273;
+		final private double maxWeight = 17000;
+		final private double volume = length*width*height;
 		
 	/**
 	 * Constructor that creates a new crate with the standard sizes
@@ -18,40 +18,40 @@ public class Crate {
 	}
 	
 	/**
-	 * method to get the length of a crate
-	 * @return length
+	 * Method to get the length of a crate
+	 * @return length in mm
 	 */
 	public double getLength() {
 		return this.length;
 	}
 	
 	/**
-	 * method to get the width of a crate
-	 * @return
+	 * Method to get the width of a crate
+	 * @return width in mm
 	 */
 	public double getWidth() {
 		return this.width;
 	}
 	
 	/**
-	 * method to get the height of a crate
-	 * @return
+	 * Method to get the height of a crate
+	 * @return height in mm
 	 */
-	public double getHeigth() {
-		return this.heigth;
+	public double getHeight() {
+		return this.height;
 	}
 	
 	/**
-	 * method to get the maximum weight we can put in a crate
-	 * @return
+	 * Method to get the maximum weight a crate can handle
+	 * @return maxWeight in grams
 	 */
 	public double getMaxWeight() {
 		return this.maxWeight;
 	}
 	
 	/**
-	 * method to get the volume of the crate
-	 * @return volume
+	 * Method to get the volume of the crate
+	 * @return volume in mm3
 	 */
 	public double getVolume() {
 		return this.volume;

@@ -1,7 +1,6 @@
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -20,28 +19,35 @@ public class Order {
 	 * @param items
 	 * @param orderId
 	 */
-	public Order(List<Item> item, double orderId) {
+	public Order(List<Item> items, double orderId) {
 		this.items = new ArrayList<>();
-		this.items.addAll(item);
+		this.items.addAll(items);
 		this.orderId = orderId;
 	}
 	
 	/**
 	 * Get the list of items in the order
-	 * @return itemlist
+	 * @return items
 	 */
 	public List<Item> getItems() {
 		return this.items;
 	}
 	
 	/**
-	 * method to get the id of the order
-	 * @return id
+	 * Method to get the ID of the order
+	 * @return orderId
 	 */
-	public double getId() {
+	public double getOrderId() {
 		return this.orderId;
 	}
 	
+	/**
+	 * Method to read the order file
+	 * @param orderFile
+	 * @param items
+	 * @return
+	 * @throws FileNotFoundException
+	 */
 	public static List<Order> readOrder(File orderFile, Map<Double, Item> items) throws FileNotFoundException {
 		try(Scanner s = new Scanner(orderFile)) {
 			List<Order> orders = new ArrayList<>();
@@ -58,17 +64,16 @@ public class Order {
 				orderId = Double.parseDouble(parts[0]);
 				itemId = Double.parseDouble(parts[1]);
 				quantity = Double.parseDouble(parts[2]);
-				if(orderId == ordernumber) { // Als je nogsteeds in dezelfde order zit
+				if(orderId == ordernumber) { // Same order
 					for(int i = 0; i < quantity; i++){
 						itemsInOrder.add(items.get(itemId));
 					}
 				}
-				else { // Als de eerste regel van een nieuwe order
-					// Dan eerst de oude order afsluiten
+				else { // First rule of new order
+					// First close previous order
 					Order o = new Order(itemsInOrder,orderId - 1.0);
 					orders.add(o);
 					itemsInOrder.clear();
-					
 					// Now start with new order
 					ordernumber = orderId;
 					for(int i = 0; i < quantity; i++){
@@ -78,7 +83,6 @@ public class Order {
 			}
 			Order o = new Order(itemsInOrder, orderId);
 			orders.add(o);
-			
 			return orders;	
 		}
 	}
