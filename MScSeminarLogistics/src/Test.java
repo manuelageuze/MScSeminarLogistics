@@ -7,6 +7,7 @@ public class Test {
 		System.out.println("hallootjes");
 		System.out.println("verschil");
 		System.out.println("master test");
+		System.out.println("Nog een test");
 	}
 
 }
