@@ -11,9 +11,9 @@ public class Main {
 		
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
-		
+		//
 		//for(int i = 0; i < orders.size(); i++) {
-			LowerBoundModel.findLowerBound(orders.get(816), items);	
+			LowerBoundModel.setCoveringLB(orders.get(816), items);	
 		//}
 	}
 	
