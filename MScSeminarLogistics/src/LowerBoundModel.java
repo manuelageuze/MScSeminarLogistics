@@ -8,7 +8,7 @@ import ilog.cplex.IloCplex;
 public class LowerBoundModel {
 	private final Order order;
 	private final Map<Double,Item> items;
-
+//
 	public LowerBoundModel(Order order, Map<Double,Item> items) throws IloException {
 		this.order = order;
 		this.items = items;
