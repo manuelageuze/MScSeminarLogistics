@@ -6,23 +6,32 @@ import java.util.Map;
 public class Main {
 
 	public static void main(String[] args) throws FileNotFoundException {
-		
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
-
+		
 	}
 
-	private static Map readItems() throws FileNotFoundException {
+	/**
+	 * Read items
+	 * @return Map containing items
+	 * @throws FileNotFoundException
+	 */
+	private static Map<Double, Item> readItems() throws FileNotFoundException {
 		File itemFile = new File("items.csv");
-		Map<Double,Item> items = Item.readItem(itemFile);
+		Map<Double, Item> items = Item.readItems(itemFile);
 		return items;	
 	}
 	
-	private static List<Order> readOrders(Map<Double,Item> items) throws FileNotFoundException {
+	/**
+	 * Read orders
+	 * @param items
+	 * @return List of orders
+	 * @throws FileNotFoundException
+	 */
+	private static List<Order> readOrders(Map<Double, Item> items) throws FileNotFoundException {
 		File orderFile = new File("orders.csv");
 		List<Order> orders = Order.readOrder(orderFile, items);
-		return orders;	
-		
+		return orders;
 	}
 		
 }
