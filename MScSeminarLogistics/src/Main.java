@@ -3,14 +3,20 @@ import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.Map;
 
+import ilog.concert.IloException;
+
 public class Main {
 
-	public static void main(String[] args) throws FileNotFoundException {
+	public static void main(String[] args) throws FileNotFoundException, IloException {
+		
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
 		
+		//for(int i = 0; i < orders.size(); i++) {
+			LowerBoundModel.findLowerBound(orders.get(35), items);	
+		//}
 	}
-
+	
 	/**
 	 * Read items
 	 * @return Map containing items
