@@ -10,6 +10,7 @@ public class Test {
 		System.out.println("Nog een test");
 		System.out.println("Commit in branch Tobias");
 		System.out.println("Test");
+		System.out.println("nog een test");
 	}
 
 }
