@@ -15,10 +15,10 @@ public class LowerBoundModel {
 		
 	}
 
-	public static void setCoveringLB(Order order, Map<Double, Item> items) throws IloException {
+	public static double setCoveringLB(Order order, Map<Double, Item> items) throws IloException {
 		Crate crate = new Crate();
 		IloCplex cplex = new IloCplex();
-		//cplex.setOut(null);
+		cplex.setOut(null);
 		
 		IloNumVar[] y = new IloNumVar[order.getItems().size() + 1];
 		IloNumVar[][] x = new IloNumVar[order.getItems().size()][order.getItems().size() + 1];
@@ -71,10 +71,17 @@ public class LowerBoundModel {
 		
 		if(cplex.isPrimalFeasible()) {
 			System.out.println("Solution value: " + cplex.getObjValue());
+			
+			return cplex.getObjValue();
+			
 		}
+		return Double.NEGATIVE_INFINITY;
 		
 	}
 
+	/*
+	 * Deze methode werkt niet toch?
+	 */
 	public static void findLowerBound(Order order, Map<Double,Item> items) throws IloException {
 		Crate crate = new Crate();
 		IloCplex cplex = new IloCplex();
