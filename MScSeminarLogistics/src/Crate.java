@@ -25,6 +25,32 @@ public class Crate {
 		this.items = new ArrayList<>();
 	}
 	
+	public Crate(List<Item> list) {
+		this.currentWeight = 0.0;
+		this.ep = new ArrayList<>();
+		this.items = list; // Gaat dit goed?
+	}
+	
+	public List<EP> getEP() {
+		return this.ep;
+	}
+	
+	public void setEPList(List<EP> list){
+		this.ep = list;
+	}
+	
+	public void addEPToCrate(EP ep) {
+		this.ep.add(ep);
+	}
+		
+	public List<Item> getItemList(){
+		return this.items;
+	}
+	
+	public void setItemList(List<Item> list) {
+		this.items = new ArrayList<>(list);
+	}
+	
 	public void addItemToCrate(Item i) {
 		this.items.add(i);
 		this.currentWeight =+ i.getWeight();
