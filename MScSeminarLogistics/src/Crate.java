@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Class that represents a blue AH crate
  * @author Geuze et al.
@@ -9,12 +12,30 @@ public class Crate {
 		final private double height = 273;
 		final private double maxWeight = 17000;
 		final private double volume = length*width*height;
+		private double currentWeight;
+		List<EP> ep;
+		List<Item> items;
 		
 	/**
 	 * Constructor that creates a new crate with the standard sizes
 	 */
 	public Crate() {
-		
+		this.currentWeight = 0.0;
+		this.ep = new ArrayList<>();
+		this.items = new ArrayList<>();
+	}
+	
+	public void addItemToCrate(Item i) {
+		this.items.add(i);
+		this.currentWeight =+ i.getWeight();
+	}
+	
+	public double getCurrentWeight() {
+		return this.currentWeight;
+	}
+	
+	public void addtoCurrentWeight(double value) {
+		this.currentWeight =+ value;
 	}
 	
 	/**

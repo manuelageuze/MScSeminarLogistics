@@ -75,6 +75,7 @@ public class LowerBoundModel {
 			return cplex.getObjValue();
 			
 		}
+		cplex.close();
 		return Double.NEGATIVE_INFINITY;
 		
 	}

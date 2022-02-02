@@ -14,15 +14,22 @@ public class Main {
 		List<Order> orders = readOrders(items);
 		
 		// Compute lower bound and write file
-		File sol = new File("lowerBound_solution.txt");
-		PrintWriter out = new PrintWriter(sol);
-		out.println("instance minimum_number_of_crates");
-		for(int i = 0; i < orders.size(); i++) {
-			double lowerbound = LowerBoundModel.setCoveringLB(orders.get(i), items);	
-			out.print(i + " ");
-			out.println(lowerbound);
-		}	
-		out.close();	
+		//File sol = new File("lowerBound_solution.txt");
+		//PrintWriter out = new PrintWriter(sol);
+		//out.println("instance minimum_number_of_crates");
+		//for(int i = 0; i < orders.size(); i++) {
+			//double lowerbound = LowerBoundModel.setCoveringLB(orders.get(i), items);	
+			//out.print(i + " ");
+			//out.println(lowerbound);
+		//}	
+		//out.close();
+		
+		
+		//for(int i = 0; i < orders.size();i++) {
+			BF bf = new BF(orders.get(0));
+			bf.computeBF();
+		//}
+		
 	}
 	
 	/**
