@@ -9,13 +9,16 @@ import java.util.Scanner;
  * @author Geuze et al.
  * 
  */
-public class Item {
+public class Item implements Comparable<Item> {
 	private final double itemId;
 	private final double width;
 	private final double length;
 	private final double height;
 	private final double weight;
 	private final double volume;
+	double insertedx;
+	double insertedy;
+	double insertedz;
 
 	/**
 	 * Constructor that creates a new item
@@ -32,6 +35,9 @@ public class Item {
 		this.height = height;
 		this.weight = weight;
 		this.volume = width*length*height;
+		this.insertedx = 0.0;
+		this.insertedy = 0.0;
+		this.insertedz = 0.0;
 	}
 
 	/**
@@ -124,6 +130,28 @@ public class Item {
 			}
 			return items;	
 		}	
+	}
+
+	@Override
+	public int compareTo(Item o) {		
+		// Area-Height
+		double area = this.width*this.length;
+		double oArea = o.width*o.length;
+		if(area > oArea) {
+			return -1;
+		}
+		else if(area < oArea) {
+			return 1;
+		}
+		else { // Als gelijk, sorteer op height
+			if( this.height > o.height) {
+				return -1;
+			}
+			else if(this.height < o.height) {
+				return 1;
+			}
+			return 0;
+		}
 	}
 
 }
