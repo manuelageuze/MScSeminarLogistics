@@ -1,6 +1,5 @@
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +11,7 @@ public class Main {
 		
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
+		int choice_D2_VBO = 2; // TODO: 1 if DFTRC-2^2 is used, 2 if DFTRC-2-VBO is used
 		
 		// Compute lower bound and write file
 		//File sol = new File("lowerBound_solution.txt");
@@ -29,6 +29,7 @@ public class Main {
 			BF bf = new BF(orders.get(0)); //31
 			bf.computeBF();
 		//}
+		BRKGA.solve(orders.get(0), choice_D2_VBO);
 		
 	}
 	
