@@ -26,7 +26,7 @@ public class Main {
 		
 		
 		//for(int i = 0; i < orders.size();i++) {
-			BF bf = new BF(orders.get(0));
+			BF bf = new BF(orders.get(0)); //31
 			bf.computeBF();
 		//}
 		
