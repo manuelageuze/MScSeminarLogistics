@@ -26,10 +26,10 @@ public class Main {
 		
 		
 		//for(int i = 0; i < orders.size();i++) {
-			BF bf = new BF(orders.get(0)); //31
+			BF bf = new BF(orders.get(31)); //31
 			bf.computeBF();
 		//}
-		BRKGA.solve(orders.get(0), choice_D2_VBO);
+		//BRKGA.solve(orders.get(0), choice_D2_VBO);
 		
 	}
 	
