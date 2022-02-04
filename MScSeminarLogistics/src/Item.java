@@ -39,6 +39,31 @@ public class Item implements Comparable<Item> {
 		this.insertedy = 0.0;
 		this.insertedz = 0.0;
 	}
+	
+	public double getinsertedx() {
+		return this.insertedx;
+	}
+	
+	public void setInsertedx(double value) {
+		this.insertedx = value;
+	}
+	
+	public double getinsertedy() {
+		return this.insertedy;
+	}
+	
+	public void setInsertedy(double value) {
+		this.insertedy = value;
+	}
+	
+	public double getinsertedz() {
+		return this.insertedz;
+	}
+	
+	public void setInsertedz(double value) {
+		this.insertedz = value;
+	}
+	
 
 	/**
 	 * Method to obtain the ID of the item
