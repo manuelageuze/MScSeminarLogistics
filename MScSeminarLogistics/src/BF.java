@@ -8,6 +8,7 @@ public class BF {
 	public BF(Order order) {
 		this.order = order;
 	}
+	
 
 	public void computeBF() {
 		List<Item> sortedItemList = new ArrayList<>(order.getItems());	
