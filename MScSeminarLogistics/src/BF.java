@@ -297,9 +297,42 @@ public class BF {
 			double rsz = 273 - newz;
 			
 			for(int j = 0; j < items.size(); j++) {
+				Item itemj = items.get(j);
 				if(items.get(j).getItemId() == i.getItemId()) {
 					continue;
 				}
+				
+				if(newy >= itemj.getinsertedy() + itemj.getLength() || newx >= itemj.getinsertedx() + itemj.getWidth()) {		
+					continue;
+				}
+				if(itemj.getinsertedy() > i.getinsertedy() + i.getLength()) {
+					if(newz <= itemj.getinsertedz() && rsz > itemj.getinsertedz()-newz)rsz = itemj.getinsertedz() - newz;
+					if(rsx > itemj.getinsertedx()-newx)rsx = itemj.getinsertedx() - newx;
+					if(rsy > itemj.getinsertedy()-newy)rsy = itemj.getinsertedy() - newy;
+					continue;
+				}
+				if(itemj.getinsertedx()> k.getinsertedx() + k.getWidth()) {
+					if(newz <= itemj.getinsertedz() && rsz > itemj.getinsertedz()-newz)rsz = itemj.getinsertedz() - newz;
+					if(rsx > itemj.getinsertedx()-newx)rsx = itemj.getinsertedx() - newx;
+					if(rsy > itemj.getinsertedy()-newy)rsy = itemj.getinsertedy() - newy;
+					continue;
+				}
+				if(itemj.getinsertedx() >= newx && itemj.getinsertedy() >= newy)
+				{
+					if(newz <= itemj.getinsertedz())
+					{
+						if(rsz > itemj.getinsertedz()-newz)rsz = itemj.getinsertedz()-newz;
+					}
+					else if(itemj.getinsertedz() < newz && newz < itemj.getinsertedz()+ itemj.getHeight())
+					{
+						if(rsx > itemj.getinsertedx()-newx)rsx = itemj.getinsertedx()-newx;
+						if(rsy > itemj.getinsertedy()-newy)rsy = itemj.getinsertedy()-newy;
+					}
+					continue;
+				}
+				
+				
+				
 				if(newx >= items.get(j).getinsertedx() + items.get(j).getWidth() || newx < items.get(j).getinsertedx()) {
 					continue;
 				}
@@ -311,17 +344,6 @@ public class BF {
 				}
 				return false;
 
-				/*
-				if(newx < items.get(j).getinsertedx() + items.get(j).getWidth() && newx >= items.get(j).getinsertedx()) {
-					return false;
-				}
-				else if(newy < items.get(j).getinsertedy() + items.get(j).getLength() && newy >= items.get(j).getinsertedy()) {
-					return false;
-				}
-				else if(newz < items.get(j).getinsertedz() + items.get(j).getHeight() && newz >= items.get(j).getinsertedz()) {
-					return false;
-				}
-				 */
 			}
 			return true;
 		}
@@ -352,19 +374,6 @@ public class BF {
 					continue;
 				}
 				return false;
-
-
-				/*
-				if(newx < items.get(j).getinsertedx() + items.get(j).getWidth() && newx >= items.get(j).getinsertedx()) {
-					return false;
-				}
-				if(newy < items.get(j).getinsertedy() + items.get(j).getLength() && newy >= items.get(j).getinsertedy()) {
-					return false;
-				}
-				if(newz < items.get(j).getinsertedz() + items.get(j).getHeight() && newz >= items.get(j).getinsertedz()) {
-					return false;
-				}
-				 */
 			}
 			return true;
 		}
@@ -425,16 +434,7 @@ public class BF {
 					continue;
 				}
 				return false;
-				/*
-				if(newx < items.get(j).getinsertedx() + items.get(j).getWidth() && newx >= items.get(j).getinsertedx()) {
-					return false;
-				}
-				if(newy < items.get(j).getinsertedy() + items.get(j).getLength() && newy >= items.get(j).getinsertedy()) {
-					return false;
-				}
-				if(newz < items.get(j).getinsertedz() + items.get(j).getHeight() && newz >= items.get(j).getinsertedz()) {
-					return false;
-				}*/				
+		
 			}
 			return true;
 		}
@@ -460,16 +460,7 @@ public class BF {
 					continue;
 				}
 				return false;
-				/*
-				if(newx < items.get(j).getinsertedx() + items.get(j).getWidth() && newx >= items.get(j).getinsertedx()) {
-					return false;
-				}
-				if(newy < items.get(j).getinsertedy() + items.get(j).getLength() && newy >= items.get(j).getinsertedy()) {
-					return false;
-				}
-				if(newz < items.get(j).getinsertedz() + items.get(j).getHeight() && newz >= items.get(j).getinsertedz()) {
-					return false;
-				}*/
+
 			}
 			return true;
 		}
@@ -498,23 +489,11 @@ public class BF {
 				}
 				return false;
 
-				/*
-				if(newx < items.get(j).getinsertedx() + items.get(j).getWidth() && newx >= items.get(j).getinsertedx()) {
-					return false;
-				}
-				if(newy < items.get(j).getinsertedy() + items.get(j).getLength() && newy >= items.get(j).getinsertedy()) {
-					return false;
-				}
-				if(newz < items.get(j).getinsertedz() + items.get(j).getHeight() && newz >= items.get(j).getinsertedz()) {
-					return false;
-				}*/
 			}
 			return true;
 		}
 		return false;
 	}
-
-
 
 
 }
