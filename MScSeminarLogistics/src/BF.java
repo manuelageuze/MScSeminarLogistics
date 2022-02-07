@@ -65,17 +65,17 @@ public class BF {
 			List<Item> rotatedItem = new ArrayList<>(); // List with all rotations of an item
 			Item a = sortedItemList.get(i);
 			// Rotatie 1
-			Item it = new Item(1.0 , a.getWidth(), a.getLength(), a.getHeight(), a.getWeight());
+			Item it = new Item(a.getItemId() , a.getWidth(), a.getLength(), a.getHeight(), a.getWeight());
 			// Rotatie 2
-			Item it2 = new Item(2.0, a.getLength(), a.getWidth(), a.getHeight(), a.getWeight());
+			Item it2 = new Item(a.getItemId(), a.getLength(), a.getWidth(), a.getHeight(), a.getWeight());
 			// Rotatie 3
-			Item it3 = new Item(3.0, a.getHeight(), a.getLength(), a.getWidth(), a.getWeight());
+			Item it3 = new Item(a.getItemId(), a.getHeight(), a.getLength(), a.getWidth(), a.getWeight());
 			// Rotatie 4
-			Item it4 = new Item(4.0, a.getLength(), a.getHeight(), a.getWidth(), a.getWeight());
+			Item it4 = new Item(a.getItemId(), a.getLength(), a.getHeight(), a.getWidth(), a.getWeight());
 			// Rotatie 5
-			Item it5 = new Item(5.0, a.getWidth(), a.getHeight(), a.getLength(), a.getWeight());
+			Item it5 = new Item(a.getItemId(), a.getWidth(), a.getHeight(), a.getLength(), a.getWeight());
 			// Rotatie 6
-			Item it6 = new Item(6.0, a.getHeight(), a.getWidth(), a.getLength(), a.getWeight());
+			Item it6 = new Item(a.getItemId(), a.getHeight(), a.getWidth(), a.getLength(), a.getWeight());
 			rotatedItem.add(it);
 			rotatedItem.add(it2);
 			rotatedItem.add(it3);
@@ -169,58 +169,85 @@ public class BF {
 			}
 			for(int j = 0; j < crates.get(crateIndex).getItemList().size() - 1; j++) {
 				//#1
-				if(canTakeProjectionYX(crates.get(crateIndex).getItemList().get(j), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1),crates.get(crateIndex).getItemList()) == true && crates.get(crateIndex).getItemList().get(j).insertedx + crates.get(crateIndex).getItemList().get(j).getWidth() > maxbound[0]) {
-					maxbound[0] = crates.get(crateIndex).getItemList().get(j).insertedx + crates.get(crateIndex).getItemList().get(j).getWidth();
-					EP ep = new EP(crates.get(crateIndex).getItemList().get(j).insertedx + crates.get(crateIndex).getItemList().get(j).getWidth(), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedy + crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).getLength(), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedz);
-					ep.setRSx(crates.get(crateIndex).getWidth() - ep.getX());
-					ep.setRSy(crates.get(crateIndex).getLength() - ep.getY());
-					ep.setRSz(crates.get(crateIndex).getHeight() - ep.getZ());
-					newEP.add(ep);
+				if(crates.get(crateIndex).getItemList().get(j).insertedx + crates.get(crateIndex).getItemList().get(j).getWidth() > maxbound[0]) {
+					EP ep = canTakeProjectionYX(crates.get(crateIndex).getItemList().get(j), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1),crates.get(crateIndex).getItemList());
+					
+					if(ep != null) {
+						newEP.add(ep);
+						maxbound[0] = crates.get(crateIndex).getItemList().get(j).insertedx + crates.get(crateIndex).getItemList().get(j).getWidth();
+					}
+					//EP ep = new EP(crates.get(crateIndex).getItemList().get(j).insertedx + crates.get(crateIndex).getItemList().get(j).getWidth(), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedy + crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).getLength(), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedz);
+					//ep.setRSx(crates.get(crateIndex).getWidth() - ep.getX());
+					//ep.setRSy(crates.get(crateIndex).getLength() - ep.getY());
+					//ep.setRSz(crates.get(crateIndex).getHeight() - ep.getZ());
 				}
-				//				#2
-				if(canTakeProjectionYZ(crates.get(crateIndex).getItemList().get(j), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1), crates.get(crateIndex).getItemList()) == true && crates.get(crateIndex).getItemList().get(j).insertedz + crates.get(crateIndex).getItemList().get(j).getHeight() > maxbound[1]) {
-					maxbound[1] = crates.get(crateIndex).getItemList().get(j).insertedz + crates.get(crateIndex).getItemList().get(j).getHeight();
-					EP ep = new EP(crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedx, crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedy + crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).getLength(), crates.get(crateIndex).getItemList().get(j).insertedz + crates.get(crateIndex).getItemList().get(j).getHeight());
-					ep.setRSx(crates.get(crateIndex).getWidth() - ep.getX());
-					ep.setRSy(crates.get(crateIndex).getLength() - ep.getY());
-					ep.setRSz(crates.get(crateIndex).getHeight() - ep.getZ());
-					newEP.add(ep);
+				//	#2
+				if(crates.get(crateIndex).getItemList().get(j).insertedz + crates.get(crateIndex).getItemList().get(j).getHeight() > maxbound[1]) {
+					EP ep = canTakeProjectionYZ(crates.get(crateIndex).getItemList().get(j), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1), crates.get(crateIndex).getItemList());
+					
+					if(ep != null) {
+						maxbound[1] = crates.get(crateIndex).getItemList().get(j).insertedz + crates.get(crateIndex).getItemList().get(j).getHeight();
+						newEP.add(ep);
+					}
+					//EP ep = new EP(crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedx, crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedy + crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).getLength(), crates.get(crateIndex).getItemList().get(j).insertedz + crates.get(crateIndex).getItemList().get(j).getHeight());
+					//ep.setRSx(crates.get(crateIndex).getWidth() - ep.getX());
+					//ep.setRSy(crates.get(crateIndex).getLength() - ep.getY());
+					//ep.setRSz(crates.get(crateIndex).getHeight() - ep.getZ());
+					//newEP.add(ep);
 				}
-				//				#3
-				if(canTakeProjectionXY(crates.get(crateIndex).getItemList().get(j), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1), crates.get(crateIndex).getItemList()) == true && crates.get(crateIndex).getItemList().get(j).insertedy + crates.get(crateIndex).getItemList().get(j).getLength() > maxbound[2]) {
-					maxbound[2] = crates.get(crateIndex).getItemList().get(j).insertedy + crates.get(crateIndex).getItemList().get(j).getLength();
-					EP ep = new EP(crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedx + crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).getWidth(), crates.get(crateIndex).getItemList().get(j).insertedy + crates.get(crateIndex).getItemList().get(j).getLength(), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedz);
-					ep.setRSx(crates.get(crateIndex).getWidth() - ep.getX());
-					ep.setRSy(crates.get(crateIndex).getLength() - ep.getY());
-					ep.setRSz(crates.get(crateIndex).getHeight() - ep.getZ());
-					newEP.add(ep);
+				//	#3
+				if(crates.get(crateIndex).getItemList().get(j).insertedy + crates.get(crateIndex).getItemList().get(j).getLength() > maxbound[2]) {
+					EP ep = canTakeProjectionXY(crates.get(crateIndex).getItemList().get(j), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1), crates.get(crateIndex).getItemList());
+					if(ep != null) {
+						maxbound[2] = crates.get(crateIndex).getItemList().get(j).insertedy + crates.get(crateIndex).getItemList().get(j).getLength();
+						newEP.add(ep);
+					}
+					//EP ep = new EP(crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedx + crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).getWidth(), crates.get(crateIndex).getItemList().get(j).insertedy + crates.get(crateIndex).getItemList().get(j).getLength(), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedz);
+					//ep.setRSx(crates.get(crateIndex).getWidth() - ep.getX());
+					//ep.setRSy(crates.get(crateIndex).getLength() - ep.getY());
+					//ep.setRSz(crates.get(crateIndex).getHeight() - ep.getZ());
+					//newEP.add(ep);
 				}
-				//				#4
-				if(canTakeProjectionXZ(crates.get(crateIndex).getItemList().get(j), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1), crates.get(crateIndex).getItemList()) == true && crates.get(crateIndex).getItemList().get(j).insertedz + crates.get(crateIndex).getItemList().get(j).getHeight() > maxbound[3]) {
-					maxbound[3] = crates.get(crateIndex).getItemList().get(j).insertedz + crates.get(crateIndex).getItemList().get(j).getHeight();
-					EP ep = new EP(crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedx + crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).getWidth(), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedy, crates.get(crateIndex).getItemList().get(j).insertedz + crates.get(crateIndex).getItemList().get(j).getHeight());
-					ep.setRSx(crates.get(crateIndex).getWidth() - ep.getX());
-					ep.setRSy(crates.get(crateIndex).getLength() - ep.getY());
-					ep.setRSz(crates.get(crateIndex).getHeight() - ep.getZ());
-					newEP.add(ep);
+				//	#4
+				if(crates.get(crateIndex).getItemList().get(j).insertedz + crates.get(crateIndex).getItemList().get(j).getHeight() > maxbound[3]) {
+					EP ep = canTakeProjectionXZ(crates.get(crateIndex).getItemList().get(j), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1), crates.get(crateIndex).getItemList());
+					if(ep != null) {
+						maxbound[3] = crates.get(crateIndex).getItemList().get(j).insertedz + crates.get(crateIndex).getItemList().get(j).getHeight();
+						newEP.add(ep);
+					}
+					//	EP ep = new EP(crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedx + crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).getWidth(), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedy, crates.get(crateIndex).getItemList().get(j).insertedz + crates.get(crateIndex).getItemList().get(j).getHeight());
+					//ep.setRSx(crates.get(crateIndex).getWidth() - ep.getX());
+					//ep.setRSy(crates.get(crateIndex).getLength() - ep.getY());
+					//ep.setRSz(crates.get(crateIndex).getHeight() - ep.getZ());
+					//newEP.add(ep);
 				}
-				//				#5
-				if(canTakeProjectionZX(crates.get(crateIndex).getItemList().get(j), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1), crates.get(crateIndex).getItemList()) == true && crates.get(crateIndex).getItemList().get(j).insertedx + crates.get(crateIndex).getItemList().get(j).getWidth() > maxbound[4]) {
-					maxbound[4] = crates.get(crateIndex).getItemList().get(j).insertedx + crates.get(crateIndex).getItemList().get(j).getWidth();
-					EP ep = new EP(crates.get(crateIndex).getItemList().get(j).insertedx + crates.get(crateIndex).getItemList().get(j).getWidth(), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedy, crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedz + crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).getHeight());
-					ep.setRSx(crates.get(crateIndex).getWidth() - ep.getX());
-					ep.setRSy(crates.get(crateIndex).getLength() - ep.getY());
-					ep.setRSz(crates.get(crateIndex).getHeight() - ep.getZ());
-					newEP.add(ep);
+				//	#5
+				if(crates.get(crateIndex).getItemList().get(j).insertedx + crates.get(crateIndex).getItemList().get(j).getWidth() > maxbound[4]) {
+					EP ep = canTakeProjectionZX(crates.get(crateIndex).getItemList().get(j), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1), crates.get(crateIndex).getItemList());
+					if(ep != null) {
+						maxbound[4] = crates.get(crateIndex).getItemList().get(j).insertedx + crates.get(crateIndex).getItemList().get(j).getWidth();
+						newEP.add(ep);
+					}
+						
+					//	EP ep = new EP(crates.get(crateIndex).getItemList().get(j).insertedx + crates.get(crateIndex).getItemList().get(j).getWidth(), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedy, crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedz + crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).getHeight());
+					//ep.setRSx(crates.get(crateIndex).getWidth() - ep.getX());
+					//ep.setRSy(crates.get(crateIndex).getLength() - ep.getY());
+					//ep.setRSz(crates.get(crateIndex).getHeight() - ep.getZ());
+					//newEP.add(ep);
 				}
 				//				#6
-				if(canTakeProjectionZY(crates.get(crateIndex).getItemList().get(j), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1),crates.get(crateIndex).getItemList()) == true && crates.get(crateIndex).getItemList().get(j).insertedy + crates.get(crateIndex).getItemList().get(j).getLength() > maxbound[5]) {
-					maxbound[5] = crates.get(crateIndex).getItemList().get(j).insertedy + crates.get(crateIndex).getItemList().get(j).getLength();
-					EP ep = new EP(crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedx, crates.get(crateIndex).getItemList().get(j).insertedy + crates.get(crateIndex).getItemList().get(j).getLength(), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedz + crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).getHeight());
-					ep.setRSx(crates.get(crateIndex).getWidth() - ep.getX());
-					ep.setRSy(crates.get(crateIndex).getLength() - ep.getY());
-					ep.setRSz(crates.get(crateIndex).getHeight() - ep.getZ());
-					newEP.add(ep);
+				if(crates.get(crateIndex).getItemList().get(j).insertedy + crates.get(crateIndex).getItemList().get(j).getLength() > maxbound[5]) {
+					EP ep = canTakeProjectionZY(crates.get(crateIndex).getItemList().get(j), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1),crates.get(crateIndex).getItemList());
+					if(ep != null) {
+						maxbound[5] = crates.get(crateIndex).getItemList().get(j).insertedy + crates.get(crateIndex).getItemList().get(j).getLength();
+						newEP.add(ep);
+					}
+					
+					//EP ep = new EP(crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedx, crates.get(crateIndex).getItemList().get(j).insertedy + crates.get(crateIndex).getItemList().get(j).getLength(), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedz + crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).getHeight());
+					//ep.setRSx(crates.get(crateIndex).getWidth() - ep.getX());
+					//ep.setRSy(crates.get(crateIndex).getLength() - ep.getY());
+					//ep.setRSz(crates.get(crateIndex).getHeight() - ep.getZ());
+					//newEP.add(ep);
 				}
 			}
 
@@ -265,9 +292,10 @@ public class BF {
 		}
 
 		// Print solution
+		
+		System.out.println("Number of crates used in this order: " + crates.size());
 		for(int i = 0; i < crates.size(); i++) {
 			Crate c = crates.get(i);
-			System.out.println("Number of crates used in this order: " + crates.size());
 			System.out.print("Crate number " + (i + 1)+"\t");
 			for(int j = 6 ; j < c.getItemList().size(); j++) {
 				System.out.print((int)c.getItemList().get(j).getItemId() + "\t");
@@ -285,7 +313,7 @@ public class BF {
 	}
 
 	//  #1
-	public boolean canTakeProjectionYX(Item i, Item k, List<Item> items) {
+	public EP canTakeProjectionYX(Item i, Item k, List<Item> items) {		
 		if(k.insertedx >= i.insertedx + i.getWidth() && k.insertedy + k.getLength() < i.insertedy + i.getLength() && k.insertedz < i.insertedz + i.getHeight()) {	
 			
 			double newx = i.insertedx + i.getWidth();
@@ -296,7 +324,12 @@ public class BF {
 			double rsy = 501 - newy;
 			double rsz = 273 - newz;
 			
-			for(int j = 0; j < items.size(); j++) {
+			EP ep = new EP(newx, newy, newz);
+			ep.setRSx(rsx);
+			ep.setRSy(rsy);
+			ep.setRSz(rsz);
+			
+			for(int j = 6; j < items.size(); j++) {
 				Item itemj = items.get(j);
 				if(items.get(j).getItemId() == i.getItemId()) {
 					continue;
@@ -339,9 +372,8 @@ public class BF {
 					continue;
 				}
 				if(newz >= itemj.getinsertedz() + itemj.getHeight())continue;
-//				
-//				
-//				
+
+				
 //				if(newx >= items.get(j).getinsertedx() + items.get(j).getWidth() || newx < items.get(j).getinsertedx()) {
 //					continue;
 //				}
@@ -351,15 +383,18 @@ public class BF {
 //				if(newy >= items.get(j).getinsertedy() + items.get(j).getLength() || newy < items.get(j).getinsertedy()) {
 //					continue;
 //				}
-				return false;
+				return null;
 			}
-			return true;
+			ep.setRSx(rsx);
+			ep.setRSy(rsy);
+			ep.setRSz(rsz);
+			return ep;
 		}
-		return false;
+		return null;
 	}
 	
 //	#2
-	public boolean canTakeProjectionYZ(Item i, Item k, List<Item> items) {
+	public EP canTakeProjectionYZ(Item i, Item k, List<Item> items) {
 		if(k.insertedz >= i.insertedz + i.getHeight() && k.insertedy + k.getLength()  < i.insertedy + i.getLength() && k.insertedx < i.insertedx + i.getWidth()) {
 			double newx = k.insertedx;
 			double newy = k.insertedy + k.getLength();
@@ -368,8 +403,14 @@ public class BF {
 			double rsx = 321 - newx;
 			double rsy = 501 - newy;
 			double rsz = 273 - newz;
+			
+			EP ep = new EP(newx, newy, newz);
+			
+			ep.setRSx(rsx);
+			ep.setRSy(rsy);
+			ep.setRSz(rsz);
 				
-			for(int j = 0; j < items.size(); j++) {
+			for(int j = 6; j < items.size(); j++) {
 				Item itemj = items.get(j);
 				if(items.get(j).getItemId() == i.getItemId()) {
 					continue;
@@ -427,15 +468,20 @@ public class BF {
 //				if(newy >= items.get(j).getinsertedy() + items.get(j).getLength() || newy < items.get(j).getinsertedy()) {
 //					continue;
 //				}
-				return false;
+				return null;
 			}
-			return true;
+			
+			ep.setRSx(rsx);
+			ep.setRSy(rsy);
+			ep.setRSz(rsz);
+			
+			return ep;
 		}
-		return false;
+		return null;
 	}
 	
 //	#3
-	public boolean canTakeProjectionXY(Item i, Item k, List<Item> items) {
+	public EP canTakeProjectionXY(Item i, Item k, List<Item> items) {
 		if(k.insertedy >= i.insertedy + i.getLength() && k.insertedx + k.getWidth() < i.insertedx + i.getWidth() && k.insertedz < i.insertedz + i.getHeight()) {
 			double newx = k.insertedx + k.getWidth();
 			double newy = i.insertedy + i.getLength();
@@ -445,7 +491,13 @@ public class BF {
 			double rsy = 501 - newy;
 			double rsz = 273 - newz;
 			
-			for(int j = 0; j < items.size(); j++) {
+			EP ep = new EP(newx, newy, newz);
+			
+			ep.setRSx(rsx);
+			ep.setRSy(rsy);
+			ep.setRSz(rsz);
+			
+			for(int j = 6; j < items.size(); j++) {
 				Item itemj = items.get(j);		
 				if(items.get(j).getItemId() == i.getItemId()) {
 					continue;
@@ -500,7 +552,7 @@ public class BF {
 //				if(newy >= items.get(j).getinsertedy() + items.get(j).getLength() || newy < items.get(j).getinsertedy()) {
 //					continue;
 //				}
-				return false;
+				return null;
 				/*
 				if(newx < items.get(j).getinsertedx() + items.get(j).getWidth() && newx >= items.get(j).getinsertedx()) {
 					return false;
@@ -512,12 +564,16 @@ public class BF {
 					return false;
 				}*/
 			}
-			return true;
+			
+			ep.setRSx(rsx);
+			ep.setRSy(rsy);
+			ep.setRSz(rsz);
+			return ep;
 		}
-		return false;
+		return null;
 	}
 //	#4
-	public boolean canTakeProjectionXZ(Item i, Item k, List<Item> items) {	
+	public EP canTakeProjectionXZ(Item i, Item k, List<Item> items) {	
 		if(k.insertedz >= i.insertedz + i.getHeight() && k.insertedx + k.getWidth() < i.insertedx + i.getWidth() && k.insertedy < i.insertedy + i.getLength()) {
 			double newx = k.insertedx + k.getWidth();
 			double newy = k.insertedy;
@@ -527,7 +583,13 @@ public class BF {
 			double rsy = 501 - newy;
 			double rsz = 273 - newz;
 			
-			for(int j = 0; j < items.size(); j++) {
+			EP ep = new EP(newx, newy, newz);
+			
+			ep.setRSx(rsx);
+			ep.setRSy(rsy);
+			ep.setRSz(rsz);
+			
+			for(int j = 6; j < items.size(); j++) {
 				Item itemj = items.get(j);		
 				if(items.get(j).getItemId() == i.getItemId()) {
 					continue;
@@ -585,15 +647,20 @@ public class BF {
 //				if(newy >= items.get(j).getinsertedy() + items.get(j).getLength() || newy < items.get(j).getinsertedy()) {
 //					continue;
 //				}
-				return false;
+				return null;
 		
 			}
-			return true;
+			
+			ep.setRSx(rsx);
+			ep.setRSy(rsy);
+			ep.setRSz(rsz);
+			
+			return ep;
 		}
-		return false;
+		return null;
 	}
 //	#5
-	public boolean canTakeProjectionZX(Item i, Item k, List<Item> items) {
+	public EP canTakeProjectionZX(Item i, Item k, List<Item> items) {
 		if(k.insertedx >= i.insertedx + i.getWidth() && k.insertedz + k.getHeight() < i.insertedz + i.getHeight() && k.insertedy < i.insertedy + i.getLength()) {
 			double newx = i.insertedx + i.getWidth();
 			double newy = k.insertedy;
@@ -603,7 +670,13 @@ public class BF {
 			double rsy = 501 - newy;
 			double rsz = 273 - newz;
 			
-			for(int j = 0; j < items.size(); j++) {
+			EP ep = new EP(newx, newy, newz);
+			
+			ep.setRSx(rsx);
+			ep.setRSy(rsy);
+			ep.setRSz(rsz);
+			
+			for(int j = 6; j < items.size(); j++) {
 				Item itemj = items.get(j);
 				if(items.get(j).getItemId() == i.getItemId()) {
 					continue;
@@ -653,16 +726,21 @@ public class BF {
 //				if(newy >= items.get(j).getinsertedy() + items.get(j).getLength() || newy < items.get(j).getinsertedy()) {
 //					continue;
 //				}
-				return false;
+				return null;
 
 			}
-			return true;
+			
+			ep.setRSx(rsx);
+			ep.setRSy(rsy);
+			ep.setRSz(rsz);
+			
+			return ep;
 		}
-		return false;
+		return null;
 	}
 
 	//	#6
-	public boolean canTakeProjectionZY(Item i, Item k, List<Item> items) {
+	public EP canTakeProjectionZY(Item i, Item k, List<Item> items) {
 		if(k.insertedy >= i.insertedy + i.getLength() && k.insertedz + k.getHeight() < i.insertedz + i.getHeight() && k.insertedx < i.insertedx + i.getWidth() ) {
 			double newx = k.insertedx;
 			double newy = i.insertedy + i.getLength();
@@ -672,7 +750,13 @@ public class BF {
 			double rsy = 501 - newy;
 			double rsz = 273 - newz;
 			
-			for(int j = 0; j < items.size(); j++) {
+			EP ep = new EP(newx, newy, newz);
+			
+			ep.setRSx(rsx);
+			ep.setRSy(rsy);
+			ep.setRSz(rsz);
+			
+			for(int j = 6; j < items.size(); j++) {
 				Item itemj = items.get(j);
 				if(items.get(j).getItemId() == i.getItemId()) {
 					continue;
@@ -680,7 +764,7 @@ public class BF {
 				if(newy >= itemj.getinsertedy() + itemj.getLength() || newz >= itemj.getinsertedz()+itemj.getHeight()) {
 					continue;
 				}
-				if(itemj.getinsertedz() > i.getinsertedz()+i.getHeight()){
+				if(itemj.getinsertedz() > i.getinsertedz()+i.getHeight()) {
 					if(newx <= itemj.getinsertedx() && rsx > itemj.getinsertedx()-newx)rsx = itemj.getinsertedx()-newx;
 					else if(itemj.getinsertedx() < newx && newx < itemj.getinsertedx()+itemj.getWidth())
 					{
@@ -689,7 +773,7 @@ public class BF {
 					}
 					continue;
 				}
-				if(itemj.getinsertedy() > k.getinsertedy()+k.getLength()) {
+				if(itemj.getinsertedy() > k.getinsertedy() + k.getLength()) {
 					if(newx <= itemj.getinsertedx() && rsx > itemj.getinsertedx()-newx)rsx = itemj.getinsertedx()-newx;
 					else if(itemj.getinsertedx() < newx && newx < itemj.getinsertedx()+itemj.getWidth())
 					{
@@ -727,12 +811,17 @@ public class BF {
 //				if(newy >= items.get(j).getinsertedy()|| i.getinsertedy()+i.getLength() >= items.get(j).getinsertedy()) {
 //					continue;
 //				}
-				return false;
+				return null;
 
 			}
-			return true;
+			
+			ep.setRSx(rsx);
+			ep.setRSy(rsy);
+			ep.setRSz(rsz);
+			
+			return ep;
 		}
-		return false;
+		return null;
 	}
 
 

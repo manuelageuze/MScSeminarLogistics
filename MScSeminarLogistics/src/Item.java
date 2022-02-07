@@ -16,6 +16,7 @@ public class Item implements Comparable<Item> {
 	private final double height;
 	private final double weight;
 	private final double volume;
+
 	double insertedx;
 	double insertedy;
 	double insertedz;
