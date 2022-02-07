@@ -19,7 +19,7 @@ public class BRKGA {
 	 * @param order Order to solve problem for
 	 * @param choice_D2_VBO 1 if DFTRC-2^2 is used, 2 if DFTRC-2-VBO is used
 	 */
-	public static void solve(Order order, int choice_D2_VBO) {
+	public static int solve(Order order, double lowerBound, int choice_D2_VBO) {
 		// Parameters
 		final int numItems = order.getItems().size();
 		final int numPop = 30*numItems; // p : number of vectors in population
@@ -32,12 +32,12 @@ public class BRKGA {
 		ArrayList<Chromosome> population = new ArrayList<Chromosome>();
 		for (int p=0; p < numPop; p++) {
 			population.add(createMutation(order, rand, numItems, choice_D2_VBO));
-			System.out.println(population.get(p).getNumCrates());
 		}		
 		// Start algorithm
-		for (int g=1; g < 2; g++) { // TODO: set to numGeneration!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		for (int g=1; g < numGeneration; g++) {
 			Collections.sort(population);
-			System.out.println("Min number of bins in generation g = " + g + " is " + population.get(0).getNumCrates());
+			if (population.get(0).getNumCrates() == lowerBound) break;
+//			System.out.println("Min number of bins in generation g = " + g + " is " + population.get(0).getNumCrates());
 			ArrayList<Chromosome> populationG = new ArrayList<Chromosome>();
 			for (int p=0; p < numPopElite; p++) { // Copy elite directly
 				populationG.add(population.get(p));
@@ -64,8 +64,8 @@ public class BRKGA {
 					}
 				}
 				ArrayList<ArrayList<Integer>> openCrates = placement(order, BPS, VBO, choice_D2_VBO);
-				double[] adjAndNumBins = getAdjustedAndNumberBins(order, openCrates);
-				populationG.add(new Chromosome(BPS, VBO, adjAndNumBins[0], (int) Math.round(adjAndNumBins[1])));
+				double adjNumBins = getAdjustedNumberBins(order, openCrates);
+				populationG.add(new Chromosome(BPS, VBO, adjNumBins, (int) adjNumBins));
 			}
 			// Replace by new population
 			population.clear();
@@ -74,6 +74,7 @@ public class BRKGA {
 		Collections.sort(population);
 		int minNumberBins = population.get(0).getNumCrates();
 		System.out.println("YOU DID IT!!!!!!! NUMBER OF BINS IS " + minNumberBins);
+		return minNumberBins;
 	}
 
 	/**
@@ -185,7 +186,7 @@ public class BRKGA {
 					double distance = Math.pow(width-x1-orientation.get(0), 2) + Math.pow(length-y1-orientation.get(1), 2) + Math.pow(height-z1-orientation.get(2), 2);
 					if (distance > maxDist) {
 						maxDist = distance;
-						// Save winning orientation TODO: check of dit werkt
+						// Save winning orientation
 						winningOrientation.clear();
 						winningOrientation.addAll(orientation);
 						// Save winning EMS
@@ -239,7 +240,7 @@ public class BRKGA {
 	 * @param openCrates
 	 * @return fitness value
 	 */
-	private static double[] getAdjustedAndNumberBins(Order order, ArrayList<ArrayList<Integer>> openCrates) {
+	private static double getAdjustedNumberBins(Order order, ArrayList<ArrayList<Integer>> openCrates) {
 		double leastLoad = Double.POSITIVE_INFINITY;
 		Crate crate = new Crate();
 		double crateCapacity = crate.getVolume();
@@ -252,8 +253,7 @@ public class BRKGA {
 			if (loadCrate < leastLoad)
 				leastLoad = loadCrate;
 		}
-		double[] result = {openCrates.size() + leastLoad/crateCapacity, openCrates.size()};
-		return result;
+		return openCrates.size() + leastLoad/crateCapacity;
 	}
 
 	/**
@@ -313,7 +313,7 @@ public class BRKGA {
 		Iterator<EP> iter = list.iterator();
 		while (iter.hasNext()) {
 			EP EMS = iter.next();
-			if (EMS.getRSx() - EMS.getX() <= 1E-6 || EMS.getRSy() - EMS.getY() <= 1E-6 || EMS.getRSz() - EMS.getY() <= 1E-6) {
+			if (EMS.getRSx() - EMS.getX() <= 1E-6 || EMS.getRSy() - EMS.getY() <= 1E-6 || EMS.getRSz() - EMS.getZ() <= 1E-6) {
 				iter.remove();
 			}
 		}
@@ -395,13 +395,12 @@ public class BRKGA {
 		double[] BPS = new double[numItems]; // Box Packing Sequence BPS
 		double[] VBO = new double[numItems]; // Vector Box Orientation VBO
 		for (int i=0; i < numItems; i++) { 
-			double gene = rand.nextDouble();
-			BPS[i] = gene;
+			BPS[i] = rand.nextDouble();
 			VBO[i] = rand.nextDouble();
 		}
 		ArrayList<ArrayList<Integer>> openCrates = placement(order, BPS, VBO, choice_D2_VBO);
-		double[] adjAndNumBins = getAdjustedAndNumberBins(order, openCrates);
-		return new Chromosome(BPS, VBO, adjAndNumBins[0], (int) Math.round(adjAndNumBins[1])); 
+		double adjNumBins = getAdjustedNumberBins(order, openCrates);
+		return new Chromosome(BPS, VBO, adjNumBins, (int) adjNumBins);
 	}
 
 	/**
