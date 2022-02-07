@@ -29,9 +29,10 @@ public class Main {
 		//		LowerBoundModel.setCoveringLB(orders.get(124), items);	// Order with 5 as LB
 
 		//for(int i = 0; i < orders.size();i++) {
-		//			BF bf = new BF(orders.get(31)); //31
-		//			bf.computeBF();
+			BF bf = new BF(orders.get(124)); //31
+			bf.computeBF();
 		//}
+		//BRKGA.solve(orders.get(124), choice_D2_VBO);
 		
 		File sol = new File("GA_solution.txt");
 		PrintWriter out = new PrintWriter(sol);
