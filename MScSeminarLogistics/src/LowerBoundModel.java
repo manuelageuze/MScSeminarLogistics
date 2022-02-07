@@ -12,7 +12,6 @@ public class LowerBoundModel {
 	public LowerBoundModel(Order order, Map<Double,Item> items) throws IloException {
 		this.order = order;
 		this.items = items;
-		
 	}
 
 	public static double setCoveringLB(Order order, Map<Double, Item> items) throws IloException {
@@ -71,7 +70,6 @@ public class LowerBoundModel {
 		
 		if(cplex.isPrimalFeasible()) {
 			System.out.println("Solution value: " + cplex.getObjValue());
-			
 			return cplex.getObjValue();
 			
 		}
