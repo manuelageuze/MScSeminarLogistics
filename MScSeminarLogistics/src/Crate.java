@@ -77,7 +77,7 @@ public class Crate {
 	 */
 	public void addItemToCrate(Item i) {
 		this.items.add(i);
-		this.currentWeight =+ i.getWeight();
+		this.currentWeight += i.getWeight();
 	}
 	
 	/**
@@ -93,7 +93,7 @@ public class Crate {
 	 * @param value weight to add to crate
 	 */
 	public void addtoCurrentWeight(double value) {
-		this.currentWeight =+ value;
+		this.currentWeight += value;
 	}
 	
 	/**

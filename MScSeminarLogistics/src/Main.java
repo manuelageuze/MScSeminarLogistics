@@ -23,13 +23,13 @@ public class Main {
 			//out.println(lowerbound);
 		//}	
 		//out.close();
-		
+//		LowerBoundModel.setCoveringLB(orders.get(124), items);	// Order with 5 as LB
 		
 		//for(int i = 0; i < orders.size();i++) {
-			BF bf = new BF(orders.get(31)); //31
-			bf.computeBF();
+//			BF bf = new BF(orders.get(31)); //31
+//			bf.computeBF();
 		//}
-		//BRKGA.solve(orders.get(0), choice_D2_VBO);
+		BRKGA.solve(orders.get(124), choice_D2_VBO);
 		
 	}
 	

@@ -32,9 +32,10 @@ public class BRKGA {
 		ArrayList<Chromosome> population = new ArrayList<Chromosome>();
 		for (int p=0; p < numPop; p++) {
 			population.add(createMutation(order, rand, numItems, choice_D2_VBO));
-		}
+			System.out.println(population.get(p).getNumCrates());
+		}		
 		// Start algorithm
-		for (int g=1; g < numGeneration; g++) {
+		for (int g=1; g < 2; g++) { // TODO: set to numGeneration!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 			Collections.sort(population);
 			System.out.println("Min number of bins in generation g = " + g + " is " + population.get(0).getNumCrates());
 			ArrayList<Chromosome> populationG = new ArrayList<Chromosome>();
@@ -103,11 +104,17 @@ public class BRKGA {
 			Item itemToPack = mapBPS.get(sortedBPS[i]); // Item selection
 			Crate crateSelected = null; // Initialize with no bin/crate selected
 			EP EMS = null; // Initialize with no Empty Maximal Space selected
+			int crateIndex = -1;
 			List<Double> orient = new ArrayList<Double>();
 			orient.add(itemToPack.getWidth());
 			orient.add(itemToPack.getLength());
 			orient.add(itemToPack.getHeight());
 			for (int k=0; k < numCrates; k++) {
+//				System.out.println("num crates = " + openCrates.size() + ", weights = ");
+//				for (Crate c : crates) {
+//					System.out.print(c.getCurrentWeight() + " ");
+//				}
+//				System.out.println();
 				Crate crate = crates.get(k);
 				switch (choice_D2_VBO) { // Box Orientation Selection
 				case 1: EMS = DFTRC2(itemToPack, crate, orient);
@@ -117,6 +124,7 @@ public class BRKGA {
 				}
 				if (EMS != null) {
 					crateSelected = crate;
+					crateIndex = k;
 					break;
 				}
 			}
@@ -133,6 +141,7 @@ public class BRKGA {
 				}
 				openCrates.add(openCrate);
 				numCrates++;
+				crateIndex = openCrates.size()-1;
 				EMS = newEMS;
 				switch (choice_D2_VBO) { // Box Orientation Selection
 				case 1: DFTRC2(itemToPack, crateSelected, orient);
@@ -142,7 +151,6 @@ public class BRKGA {
 				}
 			}
 			// Item packing
-			int crateIndex = crates.indexOf(crateSelected);
 			openCrates.get(crateIndex).set(mapBPSIndex.get(sortedBPS[i]), 1);
 			crateSelected.addItemToCrate(itemToPack);
 			itemsToPack.remove(itemToPack);
@@ -173,7 +181,7 @@ public class BRKGA {
 			double[] dim = {x1, y1, z1};
 			List<List<Double>> boxOrientations = boxOrientations(dim);
 			for (List<Double> orientation : boxOrientations) {
-				if (EMSi.getRSx()-EMSi.getX() >= orientation.get(0) && EMSi.getRSy()-EMSi.getY() >= orientation.get(1) && EMSi.getRSz()-EMSi.getZ() >= orientation.get(2)) {
+				if (EMSi.getRSx()-EMSi.getX() >= orientation.get(0) && EMSi.getRSy()-EMSi.getY() >= orientation.get(1) && EMSi.getRSz()-EMSi.getZ() >= orientation.get(2) && crate.getCurrentWeight() + itemToPack.getWeight() <= crate.getMaxWeight()) {
 					double distance = Math.pow(width-x1-orientation.get(0), 2) + Math.pow(length-y1-orientation.get(1), 2) + Math.pow(height-z1-orientation.get(2), 2);
 					if (distance > maxDist) {
 						maxDist = distance;
@@ -214,10 +222,12 @@ public class BRKGA {
 			int numOrientations = boxOrientations.size();
 			orient.clear();
 			orient.addAll(boxOrientations.get((int) Math.ceil(boxOrientation*numOrientations)-1));
-			double distance = Math.pow(width-x1-orient.get(0), 2) + Math.pow(length-y1-orient.get(1), 2) + Math.pow(height-z1-orient.get(2), 2);
-			if (distance > maxDist) {
-				maxDist = distance;
-				EMS = EMSi;
+			if (EMSi.getRSx()-EMSi.getX() >= orient.get(0) && EMSi.getRSy()-EMSi.getY() >= orient.get(1) && EMSi.getRSz()-EMSi.getZ() >= orient.get(2) && crate.getCurrentWeight() + itemToPack.getWeight() <= crate.getMaxWeight()) {
+				double distance = Math.pow(width-x1-orient.get(0), 2) + Math.pow(length-y1-orient.get(1), 2) + Math.pow(height-z1-orient.get(2), 2);
+				if (distance > maxDist) {
+					maxDist = distance;
+					EMS = EMSi;
+				}
 			}
 		}
 		return EMS;
