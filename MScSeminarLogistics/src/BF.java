@@ -1,3 +1,4 @@
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -9,7 +10,7 @@ public class BF {
 		this.order = order;
 	}
 
-	public void computeBF() {
+	public List<Crate> computeBF(PrintWriter out, int index) {
 		List<Item> sortedItemList = new ArrayList<>(order.getItems());	
 		Collections.sort(sortedItemList); // Order a list of items
 
@@ -291,8 +292,8 @@ public class BF {
 
 		}
 
-		// Print solution
 		
+		// Print solution
 		System.out.println("Number of crates used in this order: " + crates.size());
 		for(int i = 0; i < crates.size(); i++) {
 			Crate c = crates.get(i);
@@ -301,7 +302,10 @@ public class BF {
 				System.out.print((int)c.getItemList().get(j).getItemId() + "\t");
 			}
 			System.out.println();
-		}		
+		}
+		
+		return crates;
+		
 	}
 
 	public boolean isOnSideY(EP ep, Item nItem) {
