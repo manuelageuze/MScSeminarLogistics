@@ -10,7 +10,7 @@ public class BF {
 		this.order = order;
 	}
 
-	public List<Crate> computeBF(PrintWriter out, int index) {
+	public List<Crate> computeBF() { // PrintWriter out, int index
 		List<Item> sortedItemList = new ArrayList<>(order.getItems());	
 		Collections.sort(sortedItemList); // Order a list of items
 
@@ -294,16 +294,16 @@ public class BF {
 
 		
 		// Print solution
-		System.out.println("Number of crates used in this order: " + crates.size());
-		for(int i = 0; i < crates.size(); i++) {
-			Crate c = crates.get(i);
-			System.out.print("Crate number " + (i + 1)+"\t");
-			for(int j = 6 ; j < c.getItemList().size(); j++) {
-				System.out.print((int)c.getItemList().get(j).getItemId() + "\t");
-			}
-			System.out.println();
-		}
-		
+//		System.out.println("Number of crates used in this order: " + crates.size());
+//		for(int i = 0; i < crates.size(); i++) {
+//			Crate c = crates.get(i);
+//			System.out.print("Crate number " + (i + 1)+"\t");
+//			for(int j = 6 ; j < c.getItemList().size(); j++) {
+//				System.out.print((int)c.getItemList().get(j).getItemId() + "\t");
+//			}
+//			System.out.println();
+//		}
+		System.out.println("Order "+((int)order.getOrderId()));
 		return crates;
 		
 	}

@@ -66,11 +66,13 @@ public class LowerBoundModel {
 			cplex.addGe(lhs, 1.0);
 		}
 		cplex.solve();
-		System.out.println(cplex.isPrimalFeasible());
+//		System.out.println(cplex.isPrimalFeasible());
 		
 		if(cplex.isPrimalFeasible()) {
-			System.out.println("Solution value: " + cplex.getObjValue());
-			return cplex.getObjValue();
+//			System.out.println("Solution value: " + cplex.getObjValue());
+			int objValue = (int)cplex.getObjValue();
+			cplex.close();
+			return objValue;
 			
 		}
 		cplex.close();
