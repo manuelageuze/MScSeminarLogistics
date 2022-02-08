@@ -22,7 +22,7 @@ public class Main {
 //		solveLP(orders, items);
 //		Long timeLB = System.currentTimeMillis()-start;
 //		start = System.currentTimeMillis();
-//		solveBF(orders);
+		solveBF(orders);
 //		Long timeBF = System.currentTimeMillis()-start;
 //		System.out.println("Time:\nLB\tBF\n"+timeLB+"\t"+timeBF);
 		compair(new File("LB_solution_value.txt"),new File("BF_solution_value.txt"),orders);
@@ -130,7 +130,13 @@ public class Main {
 			for(Crate crate : crates)
 			{
 				List<Item> items = crate.getItemList();
-				myWriter2.write(counter+"\t");
+				double volume = 0.0;
+				for(Item item : items)
+				{
+					volume += item.getVolume();
+				}
+				double fillRate = Math.round(volume/crate.getVolume()*10000)/100;
+				myWriter2.write(counter+"\t"+fillRate+"\t");
 				for(Item item : items)
 				{
 					int id = (int) item.getItemId();
