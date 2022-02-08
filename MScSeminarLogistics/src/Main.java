@@ -19,13 +19,13 @@ public class Main {
 		// Compute lower bound and write file
 		//out.println("instance minimum_number_of_crates");
 //		Long start = System.currentTimeMillis();
-//		solveLP(orders, items);
+		solveLP(orders, items);
 //		Long timeLB = System.currentTimeMillis()-start;
 //		start = System.currentTimeMillis();
-		solveBF(orders);
+//		solveBF(orders);
 //		Long timeBF = System.currentTimeMillis()-start;
 //		System.out.println("Time:\nLB\tBF\n"+timeLB+"\t"+timeBF);
-		compair(new File("LB_solution_value.txt"),new File("BF_solution_value.txt"),orders);
+//		compair(new File("LB_solution_value.txt"),new File("BF_solution_value.txt"),orders);
 	}
 
 
@@ -112,7 +112,12 @@ public class Main {
 			int id = (int) order.getOrderId();
 			myWriter.write(id+"\t"+LB+"\n");
 		}
-		myWriter.close();
+//		myWriter.close();
+//		for(int i = 900 ; i < 1000 ; i++)
+//		{
+//			int LB = (int)LowerBoundModel.setCoveringLB(orders.get(i), items);
+//		}
+//		int LB = (int)LowerBoundModel.setCoveringLB(orders.get(27), items);
 	}
 
 	private static void solveBF(List<Order> orders) throws IOException
