@@ -289,7 +289,7 @@ public class BF {
 					ep.setRSz(Math.min(ep.getRSz(), nItem.insertedz - ep.getZ()));
 				}
 			}
-
+			boolean test = true;
 		}
 
 		
@@ -303,17 +303,17 @@ public class BF {
 //			}
 //			System.out.println();
 //		}
-		System.out.println("Order "+((int)order.getOrderId()));
+//		System.out.println("Order "+((int)order.getOrderId()));
 		return crates;
 		
 	}
 
 	public boolean isOnSideY(EP ep, Item nItem) {
-		return nItem.insertedy < ep.getY() && ep.getY() < nItem.insertedy + nItem.getLength();
+		return nItem.insertedy <= ep.getY() && ep.getY() < nItem.insertedy + nItem.getLength();
 	}
 
 	public boolean isOnSideX(EP ep, Item nItem) {
-		return nItem.insertedx < ep.getZ() && ep.getZ() < nItem.insertedx + nItem.getWidth(); 
+		return nItem.insertedx <= ep.getX() && ep.getX() < nItem.insertedx + nItem.getWidth(); 
 	}
 
 	//  #1
@@ -392,6 +392,7 @@ public class BF {
 			ep.setRSx(rsx);
 			ep.setRSy(rsy);
 			ep.setRSz(rsz);
+			if(rsx==0||rsy==0||rsz == 0) return null;
 			return ep;
 		}
 		return null;
@@ -478,7 +479,7 @@ public class BF {
 			ep.setRSx(rsx);
 			ep.setRSy(rsy);
 			ep.setRSz(rsz);
-			
+			if(rsx==0||rsy==0||rsz == 0) return null;
 			return ep;
 		}
 		return null;
@@ -572,6 +573,7 @@ public class BF {
 			ep.setRSx(rsx);
 			ep.setRSy(rsy);
 			ep.setRSz(rsz);
+			if(rsx==0||rsy==0||rsz == 0) return null;
 			return ep;
 		}
 		return null;
@@ -658,7 +660,7 @@ public class BF {
 			ep.setRSx(rsx);
 			ep.setRSy(rsy);
 			ep.setRSz(rsz);
-			
+			if(rsx==0||rsy==0||rsz == 0) return null;
 			return ep;
 		}
 		return null;
@@ -737,7 +739,7 @@ public class BF {
 			ep.setRSx(rsx);
 			ep.setRSy(rsy);
 			ep.setRSz(rsz);
-			
+			if(rsx==0||rsy==0||rsz == 0) return null;
 			return ep;
 		}
 		return null;
@@ -822,7 +824,7 @@ public class BF {
 			ep.setRSx(rsx);
 			ep.setRSy(rsy);
 			ep.setRSz(rsz);
-			
+			if(rsx==0||rsy==0||rsz == 0) return null;
 			return ep;
 		}
 		return null;

@@ -15,11 +15,14 @@ public class Main {
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
 		int choice_D2_VBO = 2; // TODO: 1 if DFTRC-2^2 is used, 2 if DFTRC-2-VBO is used
-    
+		BF bf = new BF(orders.get(372));
+		List<Crate> crates = bf.computeBF();
+		checkSolution(crates,584);
+//		System.out.println(checkSolution(crates));
 		// Compute lower bound and write file
 		//out.println("instance minimum_number_of_crates");
 //		Long start = System.currentTimeMillis();
-		solveLP(orders, items);
+//		solveLP(orders, items);
 //		Long timeLB = System.currentTimeMillis()-start;
 //		start = System.currentTimeMillis();
 //		solveBF(orders);
@@ -129,7 +132,10 @@ public class Main {
 		{
 			BF bf = new BF(orders.get(i));
 			List<Crate> crates = bf.computeBF();
-			myWriter.write(i+"\t"+crates.size()+"\n");
+//			myWriter.write(i+"\t"+crates.size()+"\n");
+			int test = checkSolution(crates,i);
+			if(test==0)myWriter.write(i+"\t"+crates.size()+"\n");
+			else myWriter.write(i+"\t"+crates.size()+"\t"+test+"\n");
 			myWriter2.write("Order: "+i+"\nCrates: "+crates.size()+"\n");
 			int counter = 1;
 			for(Crate crate : crates)
@@ -153,5 +159,40 @@ public class Main {
 			myWriter2.write("\n");
 		}
 		myWriter.close();myWriter2.close();
+	}
+	public static int checkSolution(List<Crate> crates, int order)
+	{
+		int counter = 1;
+		for(Crate c : crates)
+		{
+			List<Item> items = c.getItemList();
+			for(int i = 0 ; i < items.size() ; i++)
+			{
+				Item itemi = items.get(i);
+				for(int j = 0 ; j < items.size() ; j++)
+				{
+					Item itemj = items.get(j);
+					if(i==j) continue;
+					double x_i = itemi.getinsertedx();double x_j = itemj.getinsertedx();
+					double y_i = itemi.getinsertedy();double y_j = itemj.getinsertedy();
+					double z_i = itemi.getinsertedz();double z_j = itemj.getinsertedz();
+					if(x_i < x_j && x_j < x_i+itemi.getWidth()){
+						if(y_i < y_j && y_j < y_i + itemi.getLength()){
+							if(z_i < z_j && z_j < z_i + itemi.getHeight()) {
+								System.out.println("Order: "+order+", Crate "+counter+".");
+								System.out.println("Item i: "+(int)itemi.getItemId());
+								System.out.println("("+x_i+","+y_i+","+z_i+")"+
+											"("+itemi.getWidth()+","+itemi.getLength()+","+itemi.getHeight()+")");
+								System.out.println("Item j: "+(int)itemj.getItemId());
+								System.out.println("("+x_j+","+y_j+","+z_j+")\n");
+								return counter;
+							}
+						}
+					}
+				}
+			}
+			counter++;
+		}
+		return 0;
 	}
 }
