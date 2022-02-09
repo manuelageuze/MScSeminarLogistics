@@ -309,11 +309,29 @@ public class BF {
 	}
 
 	public boolean isOnSideY(EP ep, Item nItem) {
-		return nItem.insertedy <= ep.getY() && ep.getY() < nItem.insertedy + nItem.getLength();
+		if( nItem.insertedy <= ep.getY() && ep.getY() < nItem.insertedy + nItem.getLength()) {
+			return true;
+		}
+		boolean onx = false;
+		if(nItem.insertedx <= ep.getX() && ep.getX() < nItem.insertedx + nItem.getWidth()) {
+			onx = true;
+		}
+		if(onx == false) {	
+			if(nItem.insertedx >= 321 - ep.getRSx() && nItem.insertedy >= 501 - ep.getRSy()) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public boolean isOnSideX(EP ep, Item nItem) {
-		return nItem.insertedx <= ep.getX() && ep.getX() < nItem.insertedx + nItem.getWidth(); 
+		if(nItem.insertedx <= ep.getX() && ep.getX() < nItem.insertedx + nItem.getWidth()) {
+			return true;
+		}
+		if(nItem.insertedx >= 321 - ep.getRSx() && nItem.insertedy >= 501 - ep.getRSy()) {
+			return true;
+		}
+		return false;
 	}
 
 	//  #1

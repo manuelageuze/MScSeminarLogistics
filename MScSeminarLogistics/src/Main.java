@@ -15,7 +15,7 @@ public class Main {
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
 		int choice_D2_VBO = 2; // TODO: 1 if DFTRC-2^2 is used, 2 if DFTRC-2-VBO is used
-		BF bf = new BF(orders.get(372));
+		BF bf = new BF(orders.get(362));
 		List<Crate> crates = bf.computeBF();
 		checkSolution(crates,584);
 //		System.out.println(checkSolution(crates));
@@ -105,8 +105,8 @@ public class Main {
 		System.out.println("Medium:\t"+(int)difMedium+"\t"+difMedium/amountMedium);
 		System.out.println("Large:\t"+(int)difLarge+"\t"+difLarge/amountLarge);
 	}
-	private static void solveLP(List<Order> orders, Map<Double, Item> items) throws IloException, IOException
-	{
+	
+	private static void solveLP(List<Order> orders, Map<Double, Item> items) throws IloException, IOException {
 		FileWriter myWriter = new FileWriter("LB_solution_value.txt");
 		myWriter.write("Order\tCrates\n");
 		for(Order order : orders)
@@ -123,8 +123,7 @@ public class Main {
 //		int LB = (int)LowerBoundModel.setCoveringLB(orders.get(27), items);
 	}
 
-	private static void solveBF(List<Order> orders) throws IOException
-	{
+	private static void solveBF(List<Order> orders) throws IOException {
 		FileWriter myWriter = new FileWriter("BF_solution_value.txt");
 		FileWriter myWriter2 = new FileWriter("BF_solution.txt");
 		myWriter.write("Order\tamountCrates\n");
@@ -160,8 +159,8 @@ public class Main {
 		}
 		myWriter.close();myWriter2.close();
 	}
-	public static int checkSolution(List<Crate> crates, int order)
-	{
+	
+	public static int checkSolution(List<Crate> crates, int order) {
 		int counter = 1;
 		for(Crate c : crates)
 		{
