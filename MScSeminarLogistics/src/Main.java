@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.List;
 import java.util.Map;
 
@@ -8,15 +9,24 @@ import ilog.concert.IloException;
 public class MainGA {
 
 	public static void main(String[] args) throws FileNotFoundException, IloException {
+
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
 		int choice_D2_VBO = 1; // TODO: 1 if DFTRC-2^2 is used, 2 if DFTRC-2-VBO is used
 
 		double[] lowerBound = new double[orders.size()];
-		for(int i = 0; i < orders.size(); i++) {
-			double lowerbound = LowerBoundModel.setCoveringLB(orders.get(i), items);
-			lowerBound[i] = lowerbound;
-		}
+		// Compute lower bound and write file
+		//File sol = new File("lowerBound_solution.txt");
+		//PrintWriter out = new PrintWriter(sol);
+		//out.println("instance minimum_number_of_crates");
+//		for(int i = 0; i < orders.size(); i++) {
+//			double lowerbound = LowerBoundModel.setCoveringLB(orders.get(i), items);
+//			lowerBound[i] = lowerbound;
+//			//out.print(i + " ");
+//			//out.println(lowerbound);
+//		}	
+		//out.close();
+		//		LowerBoundModel.setCoveringLB(orders.get(124), items);	// Order with 5 as LB
 		
 //		File sol = new File("GA_solution.txt");
 //		PrintWriter out = new PrintWriter(sol);
@@ -35,8 +45,7 @@ public class MainGA {
 		System.out.println(lowerbound);
 		BRKGA.solve(orders.get(instance), lowerbound, choice_D2_VBO);
 	}
-	
-	
+
 	/**
 	 * Read items
 	 * @return Map containing items
