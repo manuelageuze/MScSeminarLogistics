@@ -1,13 +1,14 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
 import ilog.concert.IloException;
 
-public class MainGA {
+public class MainBRKGA {
 
-	public static void main(String[] args) throws FileNotFoundException, IloException {
+	public static void main(String[] args) throws IloException, IOException {
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
 		int choice_D2_VBO = 1; // TODO: 1 if DFTRC-2^2 is used, 2 if DFTRC-2-VBO is used
