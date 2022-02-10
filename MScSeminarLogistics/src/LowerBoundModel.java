@@ -1,7 +1,3 @@
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import ilog.concert.IloException;
@@ -18,7 +14,7 @@ public class LowerBoundModel {
 		this.items = items;
 	}
 
-	public static double setCoveringLB(Order order, Map<Double, Item> items) throws IloException, IOException {
+	public static double setCoveringLB(Order order, Map<Double, Item> items) throws IloException {
 		Crate crate = new Crate();
 		IloCplex cplex = new IloCplex();
 		cplex.setOut(null);
@@ -61,7 +57,7 @@ public class LowerBoundModel {
 			rhs = cplex.sum(rhs,cplex.prod(crate.getVolume(), y[j]));
 			cplex.addLe(lhs, rhs);	
 		}
-		// Constraint 3 all items are placed
+		
 		for(int i = 0; i < order.getItems().size(); i++) {
 			IloNumExpr lhs = cplex.constant(0.0);
 			for(int j = 0; j < order.getItems().size() + 1; j++) {
@@ -70,61 +66,18 @@ public class LowerBoundModel {
 			cplex.addGe(lhs, 1.0);
 		}
 		cplex.solve();
-//		System.out.println(cplex.isPrimalFeasible());
+		System.out.println(cplex.isPrimalFeasible());
 		
 		if(cplex.isPrimalFeasible()) {
-//			System.out.println("Solution value: " + cplex.getObjValue());
-			int objValue = (int)cplex.getObjValue();
-			writeSolution(order,x, y, crate, cplex);
-			cplex.close();
-			return objValue;
+			System.out.println("Solution value: " + cplex.getObjValue());
+			return cplex.getObjValue();
 			
 		}
 		cplex.close();
 		return Double.NEGATIVE_INFINITY;
 		
 	}
-	private static void writeSolution(Order order,IloNumVar[][] x, IloNumVar[] y, Crate crate, IloCplex cplex) throws IloException, IOException
-	{
-		int counter = 0;
-		List<List<Integer>> bins = new ArrayList<>();
-		List<Double> volumes = new ArrayList<>();
-		List<Item> items = order.getItems();
-		FileWriter myWriter = new FileWriter("LB_solution.txt");
-		for(int j = 0 ; j < y.length ; j++)
-		{
-			int y_j = (int)(cplex.getValue(y[j])+0.5);
-			if(y_j == 1)
-			{
-				double volume = 0.0;
-				List<Integer> bin = new ArrayList<>();
-				for(int i = 0 ; i < x.length ; i++)
-				{
-					int x_ij = (int) (cplex.getValue(x[i][j])+0.5);
-					if(x_ij == 1)
-					{
-						bin.add((int)items.get(i).getItemId());
-						volume += (items.get(i).getVolume());
-					}
-				}
-				bins.add(bin);
-				volumes.add(volume);
-				counter++;
-			}
-		}
-		System.out.print("Order: "+order.getOrderId()+"\nCrates: "+counter+"\n");
-		for(int i = 0 ; i < bins.size() ; i++)
-		{
-			System.out.print((i+1)+"\t"+volumes.get(i)/crate.getVolume()+"\t");
-			for(Integer j : bins.get(i))
-			{
-				System.out.print(j+" ");
-			}
-			System.out.print("\n");
-		}
-		System.out.print("\n");
-		myWriter.close();
-	}
+
 	/*
 	 * Deze methode werkt niet toch?
 	 */

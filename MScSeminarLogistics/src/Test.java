@@ -1,43 +1,37 @@
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Test {
 
 	public static void main(String[] args) {
 		System.out.println("Test");
-		int[] dim = {324, 860, 999};
-		List<List<Integer>> perm = permute(dim);
-		for (int i=0; i < perm.size(); i++) {
-			for (int j=0; j < perm.get(i).size(); j++) {
-				System.out.print(perm.get(i).get(j) + " ");
-			}
-			System.out.println();
-		}
-		
-	}
 
-	
-	public static List<List<Integer>> permute(int[] nums) {
-        List<List<Integer>> ans = new ArrayList<>();
-        List<Integer> ds = new ArrayList<>();
-        boolean[] freq = new boolean[nums.length];
-        fun(nums, ds,ans, freq);
-        return ans;
-    }
-    public static void fun(int[] nums,List<Integer> ds,List<List<Integer>> ans,boolean[] freq){
-        if(ds.size()==nums.length){
-            ans.add(new ArrayList<>(ds));
-            return ;
-        }
-        for(int i=0;i<nums.length;i++){
-            if(!freq[i]){
-                freq[i] = true;
-                ds.add(nums[i]);
-                fun(nums, ds,ans, freq);
-                ds.remove(ds.size()-1);
-                freq[i] = false;
-            }
-        }
-    }
+		//		Item item1 = new Item(500, 50.0, 50.0, 50.0, 50.0);
+		//		Item item2 = new Item(501, 100.0, 100.0, 100.0, 100.0);
+		//		Item item3 = new Item(502, 20.0, 20.0, 20.0, 20.0);
+		//		List<Item> items = new ArrayList<Item>();
+		//		items.add(item1);
+		//		items.add(item2);
+		//		items.add(item3);
+		//		Order order = new Order(items, 1000);
+		//		BRKGA.solve(order, 1, 1);
+
+//		int NB = 0;
+//		for (int j=0; j < 10; j++) {
+			List<Item> items = new ArrayList<Item>();
+			Random rand = new Random();
+			for (int i=0; i < 50; i++) {
+				double width = 1+34*rand.nextDouble();
+				double height = 1+34*rand.nextDouble();
+				double length = 1+34*rand.nextDouble();
+				Item item = new Item(i, width, length, height, 0);
+				items.add(item);
+			}
+			Order order = new Order(items, 1000);
+			BRKGA.solve(order, 0, 1);
+//		}
+//		System.out.println(NB/10);
+	}
 
 }

@@ -37,7 +37,7 @@ public class BRKGA {
 		for (int g=1; g < numGeneration; g++) {
 			Collections.sort(population);
 			if (population.get(0).getNumCrates() == lowerBound) break;
-//			System.out.println("Min number of bins in generation g = " + g + " is " + population.get(0).getNumCrates());
+			System.out.println("Min number of bins in generation g = " + g + " is " + population.get(0).getNumCrates());
 			ArrayList<Chromosome> populationG = new ArrayList<Chromosome>();
 			for (int p=0; p < numPopElite; p++) { // Copy elite directly
 				populationG.add(population.get(p));
@@ -106,22 +106,20 @@ public class BRKGA {
 			Crate crateSelected = null; // Initialize with no bin/crate selected
 			EP EMS = null; // Initialize with no Empty Maximal Space selected
 			int crateIndex = -1;
-			List<Double> orient = new ArrayList<Double>();
-			orient.add(itemToPack.getWidth());
-			orient.add(itemToPack.getLength());
-			orient.add(itemToPack.getHeight());
+			double[] dim = {itemToPack.getWidth(), itemToPack.getLength(), itemToPack.getHeight()};
+			List<List<Double>> boxOrientations = boxOrientations(dim);
 			for (int k=0; k < numCrates; k++) {
-//				System.out.println("num crates = " + openCrates.size() + ", weights = ");
-//				for (Crate c : crates) {
-//					System.out.print(c.getCurrentWeight() + " ");
-//				}
-//				System.out.println();
+				//				System.out.println("num crates = " + openCrates.size() + ", weights = ");
+				//				for (Crate c : crates) {
+				//					System.out.print(c.getCurrentWeight() + " ");
+				//				}
+				//				System.out.println();
 				Crate crate = crates.get(k);
 				switch (choice_D2_VBO) { // Box Orientation Selection
-				case 1: EMS = DFTRC2(itemToPack, crate, orient);
+				case 1: EMS = DFTRC2VBO(itemToPack, crate, boxOrientations);
 				break;
-				case 2: EMS = DFTRC2VBO(itemToPack, crate, orient, VBO[mapBPSIndex.get(sortedBPS[i])]);
-				break;
+				//				case 2: EMS = DFTRC2VBO(itemToPack, crate, orient, VBO[mapBPSIndex.get(sortedBPS[i])]);
+				//				break;
 				}
 				if (EMS != null) {
 					crateSelected = crate;
@@ -144,13 +142,17 @@ public class BRKGA {
 				numCrates++;
 				crateIndex = openCrates.size()-1;
 				EMS = newEMS;
-				switch (choice_D2_VBO) { // Box Orientation Selection
-				case 1: DFTRC2(itemToPack, crateSelected, orient);
-				break;
-				case 2: DFTRC2VBO(itemToPack, crateSelected, orient, VBO[mapBPSIndex.get(sortedBPS[i])]);
-				break;
+			}
+			// Box Orientation Selection
+//			System.out.println(boxOrientations.size());
+			Iterator<List<Double>> iter = boxOrientations.iterator();
+			while (iter.hasNext()) {
+				List<Double> orientation = iter.next();
+				if (!(EMS.getRSx()-EMS.getX() >= orientation.get(0) && EMS.getRSy()-EMS.getY() >= orientation.get(1) && EMS.getRSz()-EMS.getZ() >= orientation.get(2) && crateSelected.getCurrentWeight() + itemToPack.getWeight() <= crateSelected.getMaxWeight())) {
+					iter.remove();
 				}
 			}
+			List<Double> orient = new ArrayList<Double>(boxOrientations.get((int) Math.ceil(VBO[mapBPSIndex.get(sortedBPS[i])]*boxOrientations.size()-1)));
 			// Item packing
 			openCrates.get(crateIndex).set(mapBPSIndex.get(sortedBPS[i]), 1);
 			crateSelected.addItemToCrate(itemToPack);
@@ -168,7 +170,7 @@ public class BRKGA {
 	 * @param winningOrientation
 	 * @return Empty Maximal Space
 	 */
-	private static EP DFTRC2(Item itemToPack, Crate crate, List<Double> winningOrientation) {
+	private static EP DFTRC2VBO(Item itemToPack, Crate crate, List<List<Double>> boxOrientations) {
 		double maxDist = -1;
 		EP EMS = null;
 		// Dimensions crate
@@ -179,18 +181,12 @@ public class BRKGA {
 			double x1 = EMSi.getX();
 			double y1 = EMSi.getY();
 			double z1 = EMSi.getZ();
-			double[] dim = {x1, y1, z1};
-			List<List<Double>> boxOrientations = boxOrientations(dim);
 			for (List<Double> orientation : boxOrientations) {
 				if (EMSi.getRSx()-EMSi.getX() >= orientation.get(0) && EMSi.getRSy()-EMSi.getY() >= orientation.get(1) && EMSi.getRSz()-EMSi.getZ() >= orientation.get(2) && crate.getCurrentWeight() + itemToPack.getWeight() <= crate.getMaxWeight()) {
 					double distance = Math.pow(width-x1-orientation.get(0), 2) + Math.pow(length-y1-orientation.get(1), 2) + Math.pow(height-z1-orientation.get(2), 2);
 					if (distance > maxDist) {
 						maxDist = distance;
-						// Save winning orientation
-						winningOrientation.clear();
-						winningOrientation.addAll(orientation);
-						// Save winning EMS
-						EMS = EMSi;
+						EMS = EMSi; // Save winning EMS
 					}
 				}
 			}
@@ -206,7 +202,8 @@ public class BRKGA {
 	 * @param boxOrientation
 	 * @return Empty Maximal Space
 	 */
-	private static EP DFTRC2VBO(Item itemToPack, Crate crate, List<Double> orient, double boxOrientation) {
+	@SuppressWarnings("unused")
+	private static EP DFTRC2VBOold(Item itemToPack, Crate crate, List<Double> orient, double boxOrientation) {
 		double maxDist = -1;
 		EP EMS = null;
 		// Dimensions crate
@@ -279,16 +276,40 @@ public class BRKGA {
 			double z3 = EMS34.getZ();
 			double z4 = EMS34.getZ() + orientation.get(2);
 			if (!(x1 <= x3 && x4 <= x2 && y1 <= y3 && y4 <= y2 && z1 <= z3 && z4 <= z2)) { // V1
-				if (x4 <= x1 && x2 <= x3 && y4 <= y1 && y2 <= y3 && z4 <= z1 && z2 <= z3) { // x4 <= x1 && y4 <= y1 && z4 <= z1 
+				if ((x4 <= x1 || x2 <= x3) || (y4 <= y1 || y2 <= y3) || (z4 <= z1 || z2 <= z3)) { // x4 <= x1 && y4 <= y1 && z4 <= z1 
 					newList.add(EMS12);
 					continue; // Do not update EMS
 				}
-				if (x4 > x1) x3 = x1; 
-				if (x2 > x3) x4 = x2;
-				if (y4 > y1) y3 = y1;
-				if (y2 > y3) y4 = y2;
-				if (z4 > z1) z3 = z1;
-				if (z2 > z3) z4 = z2;
+				boolean x13 = x1 <= x3;
+				boolean x42 = x4 <= x2;
+				boolean y13 = y1 <= y3;
+				boolean y42 = y4 <= y2;
+				boolean z13 = z1 <= z3;
+				boolean z42 = z4 <= z2;
+				if (!x13 && !x42) {
+					x3 = x1;
+					x4 = x2;
+				}
+				else if (!x13 && x42) x3 = x1;
+				else if (x13 && !x42) x4 = x2;
+				if (!y13 && !y42) {
+					y3 = y1;
+					y4 = y2;
+				}
+				else if (!y13 && y42) y3 = y1;
+				else if (y13 && !y42) y4 = y2;
+				if (!z13 && !z42) {
+					z3 = z1;
+					z4 = z2;
+				}
+				else if (!z13 && z42) z3 = z1;
+				else if (z13 && !z42) z4 = z2;
+//				if (x4 > x1) x3 = x1; 
+//				if (x2 > x3) x4 = x2;
+//				if (y4 > y1) y3 = y1;
+//				if (y2 > y3) y4 = y2;
+//				if (z4 > z1) z3 = z1;
+//				if (z2 > z3) z4 = z2;
 			}
 			// Update EMS
 			newList.add(new EP(x1, y1, z1, x3, y2, z2));
