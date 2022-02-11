@@ -272,9 +272,20 @@ public class BF {
 			crates.get(crateIndex).setEPList(new ArrayList<>(newlist));
 
 			// Update the RS of all extreme points with algorithm 2
+			List<EP> toBeRemoved = new ArrayList<>();
 			Item nItem = crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1);
 			for(int j = 0; j < crates.get(crateIndex).getEP().size(); j++) {
 				EP ep = crates.get(crateIndex).getEP().get(j);
+				if(nItem.getinsertedx()<= ep.getX() && ep.getX() < nItem.getinsertedx()+nItem.getWidth()) {
+					if(nItem.getinsertedy()<= ep.getY() && ep.getY() < nItem.getinsertedy()+nItem.getLength()) {
+						if(nItem.getinsertedz()<= ep.getZ() && ep.getZ() < nItem.getinsertedz()+nItem.getHeight()) {
+							crates.get(crateIndex).getEP().remove(j);
+							j--;
+							continue;
+						}
+					}
+				}
+				
 				if(ep.getZ() >= nItem.insertedz && ep.getZ() < nItem.insertedz + nItem.getHeight()) {
 					boolean isSidey = isOnSideY(ep, nItem);
 //					if(ep.getX() <= nItem.insertedx && isOnSideY(ep, nItem) ) {
@@ -325,12 +336,15 @@ public class BF {
 				// If RS of ep zero, remove EP
 				if(ep.getRSx() <= 0.0) {
 					crates.get(crateIndex).getEP().remove(j);
+					j--;
 				}
 				else if(ep.getRSy() <= 0.0) {
 					crates.get(crateIndex).getEP().remove(j);
+					j--;
 				}
 				else if(ep.getRSz() <= 0.0) {
 					crates.get(crateIndex).getEP().remove(j);
+					j--;
 				}
 			}
 			boolean test = true;

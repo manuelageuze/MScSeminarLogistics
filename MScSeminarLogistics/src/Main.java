@@ -14,18 +14,18 @@ public class Main {
 
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
-		int choice_D2_VBO = 2; // TODO: 1 if DFTRC-2^2 is used, 2 if DFTRC-2-VBO is used
-		BF bf = new BF(orders.get(362));
-		List<Crate> crates = bf.computeBF();
-		checkSolution(crates,362);
+//		BF bf = new BF(orders.get(129));
+//		List<Crate> crates = bf.computeBF();
+//		checkSolution(crates,129);
 //		System.out.println(checkSolution(crates));
+		
 		// Compute lower bound and write file
 		//out.println("instance minimum_number_of_crates");
 //		Long start = System.currentTimeMillis();
 //		solveLP(orders, items);
 //		Long timeLB = System.currentTimeMillis()-start;
 //		start = System.currentTimeMillis();
-		getPlotOutput(orders.get(83),1);
+		getPlotOutput(orders.get(129),2);
 		solveBF(orders);
 		
 //		Long timeBF = System.currentTimeMillis()-start;
@@ -173,7 +173,7 @@ public class Main {
 		else
 		{
 			FileWriter myWriter = new FileWriter("outputPlot.txt");
-			Crate crate = crates.get(crateNumber);
+			Crate crate = crates.get(crateNumber-1);
 			List<Item> items  =crate.getItemList();
 			myWriter.write("id\tx\ty\tz\tw\tl\th\n");
 			for(int j = 6 ; j < items.size() ; j++)
