@@ -343,7 +343,7 @@ public class BF {
 		if(nItem.insertedx <= ep.getX() && ep.getX() < nItem.insertedx + nItem.getWidth()) {
 			onx = true;
 		}
-		if(onx == false) {	
+		if(!onx) {	
 			if(nItem.insertedx >= 321 - ep.getRSx() && nItem.insertedy >= 501 - ep.getRSy()) {
 				return true;
 			}

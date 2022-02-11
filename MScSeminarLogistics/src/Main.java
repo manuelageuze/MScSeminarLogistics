@@ -25,7 +25,8 @@ public class Main {
 //		solveLP(orders, items);
 //		Long timeLB = System.currentTimeMillis()-start;
 //		start = System.currentTimeMillis();
-		solveBF(orders);
+		getPlotOutput(orders.get(88),1);
+//		solveBF(orders);
 //		Long timeBF = System.currentTimeMillis()-start;
 //		System.out.println("Time:\nLB\tBF\n"+timeLB+"\t"+timeBF);
 //		compair(new File("LB_solution_value.txt"),new File("BF_solution_value.txt"),orders);
@@ -159,7 +160,7 @@ public class Main {
 		}
 		myWriter.close();myWriter2.close();
 	}
-	public static void getPlotOuput(Order order, int crateNumber) throws IOException
+	public static void getPlotOutput(Order order, int crateNumber) throws IOException
 	{
 		BF bf = new BF(order);
 		List<Crate> crates = bf.computeBF();
@@ -173,9 +174,10 @@ public class Main {
 			FileWriter myWriter = new FileWriter("outputPlot.txt");
 			Crate crate = crates.get(crateNumber);
 			List<Item> items  =crate.getItemList();
-			myWriter.write("id\tx\ty\tz\tw\tl\th\t");
-			for(Item i : items)
+			myWriter.write("id\tx\ty\tz\tw\tl\th\n");
+			for(int j = 6 ; j < items.size() ; j++)
 			{
+				Item i = items.get(j);
 				int id = (int) i.getItemId();
 				int x = (int) i.getinsertedx();
 				int y = (int) i.getinsertedy();
@@ -183,8 +185,9 @@ public class Main {
 				int w = (int) i.getWidth();
 				int l = (int) i.getLength();
 				int h = (int) i.getHeight();
-				myWriter.write(id+"\t"+x+"\t"+y+"\t"+z+"\t"+w+"\t"+l+"\t"+z+"\n");
+				myWriter.write(id+"\t"+x+"\t"+y+"\t"+z+"\t"+w+"\t"+l+"\t"+h+"\n");
 			}
+			myWriter.close();
 		}
 	}
 	
