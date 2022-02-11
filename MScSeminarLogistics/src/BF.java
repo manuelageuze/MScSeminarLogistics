@@ -303,7 +303,6 @@ public class BF {
 					{
 						ep.setRSz(Math.min(ep.getRSz(), nItem.insertedz - ep.getZ()));
 					}
-					
 				}
 				
 //				else if(ep.getZ() <= nItem.insertedz && isOnSideY(ep,nItem)) {
