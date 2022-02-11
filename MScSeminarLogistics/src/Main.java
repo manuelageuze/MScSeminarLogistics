@@ -17,7 +17,7 @@ public class Main {
 		int choice_D2_VBO = 2; // TODO: 1 if DFTRC-2^2 is used, 2 if DFTRC-2-VBO is used
 		BF bf = new BF(orders.get(362));
 		List<Crate> crates = bf.computeBF();
-		checkSolution(crates,584);
+		checkSolution(crates,362);
 //		System.out.println(checkSolution(crates));
 		// Compute lower bound and write file
 		//out.println("instance minimum_number_of_crates");
@@ -25,7 +25,7 @@ public class Main {
 //		solveLP(orders, items);
 //		Long timeLB = System.currentTimeMillis()-start;
 //		start = System.currentTimeMillis();
-//		solveBF(orders);
+		solveBF(orders);
 //		Long timeBF = System.currentTimeMillis()-start;
 //		System.out.println("Time:\nLB\tBF\n"+timeLB+"\t"+timeBF);
 //		compair(new File("LB_solution_value.txt"),new File("BF_solution_value.txt"),orders);
@@ -158,6 +158,34 @@ public class Main {
 			myWriter2.write("\n");
 		}
 		myWriter.close();myWriter2.close();
+	}
+	public static void getPlotOuput(Order order, int crateNumber) throws IOException
+	{
+		BF bf = new BF(order);
+		List<Crate> crates = bf.computeBF();
+		if(crateNumber > crates.size())
+		{
+			System.out.println("Crate number not feasible");
+			return;
+		}
+		else
+		{
+			FileWriter myWriter = new FileWriter("outputPlot.txt");
+			Crate crate = crates.get(crateNumber);
+			List<Item> items  =crate.getItemList();
+			myWriter.write("id\tx\ty\tz\tw\tl\th\t");
+			for(Item i : items)
+			{
+				int id = (int) i.getItemId();
+				int x = (int) i.getinsertedx();
+				int y = (int) i.getinsertedy();
+				int z = (int) i.getinsertedz();
+				int w = (int) i.getWidth();
+				int l = (int) i.getLength();
+				int h = (int) i.getHeight();
+				myWriter.write(id+"\t"+x+"\t"+y+"\t"+z+"\t"+w+"\t"+l+"\t"+z+"\n");
+			}
+		}
 	}
 	
 	public static int checkSolution(List<Crate> crates, int order) {

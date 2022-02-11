@@ -115,7 +115,7 @@ public class BF {
 				crateIndex = crates.size();
 				Crate c = new Crate();
 				c.setItemList(sideItems);
-				
+
 				for(int r = 0; r < rotatedItem.size();r++) {
 					rotatedItem.get(r);
 					double rsx = 321 - rotatedItem.get(r).getWidth();
@@ -128,7 +128,7 @@ public class BF {
 							rotatedIndex = r;
 						}
 					}
-					
+
 				}
 				// Create the 3 extreme points
 				EP one = new EP(rotatedItem.get(rotatedIndex).getWidth(),0,0);
@@ -146,7 +146,7 @@ public class BF {
 				c.getEP().add(one); // Add extreme points to the list of extreme points
 				c.getEP().add(two);
 				c.getEP().add(three);
-				
+
 				rotatedItem.get(rotatedIndex).setInsertedx(0.0);
 				rotatedItem.get(rotatedIndex).setInsertedy(0.0);
 				rotatedItem.get(rotatedIndex).setInsertedz(0.0);
@@ -172,7 +172,7 @@ public class BF {
 				//#1
 				if(crates.get(crateIndex).getItemList().get(j).insertedx + crates.get(crateIndex).getItemList().get(j).getWidth() > maxbound[0]) {
 					EP ep = canTakeProjectionYX(crates.get(crateIndex).getItemList().get(j), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1),crates.get(crateIndex).getItemList());
-					
+
 					if(ep != null) {
 						newEP.add(ep);
 						maxbound[0] = crates.get(crateIndex).getItemList().get(j).insertedx + crates.get(crateIndex).getItemList().get(j).getWidth();
@@ -185,7 +185,7 @@ public class BF {
 				//	#2
 				if(crates.get(crateIndex).getItemList().get(j).insertedz + crates.get(crateIndex).getItemList().get(j).getHeight() > maxbound[1]) {
 					EP ep = canTakeProjectionYZ(crates.get(crateIndex).getItemList().get(j), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1), crates.get(crateIndex).getItemList());
-					
+
 					if(ep != null) {
 						maxbound[1] = crates.get(crateIndex).getItemList().get(j).insertedz + crates.get(crateIndex).getItemList().get(j).getHeight();
 						newEP.add(ep);
@@ -229,7 +229,7 @@ public class BF {
 						maxbound[4] = crates.get(crateIndex).getItemList().get(j).insertedx + crates.get(crateIndex).getItemList().get(j).getWidth();
 						newEP.add(ep);
 					}
-						
+
 					//	EP ep = new EP(crates.get(crateIndex).getItemList().get(j).insertedx + crates.get(crateIndex).getItemList().get(j).getWidth(), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedy, crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedz + crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).getHeight());
 					//ep.setRSx(crates.get(crateIndex).getWidth() - ep.getX());
 					//ep.setRSy(crates.get(crateIndex).getLength() - ep.getY());
@@ -243,7 +243,7 @@ public class BF {
 						maxbound[5] = crates.get(crateIndex).getItemList().get(j).insertedy + crates.get(crateIndex).getItemList().get(j).getLength();
 						newEP.add(ep);
 					}
-					
+
 					//EP ep = new EP(crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedx, crates.get(crateIndex).getItemList().get(j).insertedy + crates.get(crateIndex).getItemList().get(j).getLength(), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).insertedz + crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1).getHeight());
 					//ep.setRSx(crates.get(crateIndex).getWidth() - ep.getX());
 					//ep.setRSy(crates.get(crateIndex).getLength() - ep.getY());
@@ -285,27 +285,54 @@ public class BF {
 						ep.setRSy(Math.min(ep.getRSy(),nItem.insertedy - ep.getY()));
 					}
 				}
-				if(ep.getZ() <= nItem.insertedz && isOnSideX(ep, nItem) && isOnSideY(ep,nItem)) {
+				if(ep.getZ() <= nItem.insertedz && isOnSideY(ep,nItem) && isOnSideX(ep, nItem)) {
 					ep.setRSz(Math.min(ep.getRSz(), nItem.insertedz - ep.getZ()));
+				}
+				else if(ep.getZ() <= nItem.insertedz && isOnSideY(ep,nItem)) {
+					if(ep.getX() <= nItem.getinsertedx() && nItem.getinsertedx() <= ep.getX() + ep.getRSx()) {
+						ep.setRSz(Math.min(ep.getRSz(), nItem.insertedz - ep.getZ()));
+					}
+					else if(ep.getX() <= nItem.getinsertedx() + nItem.getWidth() && nItem.getinsertedy() + nItem.getWidth() <= ep.getX() + ep.getRSx()) {
+						ep.setRSz(Math.min(ep.getRSz(), nItem.insertedz - ep.getZ()));
+					}
+				}
+				else if(ep.getZ() <= nItem.insertedz && isOnSideX(ep,nItem)) {
+					if(ep.getY() <= nItem.getinsertedy() && nItem.getinsertedy() <= ep.getY() + ep.getRSy()) {
+						ep.setRSz(Math.min(ep.getRSz(), nItem.insertedz - ep.getZ()));
+					}
+					else if(ep.getY() <= nItem.getinsertedy() + nItem.getLength() && nItem.getinsertedy() + nItem.getLength() <= ep.getY() + ep.getRSy()) {
+						ep.setRSz(Math.min(ep.getRSz(), nItem.insertedz - ep.getZ()));
+					}
+				}
+
+				// ALs residual space of ep zero, remove EP
+				if(ep.getRSx() == 0.0) {
+					crates.get(crateIndex).getEP().remove(j);
+				}
+				else if(ep.getRSy() == 0.0) {
+					crates.get(crateIndex).getEP().remove(j);
+				}
+				else if(ep.getRSz() == 0.0) {
+					crates.get(crateIndex).getEP().remove(j);
 				}
 			}
 			boolean test = true;
 		}
 
-		
+
 		// Print solution
-//		System.out.println("Number of crates used in this order: " + crates.size());
-//		for(int i = 0; i < crates.size(); i++) {
-//			Crate c = crates.get(i);
-//			System.out.print("Crate number " + (i + 1)+"\t");
-//			for(int j = 6 ; j < c.getItemList().size(); j++) {
-//				System.out.print((int)c.getItemList().get(j).getItemId() + "\t");
-//			}
-//			System.out.println();
-//		}
-//		System.out.println("Order "+((int)order.getOrderId()));
+		//		System.out.println("Number of crates used in this order: " + crates.size());
+		//		for(int i = 0; i < crates.size(); i++) {
+		//			Crate c = crates.get(i);
+		//			System.out.print("Crate number " + (i + 1)+"\t");
+		//			for(int j = 6 ; j < c.getItemList().size(); j++) {
+		//				System.out.print((int)c.getItemList().get(j).getItemId() + "\t");
+		//			}
+		//			System.out.println();
+		//		}
+		//		System.out.println("Order "+((int)order.getOrderId()));
 		return crates;
-		
+
 	}
 
 	public boolean isOnSideY(EP ep, Item nItem) {
@@ -328,8 +355,14 @@ public class BF {
 		if(nItem.insertedx <= ep.getX() && ep.getX() < nItem.insertedx + nItem.getWidth()) {
 			return true;
 		}
-		if(nItem.insertedx >= 321 - ep.getRSx() && nItem.insertedy >= 501 - ep.getRSy()) {
-			return true;
+		boolean ony = false;
+		if(nItem.insertedy <= ep.getY() && ep.getY() < nItem.insertedy + nItem.getLength()) {
+			ony = true;
+		}
+		if(ony == false) {
+			if(nItem.insertedx >= 321 - ep.getRSx() && nItem.insertedy >= 501 - ep.getRSy()) {
+				return true;
+			}
 		}
 		return false;
 	}
@@ -337,26 +370,26 @@ public class BF {
 	//  #1
 	public EP canTakeProjectionYX(Item i, Item k, List<Item> items) {		
 		if(k.insertedx >= i.insertedx + i.getWidth() && k.insertedy + k.getLength() < i.insertedy + i.getLength() && k.insertedz < i.insertedz + i.getHeight()) {	
-			
+
 			double newx = i.insertedx + i.getWidth();
 			double newy = k.insertedy + k.getLength();
 			double newz = k.insertedz;
-			
+
 			double rsx = 321 - newx;
 			double rsy = 501 - newy;
 			double rsz = 273 - newz;
-			
+
 			EP ep = new EP(newx, newy, newz);
 			ep.setRSx(rsx);
 			ep.setRSy(rsy);
 			ep.setRSz(rsz);
-			
+
 			for(int j = 6; j < items.size(); j++) {
 				Item itemj = items.get(j);
 				if(items.get(j).getItemId() == i.getItemId()) {
 					continue;
 				}
-				
+
 				if(newy >= itemj.getinsertedy() + itemj.getLength() || newx >= itemj.getinsertedx() + itemj.getWidth()) {		
 					continue;
 				}
@@ -395,16 +428,16 @@ public class BF {
 				}
 				if(newz >= itemj.getinsertedz() + itemj.getHeight())continue;
 
-				
-//				if(newx >= items.get(j).getinsertedx() + items.get(j).getWidth() || newx < items.get(j).getinsertedx()) {
-//					continue;
-//				}
-//				if(newz >=items.get(j).getinsertedz() + items.get(j).getHeight() || newz < items.get(j).getinsertedz()) {
-//					continue;
-//				}
-//				if(newy >= items.get(j).getinsertedy() + items.get(j).getLength() || newy < items.get(j).getinsertedy()) {
-//					continue;
-//				}
+
+				//				if(newx >= items.get(j).getinsertedx() + items.get(j).getWidth() || newx < items.get(j).getinsertedx()) {
+				//					continue;
+				//				}
+				//				if(newz >=items.get(j).getinsertedz() + items.get(j).getHeight() || newz < items.get(j).getinsertedz()) {
+				//					continue;
+				//				}
+				//				if(newy >= items.get(j).getinsertedy() + items.get(j).getLength() || newy < items.get(j).getinsertedy()) {
+				//					continue;
+				//				}
 				return null;
 			}
 			ep.setRSx(rsx);
@@ -415,8 +448,8 @@ public class BF {
 		}
 		return null;
 	}
-	
-//	#2
+
+	//	#2
 	public EP canTakeProjectionYZ(Item i, Item k, List<Item> items) {
 		if(k.insertedz >= i.insertedz + i.getHeight() && k.insertedy + k.getLength()  < i.insertedy + i.getLength() && k.insertedx < i.insertedx + i.getWidth()) {
 			double newx = k.insertedx;
@@ -426,19 +459,19 @@ public class BF {
 			double rsx = 321 - newx;
 			double rsy = 501 - newy;
 			double rsz = 273 - newz;
-			
+
 			EP ep = new EP(newx, newy, newz);
-			
+
 			ep.setRSx(rsx);
 			ep.setRSy(rsy);
 			ep.setRSz(rsz);
-				
+
 			for(int j = 6; j < items.size(); j++) {
 				Item itemj = items.get(j);
 				if(items.get(j).getItemId() == i.getItemId()) {
 					continue;
 				}
-				
+
 				if(newy >= itemj.getinsertedy() + itemj.getLength() || newz >= itemj.getinsertedz() + itemj.getHeight()) {		
 					continue;
 				}
@@ -476,24 +509,24 @@ public class BF {
 					continue;
 				}
 				if(newx >= itemj.getinsertedx() + itemj.getLength())continue;
-			
 
-//				if(newx >= items.get(j).getinsertedx() + items.get(j).getWidth() || newx < items.get(j).getinsertedx()) {
-//					
-//					
-//					
-//					continue;
-//				}
-//				if(newz >=items.get(j).getinsertedz() + items.get(j).getHeight() || 
-//						newz < items.get(j).getinsertedz()) {
-//					continue;
-//				}
-//				if(newy >= items.get(j).getinsertedy() + items.get(j).getLength() || newy < items.get(j).getinsertedy()) {
-//					continue;
-//				}
+
+				//				if(newx >= items.get(j).getinsertedx() + items.get(j).getWidth() || newx < items.get(j).getinsertedx()) {
+				//					
+				//					
+				//					
+				//					continue;
+				//				}
+				//				if(newz >=items.get(j).getinsertedz() + items.get(j).getHeight() || 
+				//						newz < items.get(j).getinsertedz()) {
+				//					continue;
+				//				}
+				//				if(newy >= items.get(j).getinsertedy() + items.get(j).getLength() || newy < items.get(j).getinsertedy()) {
+				//					continue;
+				//				}
 				return null;
 			}
-			
+
 			ep.setRSx(rsx);
 			ep.setRSy(rsy);
 			ep.setRSz(rsz);
@@ -502,24 +535,24 @@ public class BF {
 		}
 		return null;
 	}
-	
-//	#3
+
+	//	#3
 	public EP canTakeProjectionXY(Item i, Item k, List<Item> items) {
 		if(k.insertedy >= i.insertedy + i.getLength() && k.insertedx + k.getWidth() < i.insertedx + i.getWidth() && k.insertedz < i.insertedz + i.getHeight()) {
 			double newx = k.insertedx + k.getWidth();
 			double newy = i.insertedy + i.getLength();
 			double newz = k.insertedz;
-			
+
 			double rsx = 321 - newx;
 			double rsy = 501 - newy;
 			double rsz = 273 - newz;
-			
+
 			EP ep = new EP(newx, newy, newz);
-			
+
 			ep.setRSx(rsx);
 			ep.setRSy(rsy);
 			ep.setRSz(rsz);
-			
+
 			for(int j = 6; j < items.size(); j++) {
 				Item itemj = items.get(j);		
 				if(items.get(j).getItemId() == i.getItemId()) {
@@ -565,16 +598,16 @@ public class BF {
 					continue;
 				}
 				if(newz >= itemj.getinsertedz()+itemj.getHeight())continue;
-				
-//				if(newx >= items.get(j).getinsertedx() + items.get(j).getWidth() || newx < items.get(j).getinsertedx()) {
-//					continue;
-//				}
-//				if(newz >=items.get(j).getinsertedz() + items.get(j).getHeight() || newz < items.get(j).getinsertedz()) {
-//					continue;
-//				}
-//				if(newy >= items.get(j).getinsertedy() + items.get(j).getLength() || newy < items.get(j).getinsertedy()) {
-//					continue;
-//				}
+
+				//				if(newx >= items.get(j).getinsertedx() + items.get(j).getWidth() || newx < items.get(j).getinsertedx()) {
+				//					continue;
+				//				}
+				//				if(newz >=items.get(j).getinsertedz() + items.get(j).getHeight() || newz < items.get(j).getinsertedz()) {
+				//					continue;
+				//				}
+				//				if(newy >= items.get(j).getinsertedy() + items.get(j).getLength() || newy < items.get(j).getinsertedy()) {
+				//					continue;
+				//				}
 				return null;
 				/*
 				if(newx < items.get(j).getinsertedx() + items.get(j).getWidth() && newx >= items.get(j).getinsertedx()) {
@@ -587,7 +620,7 @@ public class BF {
 					return false;
 				}*/
 			}
-			
+
 			ep.setRSx(rsx);
 			ep.setRSy(rsy);
 			ep.setRSz(rsz);
@@ -596,23 +629,23 @@ public class BF {
 		}
 		return null;
 	}
-//	#4
+	//	#4
 	public EP canTakeProjectionXZ(Item i, Item k, List<Item> items) {	
 		if(k.insertedz >= i.insertedz + i.getHeight() && k.insertedx + k.getWidth() < i.insertedx + i.getWidth() && k.insertedy < i.insertedy + i.getLength()) {
 			double newx = k.insertedx + k.getWidth();
 			double newy = k.insertedy;
 			double newz = i.insertedz + i.getHeight();
-			
+
 			double rsx = 321 - newx;
 			double rsy = 501 - newy;
 			double rsz = 273 - newz;
-			
+
 			EP ep = new EP(newx, newy, newz);
-			
+
 			ep.setRSx(rsx);
 			ep.setRSy(rsy);
 			ep.setRSz(rsz);
-			
+
 			for(int j = 6; j < items.size(); j++) {
 				Item itemj = items.get(j);		
 				if(items.get(j).getItemId() == i.getItemId()) {
@@ -658,23 +691,23 @@ public class BF {
 					continue;
 				}
 				if(newy >= itemj.getinsertedy()+itemj.getLength())continue;
-//			for(int j = 0; j < items.size(); j++) {
-//				if(items.get(j).getItemId() == i.getItemId()) {
-//					continue;
-//				}
-//				if(newx >= items.get(j).getinsertedx() + items.get(j).getWidth() || newx < items.get(j).getinsertedx()) {
-//					continue;
-//				}
-//				if(newz >=items.get(j).getinsertedz() + items.get(j).getHeight() || newz < items.get(j).getinsertedz()) {
-//					continue;
-//				}
-//				if(newy >= items.get(j).getinsertedy() + items.get(j).getLength() || newy < items.get(j).getinsertedy()) {
-//					continue;
-//				}
+				//			for(int j = 0; j < items.size(); j++) {
+				//				if(items.get(j).getItemId() == i.getItemId()) {
+				//					continue;
+				//				}
+				//				if(newx >= items.get(j).getinsertedx() + items.get(j).getWidth() || newx < items.get(j).getinsertedx()) {
+				//					continue;
+				//				}
+				//				if(newz >=items.get(j).getinsertedz() + items.get(j).getHeight() || newz < items.get(j).getinsertedz()) {
+				//					continue;
+				//				}
+				//				if(newy >= items.get(j).getinsertedy() + items.get(j).getLength() || newy < items.get(j).getinsertedy()) {
+				//					continue;
+				//				}
 				return null;
-		
+
 			}
-			
+
 			ep.setRSx(rsx);
 			ep.setRSy(rsy);
 			ep.setRSz(rsz);
@@ -683,23 +716,23 @@ public class BF {
 		}
 		return null;
 	}
-//	#5
+	//	#5
 	public EP canTakeProjectionZX(Item i, Item k, List<Item> items) {
 		if(k.insertedx >= i.insertedx + i.getWidth() && k.insertedz + k.getHeight() < i.insertedz + i.getHeight() && k.insertedy < i.insertedy + i.getLength()) {
 			double newx = i.insertedx + i.getWidth();
 			double newy = k.insertedy;
 			double newz = k.insertedz + k.getHeight();
-			
+
 			double rsx = 321 - newx;
 			double rsy = 501 - newy;
 			double rsz = 273 - newz;
-			
+
 			EP ep = new EP(newx, newy, newz);
-			
+
 			ep.setRSx(rsx);
 			ep.setRSy(rsy);
 			ep.setRSz(rsz);
-			
+
 			for(int j = 6; j < items.size(); j++) {
 				Item itemj = items.get(j);
 				if(items.get(j).getItemId() == i.getItemId()) {
@@ -740,20 +773,20 @@ public class BF {
 					continue;
 				}
 				if(newy > itemj.getinsertedy()+itemj.getLength())continue;
-				
-//				if(newx >= items.get(j).getinsertedx() + items.get(j).getWidth() || newx < items.get(j).getinsertedx()) {
-//					continue;
-//				}
-//				if(newz >=items.get(j).getinsertedz() + items.get(j).getHeight() || newz < items.get(j).getinsertedz()) {
-//					continue;
-//				}
-//				if(newy >= items.get(j).getinsertedy() + items.get(j).getLength() || newy < items.get(j).getinsertedy()) {
-//					continue;
-//				}
+
+				//				if(newx >= items.get(j).getinsertedx() + items.get(j).getWidth() || newx < items.get(j).getinsertedx()) {
+				//					continue;
+				//				}
+				//				if(newz >=items.get(j).getinsertedz() + items.get(j).getHeight() || newz < items.get(j).getinsertedz()) {
+				//					continue;
+				//				}
+				//				if(newy >= items.get(j).getinsertedy() + items.get(j).getLength() || newy < items.get(j).getinsertedy()) {
+				//					continue;
+				//				}
 				return null;
 
 			}
-			
+
 			ep.setRSx(rsx);
 			ep.setRSy(rsy);
 			ep.setRSz(rsz);
@@ -769,17 +802,17 @@ public class BF {
 			double newx = k.insertedx;
 			double newy = i.insertedy + i.getLength();
 			double newz = k.getinsertedz() + k.getHeight();
-			
+
 			double rsx = 321 - newx;
 			double rsy = 501 - newy;
 			double rsz = 273 - newz;
-			
+
 			EP ep = new EP(newx, newy, newz);
-			
+
 			ep.setRSx(rsx);
 			ep.setRSy(rsy);
 			ep.setRSz(rsz);
-			
+
 			for(int j = 6; j < items.size(); j++) {
 				Item itemj = items.get(j);
 				if(items.get(j).getItemId() == i.getItemId()) {
@@ -820,25 +853,25 @@ public class BF {
 					continue;
 				}
 				if(newx > itemj.getinsertedx()+itemj.getWidth())continue;
-			
-//			for(int j = 0; j < items.size(); j++) {
-//				if(items.get(j).getItemId() == i.getItemId()) {
-//					continue;
-//				}
-//				//				int counter = 0;
-//				if(newx >= items.get(j).getinsertedx() + items.get(j).getWidth() || newx < items.get(j).getinsertedx()) {
-//					continue;
-//				}
-//				if(newz >=items.get(j).getinsertedz() + items.get(j).getHeight() || newz < items.get(j).getinsertedz()) {
-//					continue;
-//				}
-//				if(newy >= items.get(j).getinsertedy()|| i.getinsertedy()+i.getLength() >= items.get(j).getinsertedy()) {
-//					continue;
-//				}
+
+				//			for(int j = 0; j < items.size(); j++) {
+				//				if(items.get(j).getItemId() == i.getItemId()) {
+				//					continue;
+				//				}
+				//				//				int counter = 0;
+				//				if(newx >= items.get(j).getinsertedx() + items.get(j).getWidth() || newx < items.get(j).getinsertedx()) {
+				//					continue;
+				//				}
+				//				if(newz >=items.get(j).getinsertedz() + items.get(j).getHeight() || newz < items.get(j).getinsertedz()) {
+				//					continue;
+				//				}
+				//				if(newy >= items.get(j).getinsertedy()|| i.getinsertedy()+i.getLength() >= items.get(j).getinsertedy()) {
+				//					continue;
+				//				}
 				return null;
 
 			}
-			
+
 			ep.setRSx(rsx);
 			ep.setRSy(rsy);
 			ep.setRSz(rsz);
