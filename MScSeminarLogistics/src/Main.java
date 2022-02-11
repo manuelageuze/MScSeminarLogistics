@@ -25,8 +25,9 @@ public class Main {
 //		solveLP(orders, items);
 //		Long timeLB = System.currentTimeMillis()-start;
 //		start = System.currentTimeMillis();
-		getPlotOutput(orders.get(88),1);
-//		solveBF(orders);
+		getPlotOutput(orders.get(83),1);
+		solveBF(orders);
+		
 //		Long timeBF = System.currentTimeMillis()-start;
 //		System.out.println("Time:\nLB\tBF\n"+timeLB+"\t"+timeBF);
 //		compair(new File("LB_solution_value.txt"),new File("BF_solution_value.txt"),orders);

@@ -277,42 +277,59 @@ public class BF {
 				EP ep = crates.get(crateIndex).getEP().get(j);
 				if(ep.getZ() >= nItem.insertedz && ep.getZ() < nItem.insertedz + nItem.getHeight()) {
 					boolean isSidey = isOnSideY(ep, nItem);
-					if(ep.getX() <= nItem.insertedx && isOnSideY(ep, nItem) ) {
+//					if(ep.getX() <= nItem.insertedx && isOnSideY(ep, nItem) ) {
+					if(isOnSideX(ep,nItem)) {
 						ep.setRSx(Math.min(ep.getRSx(), nItem.insertedx - ep.getX()));
 					}
 					boolean isSidex = isOnSideX(ep,nItem);
-					if(ep.getY() <= nItem.insertedy && isOnSideX(ep, nItem)) {
+//					if(ep.getY() <= nItem.insertedy && isOnSideY(ep, nItem)) {
+					if(isOnSideY(ep,nItem)) {
 						ep.setRSy(Math.min(ep.getRSy(),nItem.insertedy - ep.getY()));
 					}
 				}
-				if(ep.getZ() <= nItem.insertedz && isOnSideY(ep,nItem) && isOnSideX(ep, nItem)) {
-					ep.setRSz(Math.min(ep.getRSz(), nItem.insertedz - ep.getZ()));
-				}
-				else if(ep.getZ() <= nItem.insertedz && isOnSideY(ep,nItem)) {
-					if(ep.getX() <= nItem.getinsertedx() && nItem.getinsertedx() <= ep.getX() + ep.getRSx()) {
+				if(ep.getZ() <= nItem.insertedz) {// && isOnSideY(ep,nItem) && isOnSideX(ep, nItem)
+					if(ep.getX() <= nItem.getinsertedx() && nItem.getinsertedx() <= ep.getX()+ep.getRSx()
+						&& ep.getY() <= nItem.getinsertedy() && nItem.getinsertedy()<=ep.getX()+ep.getRSy())
+					{
 						ep.setRSz(Math.min(ep.getRSz(), nItem.insertedz - ep.getZ()));
 					}
-					else if(ep.getX() <= nItem.getinsertedx() + nItem.getWidth() && nItem.getinsertedy() + nItem.getWidth() <= ep.getX() + ep.getRSx()) {
+					else if(ep.getX() <= nItem.getinsertedx() && nItem.getinsertedx() < ep.getX()+ep.getRSx()
+							&& ep.getY() < nItem.getinsertedy()+ nItem.getLength())
+					{
 						ep.setRSz(Math.min(ep.getRSz(), nItem.insertedz - ep.getZ()));
 					}
-				}
-				else if(ep.getZ() <= nItem.insertedz && isOnSideX(ep,nItem)) {
-					if(ep.getY() <= nItem.getinsertedy() && nItem.getinsertedy() <= ep.getY() + ep.getRSy()) {
-						ep.setRSz(Math.min(ep.getRSz(), nItem.insertedz - ep.getZ()));
-					}
-					else if(ep.getY() <= nItem.getinsertedy() + nItem.getLength() && nItem.getinsertedy() + nItem.getLength() <= ep.getY() + ep.getRSy()) {
+					else if(ep.getY() <= nItem.getinsertedy() && nItem.getinsertedy() < ep.getY()+ep.getRSy()
+							&& ep.getX() < nItem.getinsertedx()+nItem.getWidth())
+					{
 						ep.setRSz(Math.min(ep.getRSz(), nItem.insertedz - ep.getZ()));
 					}
 				}
+				
+//				else if(ep.getZ() <= nItem.insertedz && isOnSideY(ep,nItem)) {
+//					if(ep.getX() <= nItem.getinsertedx() && nItem.getinsertedx() <= ep.getX() + ep.getRSx()) {
+//						ep.setRSz(Math.min(ep.getRSz(), nItem.insertedz - ep.getZ()));
+//					}
+//					else if(ep.getX() <= nItem.getinsertedx() + nItem.getWidth() && nItem.getinsertedy() + nItem.getWidth() <= ep.getX() + ep.getRSx()) {
+//						ep.setRSz(Math.min(ep.getRSz(), nItem.insertedz - ep.getZ()));
+//					}
+//				}
+//				else if(ep.getZ() <= nItem.insertedz && isOnSideX(ep,nItem)) {
+//					if(ep.getY() <= nItem.getinsertedy() && nItem.getinsertedy() <= ep.getY() + ep.getRSy()) {
+//						ep.setRSz(Math.min(ep.getRSz(), nItem.insertedz - ep.getZ()));
+//					}
+//					else if(ep.getY() <= nItem.getinsertedy() + nItem.getLength() && nItem.getinsertedy() + nItem.getLength() <= ep.getY() + ep.getRSy()) {
+//						ep.setRSz(Math.min(ep.getRSz(), nItem.insertedz - ep.getZ()));
+//					}
+//				}
 
-				// ALs residual space of ep zero, remove EP
-				if(ep.getRSx() == 0.0) {
+				// If RS of ep zero, remove EP
+				if(ep.getRSx() <= 0.0) {
 					crates.get(crateIndex).getEP().remove(j);
 				}
-				else if(ep.getRSy() == 0.0) {
+				else if(ep.getRSy() <= 0.0) {
 					crates.get(crateIndex).getEP().remove(j);
 				}
-				else if(ep.getRSz() == 0.0) {
+				else if(ep.getRSz() <= 0.0) {
 					crates.get(crateIndex).getEP().remove(j);
 				}
 			}
@@ -336,34 +353,36 @@ public class BF {
 	}
 
 	public boolean isOnSideY(EP ep, Item nItem) {
-		if( nItem.insertedy <= ep.getY() && ep.getY() < nItem.insertedy + nItem.getLength()) {
-			return true;
-		}
-		boolean onx = false;
-		if(nItem.insertedx <= ep.getX() && ep.getX() < nItem.insertedx + nItem.getWidth()) {
-			onx = true;
-		}
-		if(!onx) {	
-			if(nItem.insertedx >= 321 - ep.getRSx() && nItem.insertedy >= 501 - ep.getRSy()) {
-				return true;
-			}
-		}
-		return false;
+//		if( nItem.insertedy <= ep.getY() && ep.getY() < nItem.insertedy + nItem.getLength()) {
+//			return true;
+//		}
+//		boolean onx = false;
+//		if(nItem.insertedx <= ep.getX() && ep.getX() < nItem.insertedx + nItem.getWidth()) {
+//			onx = true;
+//		}
+//		if(!onx) {	
+//			if(nItem.insertedx >= 321 - ep.getRSx() && nItem.insertedy >= 501 - ep.getRSy()) {
+//				return true;
+//			}
+//		}
+		if(nItem.getinsertedy() >= ep.getY() && nItem.getinsertedx()+nItem.getWidth() > ep.getX()) return true;
+		else return false;
 	}
 
 	public boolean isOnSideX(EP ep, Item nItem) {
-		if(nItem.insertedx <= ep.getX() && ep.getX() < nItem.insertedx + nItem.getWidth()) {
-			return true;
-		}
-		boolean ony = false;
-		if(nItem.insertedy <= ep.getY() && ep.getY() < nItem.insertedy + nItem.getLength()) {
-			ony = true;
-		}
-		if(ony == false) {
-			if(nItem.insertedx >= 321 - ep.getRSx() && nItem.insertedy >= 501 - ep.getRSy()) {
-				return true;
-			}
-		}
+//		if(nItem.insertedx <= ep.getX() && ep.getX() < nItem.insertedx + nItem.getWidth()) {
+//			return true;
+//		}
+//		boolean ony = false;
+//		if(nItem.insertedy <= ep.getY() && ep.getY() < nItem.insertedy + nItem.getLength()) {
+//			ony = true;
+//		}
+//		if(ony == false) {
+//			if(nItem.insertedx >= 321 - ep.getRSx() && nItem.insertedy >= 501 - ep.getRSy()) {
+//				return true;
+//			}
+//		}
+		if(nItem.getinsertedx() >= ep.getX() && nItem.getinsertedy()+nItem.getLength() > ep.getY())return true;
 		return false;
 	}
 
