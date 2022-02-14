@@ -14,8 +14,8 @@ public class Main {
 
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
-//		BF bf = new BF(orders.get(129));
-//		List<Crate> crates = bf.computeBF();
+		BF bf = new BF(orders.get(457));
+		List<Crate> crates = bf.computeBF();
 //		checkSolution(crates,129);
 //		System.out.println(checkSolution(crates));
 		
