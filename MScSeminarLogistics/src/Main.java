@@ -25,7 +25,7 @@ public class Main {
 //		solveLP(orders, items);
 //		Long timeLB = System.currentTimeMillis()-start;
 //		start = System.currentTimeMillis();
-		getPlotOutput(orders.get(129),2);
+//		getPlotOutput(orders.get(129),2);
 		solveBF(orders);
 		
 //		Long timeBF = System.currentTimeMillis()-start;
@@ -128,6 +128,9 @@ public class Main {
 	private static void solveBF(List<Order> orders) throws IOException {
 		FileWriter myWriter = new FileWriter("BF_solution_value.txt");
 		FileWriter myWriter2 = new FileWriter("BF_solution.txt");
+		double totalBins = 0.0;
+		double totalVolume = 0.0;
+		double totalWeight = 0.0;
 		myWriter.write("Order\tamountCrates\n");
 		for(int i = 0 ; i < orders.size() ; i++)
 		{
@@ -139,16 +142,21 @@ public class Main {
 			else myWriter.write(i+"\t"+crates.size()+"\t"+test+"\n");
 			myWriter2.write("Order: "+i+"\nCrates: "+crates.size()+"\n");
 			int counter = 1;
+			totalBins += crates.size();
 			for(Crate crate : crates)
 			{
 				List<Item> items = crate.getItemList();
 				double volume = 0.0;
+				double weight = 0.0;
 				for(Item item : items)
 				{
 					volume += item.getVolume();
+					weight += item.getWeight();
 				}
+				totalVolume += volume;
+				totalWeight += weight;
 				double fillRate = Math.round(volume/crate.getVolume()*10000)/100;
-				myWriter2.write(counter+"\t"+fillRate+"\t");
+				myWriter2.write(counter+"\t"+fillRate+"\t"+weight+"\t");
 				for(Item item : items)
 				{
 					int id = (int) item.getItemId();
@@ -160,6 +168,11 @@ public class Main {
 			myWriter2.write("\n");
 		}
 		myWriter.close();myWriter2.close();
+		System.out.println("Total Bins: "+(int)totalBins);
+		double averageVolume = Math.round(totalVolume/totalBins/1000);
+		double averageWeight = Math.round(totalWeight/totalBins);
+		System.out.println("Average volume: "+averageVolume/1000);
+		System.out.println("Average weight: "+averageWeight/1000);
 	}
 	public static void getPlotOutput(Order order, int crateNumber) throws IOException
 	{
