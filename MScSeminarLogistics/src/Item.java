@@ -16,9 +16,10 @@ public class Item implements Comparable<Item> {
 	private final double height;
 	private final double weight;
 	private final double volume;
-	double insertedx;
-	double insertedy;
-	double insertedz;
+	double insertedX;
+	double insertedY;
+	double insertedZ;
+	int crateIndex;
 
 	/**
 	 * Constructor that creates a new item
@@ -35,35 +36,32 @@ public class Item implements Comparable<Item> {
 		this.height = height;
 		this.weight = weight;
 		this.volume = width*length*height;
-		this.insertedx = 0.0;
-		this.insertedy = 0.0;
-		this.insertedz = 0.0;
+		this.insertedX = 0.0;
+		this.insertedY = 0.0;
+		this.insertedZ = 0.0;
+		this.crateIndex = -1;
 	}
-	
-	public double getinsertedx() {
-		return this.insertedx;
+
+	/**
+	 * Constructor that creates a new item
+	 * @param id item_id 0 to 499
+	 * @param width in mm
+	 * @param length in mm
+	 * @param height in mm
+	 * @param weight in grams
+	 */
+	public Item(double itemId, double width, double length, double height, double weight, double insertedX, double insertedY, double insertedZ, int crateIndex) {
+		this.itemId = itemId;
+		this.width = width;
+		this.length = length;
+		this.height = height;
+		this.weight = weight;
+		this.volume = width*length*height;
+		this.insertedX = insertedX;
+		this.insertedY = insertedY;
+		this.insertedZ = insertedZ;
+		this.crateIndex = crateIndex;
 	}
-	
-	public void setInsertedx(double value) {
-		this.insertedx = value;
-	}
-	
-	public double getinsertedy() {
-		return this.insertedy;
-	}
-	
-	public void setInsertedy(double value) {
-		this.insertedy = value;
-	}
-	
-	public double getinsertedz() {
-		return this.insertedz;
-	}
-	
-	public void setInsertedz(double value) {
-		this.insertedz = value;
-	}
-	
 
 	/**
 	 * Method to obtain the ID of the item
@@ -111,6 +109,34 @@ public class Item implements Comparable<Item> {
 	 */
 	public double getVolume() {
 		return this.volume;
+	}
+
+	public double getInsertedX() {
+		return this.insertedX;
+	}
+
+	public void setInsertedX(double value) {
+		this.insertedX = value;
+	}
+
+	public double getInsertedY() {
+		return this.insertedY;
+	}
+
+	public void setInsertedY(double value) {
+		this.insertedY = value;
+	}
+
+	public double getInsertedZ() {
+		return this.insertedZ;
+	}
+
+	public void setInsertedZ(double value) {
+		this.insertedZ = value;
+	}
+	
+	public int getCrateIndex() {
+		return this.crateIndex;
 	}
 
 	/**
