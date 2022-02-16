@@ -28,6 +28,8 @@ public class BRKGA {
 		final double probElite = 0.7; // rho_e : probability offspring inherits elite's vector component
 		final int numGeneration = 200; // Stopping criterion
 		Random rand = new Random();
+		double aNB = 0.0;
+		int numSameANB = 0;
 		// Initialize population chromosomes
 		ArrayList<Chromosome> population = new ArrayList<Chromosome>();
 		for (int p=0; p < numPop; p++) {
@@ -36,7 +38,14 @@ public class BRKGA {
 		// Start algorithm
 		for (int g=1; g < numGeneration; g++) {
 			Collections.sort(population);
+			double newANB = population.get(0).getFitness();
 			if (population.get(0).getNumCrates() == lowerBound) break;
+			if (Math.abs(newANB-aNB) <= 1E-6) {
+				numSameANB++;
+				if (numSameANB == 10) break;
+			}
+			else numSameANB = 0;
+			aNB = newANB;
 			System.out.println("Min number of bins in generation g = " + g + " is " + population.get(0).getNumCrates());
 			ArrayList<Chromosome> populationG = new ArrayList<Chromosome>();
 			for (int p=0; p < numPopElite; p++) { // Copy elite directly

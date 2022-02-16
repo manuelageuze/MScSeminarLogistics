@@ -19,26 +19,67 @@ public class MainBRKGA {
 //			double lowerbound = LowerBoundModel.setCoveringLB(orders.get(i), items);
 //			lowerBound[i] = lowerbound;
 //		}
-		
+//		
+//		File info = new File("GA_solution_info.txt"); 
 //		File sol = new File("GA_solution.txt");
-//		PrintWriter out = new PrintWriter(sol);
-//		out.println("instance min_num_crates_GA min_num_crates_LB running_time");
-//		for (int i=0; i < orders.size(); i++) {
+//		PrintWriter outInfo = new PrintWriter(info);
+//		PrintWriter outSol = new PrintWriter(sol);
+//		outInfo.println("instance\tnumCrates\tadjNumCrates\tnumCratesLB\tavFillRate\tavWeight\trunTime");
+//		int totalNumBins = 0;
+//		Crate crate = new Crate();
+//		for (int i=0; i < orders.size(); i++) { // TODO: orders.size
+//			System.out.println("Order nr " + i);
 //			long startTime = System.nanoTime();
-//			int numBins = BRKGA.solve(orders.get(i), lowerBound[i], choice_D2_VBO);
+//			Chromosome chrom = BRKGA.solve(orders.get(i), lowerBound[i], choice_D2_VBO);
 //			long endTime   = System.nanoTime();
 //			long totalTime = (endTime - startTime)/1000000;
-//			out.print(i + " " + numBins + " " + lowerBound[i] + " ");
-//			out.println(totalTime);
+//			totalNumBins += chrom.getNumCrates();
+//			double avFillRate = 0.0;
+//			double avWeight = 0.0;
+//			for (Item it : orders.get(i).getItems()) {
+//				avFillRate += it.getVolume();
+//				avWeight += it.getWeight();
+//			}
+//			avFillRate = avFillRate/(chrom.getNumCrates()*crate.getVolume());
+//			avWeight = avWeight/chrom.getNumCrates();
+//			outInfo.println(i + "\t" + chrom.getNumCrates() + "\t" + chrom.getFitness() + "\t" + lowerBound[i] + "\t" + avFillRate + "\t" + avWeight + "\t" + totalTime);
+//			outSol.println("Order: " + i);
+//			outSol.println("Crates: " + chrom.getNumCrates());
+//			for (int k=0; k < chrom.getOpenCrates().size(); k++) {
+//				List<Integer> openCrate = chrom.getOpenCrates().get(k);
+//				String output = k + "\t";
+//				for (int j=0; j < openCrate.size(); j++) {
+//					if (openCrate.get(j) == 1)
+//						output += (int) chrom.getItems().get(j).getItemId() + " ";
+//				}
+//				outSol.println(output);
+//			}
 //		}
-//		out.close();
-		int instance = 124;
+//		outInfo.close();
+//		outSol.close();
+//		System.out.println("Total Number of bins bitchessszs " + totalNumBins);
+		
+		int instance = 88;
 		double lowerbound = LowerBoundModel.setCoveringLB(orders.get(instance), items);
 		System.out.println(lowerbound);
 		Chromosome chrom = BRKGA.solve(orders.get(instance), lowerbound, choice_D2_VBO);
 		printCrate(orders.get(instance), chrom);
+		
+//		double avWeight = 0.0;
+//		double avVolume = 0.0;
+//		for (int i=0; i < orders.size(); i++) {
+//			List<Item> order = orders.get(i).getItems();
+//			for (int j=0; j < order.size(); j++) {
+//				avWeight += order.get(j).getWeight();
+//				avVolume += order.get(j).getVolume();
+//			}
+//		}
+//		avWeight = avWeight/1907;
+//		avVolume = avVolume/1907;
+//		System.out.println("Average volume = " + avVolume + ", average weight = " + avWeight);
 	}
 	
+	@SuppressWarnings("unused")
 	private static void printCrate(Order order, Chromosome chrom) throws FileNotFoundException {
 		List<Item> items = chrom.getItems();
 		File crate = new File("items_crate.txt");

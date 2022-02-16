@@ -209,9 +209,9 @@ public class Main {
 			{
 				Item i = items.get(j);
 				int id = (int) i.getItemId();
-				int x = (int) i.getinsertedx();
-				int y = (int) i.getinsertedy();
-				int z = (int) i.getinsertedz();
+				int x = (int) i.getInsertedX();
+				int y = (int) i.getInsertedY();
+				int z = (int) i.getInsertedZ();
 				int w = (int) i.getWidth();
 				int l = (int) i.getLength();
 				int h = (int) i.getHeight();
@@ -233,9 +233,9 @@ public class Main {
 				{
 					Item itemj = items.get(j);
 					if(i==j) continue;
-					double x_i = itemi.getinsertedx();double x_j = itemj.getinsertedx();
-					double y_i = itemi.getinsertedy();double y_j = itemj.getinsertedy();
-					double z_i = itemi.getinsertedz();double z_j = itemj.getinsertedz();
+					double x_i = itemi.getInsertedX();double x_j = itemj.getInsertedX();
+					double y_i = itemi.getInsertedY();double y_j = itemj.getInsertedY();
+					double z_i = itemi.getInsertedZ();double z_j = itemj.getInsertedZ();
 					if(x_i < x_j && x_j < x_i+itemi.getWidth()){
 						if(y_i < y_j && y_j < y_i + itemi.getLength()){
 							if(z_i < z_j && z_j < z_i + itemi.getHeight()) {
