@@ -1,4 +1,3 @@
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -62,7 +61,7 @@ public class BF {
 		crates.get(0).setItemList(sideItems);
 
 		for(int i = 0; i < sortedItemList.size(); i++) {// Voor alle items
-			if(i == 22) {
+			if(i == 15) {
 				int test = 0;
 				test = test +1;
 			}
@@ -173,6 +172,11 @@ public class BF {
 				maxbound[i1] = -1.0;
 			}
 			for(int j = 0; j < crates.get(crateIndex).getItemList().size() - 1; j++) {
+				if(j == 6)
+				{
+					int test = 0;
+					test = test +1;
+				}
 				//#1
 				if(crates.get(crateIndex).getItemList().get(j).insertedx + crates.get(crateIndex).getItemList().get(j).getWidth() > maxbound[0]) {
 					EP ep = canTakeProjectionYX(crates.get(crateIndex).getItemList().get(j), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1),crates.get(crateIndex).getItemList());
@@ -474,7 +478,10 @@ public class BF {
 					if(rsx > itemj.getinsertedx() - newx)rsx = itemj.getinsertedx()-newx;
 					continue;
 				}
-				if(newx >= itemj.getinsertedx() + itemj.getLength())continue;
+				if(newx >= itemj.getinsertedx() + itemj.getWidth())
+				{
+					continue;
+				}
 
 				return null;
 			}
