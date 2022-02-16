@@ -21,14 +21,16 @@ public class Main {
 		
 		// Compute lower bound and write file
 		//out.println("instance minimum_number_of_crates");
-//		Long start = System.currentTimeMillis();
+		Long start = System.currentTimeMillis();
 //		solveLP(orders, items);
-//		Long timeLB = System.currentTimeMillis()-start;
-//		start = System.currentTimeMillis();
-//		getPlotOutput(orders.get(129),2);
+//		double timeLB = System.currentTimeMillis()-start;
+//		System.out.println("Solution time: "+timeLB/1000);
+		start = System.currentTimeMillis();
+//		getPlotOutput(orders.get(457),2);
 		solveBF(orders);
 		
-//		Long timeBF = System.currentTimeMillis()-start;
+		double timeBF = System.currentTimeMillis()-start;
+		System.out.println("Solution time: "+timeBF/1000);
 //		System.out.println("Time:\nLB\tBF\n"+timeLB+"\t"+timeBF);
 //		compair(new File("LB_solution_value.txt"),new File("BF_solution_value.txt"),orders);
 	}
@@ -111,13 +113,27 @@ public class Main {
 	private static void solveLP(List<Order> orders, Map<Double, Item> items) throws IloException, IOException {
 		FileWriter myWriter = new FileWriter("LB_solution_value.txt");
 		myWriter.write("Order\tCrates\n");
+		double totalBins = 0.0;
+		double totalVolume = 0.0;
+		double totalWeight = 0.0;
 		for(Order order : orders)
 		{
+			for(Item i : order.getItems())
+			{
+				totalVolume += i.getVolume();
+				totalWeight += i.getWeight();
+			}
 			int LB = (int)LowerBoundModel.setCoveringLB(order, items);
 			int id = (int) order.getOrderId();
 			myWriter.write(id+"\t"+LB+"\n");
+			totalBins += LB;
 		}
-//		myWriter.close();
+		double averageVolume = Math.round(totalVolume/totalBins/1000);
+		double averageWeight = Math.round(totalWeight/totalBins);
+		System.out.println("Total bins: "+totalBins);
+		System.out.println("Average volume: "+averageVolume/1000);
+		System.out.println("Average weight: "+averageWeight/1000);
+		myWriter.close();
 //		for(int i = 900 ; i < 1000 ; i++)
 //		{
 //			int LB = (int)LowerBoundModel.setCoveringLB(orders.get(i), items);
@@ -228,7 +244,8 @@ public class Main {
 								System.out.println("("+x_i+","+y_i+","+z_i+")"+
 											"("+itemi.getWidth()+","+itemi.getLength()+","+itemi.getHeight()+")");
 								System.out.println("Item j: "+(int)itemj.getItemId());
-								System.out.println("("+x_j+","+y_j+","+z_j+")\n");
+								System.out.println("("+x_j+","+y_j+","+z_j+")"+
+										"("+itemj.getWidth()+","+itemj.getLength()+","+itemj.getHeight()+")\n");
 								return counter;
 							}
 						}
