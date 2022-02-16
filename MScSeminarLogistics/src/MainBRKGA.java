@@ -59,12 +59,19 @@ public class MainBRKGA {
 //		outSol.close();
 //		System.out.println("Total Number of bins bitchessszs " + totalNumBins);
 		
-		int instance = 88;
-		double lowerbound = LowerBoundModel.setCoveringLB(orders.get(instance), items);
-		System.out.println(lowerbound);
-		Chromosome chrom = BRKGA.solve(orders.get(instance), lowerbound, choice_D2_VBO);
-		printCrate(orders.get(instance), chrom);
+//		int instance = 88;
+//		double lowerbound = LowerBoundModel.setCoveringLB(orders.get(instance), items);
+//		System.out.println(lowerbound);
+//		Chromosome chrom = BRKGA.solve(orders.get(instance), lowerbound, choice_D2_VBO);
+//		printCrate(orders.get(instance), chrom);
 		
+		
+		
+		
+		for(int i = 0; i < 1000; i++) {
+			MultiThreadThing thread = new MultiThreadThing(i, orders.get(i));
+			thread.start();
+		}
 //		double avWeight = 0.0;
 //		double avVolume = 0.0;
 //		for (int i=0; i < orders.size(); i++) {
@@ -100,7 +107,7 @@ public class MainBRKGA {
 	 * @return Map containing items
 	 * @throws FileNotFoundException
 	 */
-	private static Map<Double, Item> readItems() throws FileNotFoundException {
+	public static Map<Double, Item> readItems() throws FileNotFoundException {
 		File itemFile = new File("items.csv");
 		Map<Double, Item> items = Item.readItems(itemFile);
 		return items;	
@@ -112,7 +119,7 @@ public class MainBRKGA {
 	 * @return List of orders
 	 * @throws FileNotFoundException
 	 */
-	private static List<Order> readOrders(Map<Double, Item> items) throws FileNotFoundException {
+	public static List<Order> readOrders(Map<Double, Item> items) throws FileNotFoundException {
 		File orderFile = new File("orders.csv");
 		List<Order> orders = Order.readOrder(orderFile, items);
 		return orders;
