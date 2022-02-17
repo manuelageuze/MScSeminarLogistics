@@ -11,7 +11,6 @@ public class MultiThreadThing extends Thread {
 
 	private int threadNumber;
 	private Order order;
-	private Map<Double, Item> items;
 	public MultiThreadThing(int threadNumber, Order order) throws FileNotFoundException {
 		this.threadNumber = threadNumber;
 		this.order = order;
@@ -20,14 +19,14 @@ public class MultiThreadThing extends Thread {
 	
 	@Override
 	public void run(){
+		
 		Map<Double, Item> items = null;
 		try {
 			items = MainBRKGA.readItems();
-		} catch (FileNotFoundException e) {
+		} catch (FileNotFoundException e1) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			e1.printStackTrace();
 		}
-		
 		int choice_D2_VBO = 1;
 		double lowerbound = 0;
 		try {
