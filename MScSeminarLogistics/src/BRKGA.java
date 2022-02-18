@@ -22,11 +22,11 @@ public class BRKGA {
 	public static Chromosome solve(Order order, double lowerBound) {
 		// Parameters
 		final int numItems = order.getItems().size();
-		final int numPop = 1; // p : number of vectors in population TODO: 30*numItems
+		final int numPop = 30*numItems; // p : number of vectors in population TODO: 30*numItems
 		final int numPopElite = (int) (0.1*numPop); // p_e : number of elite vectors in population
 		final int numPopMutant = (int) (0.15*numPop); // p_m : number of mutants in population
 		final double probElite = 0.7; // rho_e : probability offspring inherits elite's vector component
-		final int numGeneration = 1; // Stopping criterion TODO: zet op 200
+		final int numGeneration = 200; // Stopping criterion TODO: zet op 200
 		Random rand = new Random();
 		double aNB = 0.0;
 		int numSameANB = 0;

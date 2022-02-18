@@ -18,7 +18,7 @@ public class MainBRKGA {
 	public static void main(String[] args) throws IloException, IOException, InterruptedException {
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
-		int choiceSplit = 1; // Choice for order splitting or not: 1 for no splitting, 2 for splitting
+		int choiceSplit = 2; // Choice for order splitting or not: 1 for no splitting, 2 for splitting
 
 		double[] lowerBound = new double[orders.size()];
 		for(int i=0; i < orders.size(); i++) {
@@ -26,7 +26,14 @@ public class MainBRKGA {
 			lowerBound[i] = lowerbound;
 		}
 		// Order splitting
-		if (choiceSplit == 2) splitOrders(orders, lowerBound);
+		if (choiceSplit == 2) {
+			splitOrders(orders, lowerBound);
+			lowerBound = new double[orders.size()];
+			for(int i=0; i < orders.size(); i++) {
+				double lowerbound = LowerBoundModel.setCoveringLB(orders.get(i), items);
+				lowerBound[i] = lowerbound;
+			}
+		}
 
 		long startTime = System.nanoTime();
 		// Create tasks
@@ -79,9 +86,10 @@ public class MainBRKGA {
 	private static void splitOrders(List<Order> orders, double[] lowerBound) {
 		double LBBound = 3.0;
 		int numItemsBound = 50;
+		int j=0;
 		for (int i=0; i < orders.size(); i++) {
 			Order order = orders.get(i);
-			if (lowerBound[i] >= LBBound && order.getItems().size() >= numItemsBound) {
+			if (lowerBound[j] >= LBBound && order.getItems().size() >= numItemsBound) {
 				// Make 2 new orders with each half of the items
 				int numItemsSplit = order.getItems().size()/2;
 				Order newOrder1 = new Order(order.getItems().subList(0, numItemsSplit), order.getOrderId()+0.1); // Order x.1
@@ -90,6 +98,7 @@ public class MainBRKGA {
 				orders.add(i+1, newOrder2);
 				i++;
 			}
+			j++;
 		}
 	}
 
@@ -146,7 +155,7 @@ public class MainBRKGA {
 			if (chrom.getOrderId() - (int) chrom.getOrderId() > 0) { // Check if order has been split
 				chrom2 = ((MultiThread) runnables.get(i+1)).getChromosome();
 				numCrates += chrom2.getNumCrates();
-				fitness = fitness - (int) fitness > chrom2.getFitness() - (int) chrom2.getFitness() ? chrom2.getFitness() : fitness;
+				fitness = fitness - (int) fitness > chrom2.getFitness() - (int) chrom2.getFitness() ? chrom2.getFitness()+chrom.getNumCrates() : fitness+chrom2.getNumCrates();
 			}
 			totalNumBins += numCrates;
 			double avFillRate = 0.0;
@@ -185,6 +194,7 @@ public class MainBRKGA {
 					}
 					outSol.println(output);
 				}
+				i++;
 			}
 		}
 		outInfo.close();
