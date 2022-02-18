@@ -14,23 +14,26 @@ public class Main {
 
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
-		BF bf = new BF(orders.get(457));
-		List<Crate> crates = bf.computeBF();
-//		checkSolution(crates,129);
+		
+//		BF bf = new BF(orders.get(0));
+//		List<Crate> crates = bf.computeBF();
+//		checkSolution(crates,0);
 //		System.out.println(checkSolution(crates));
+		
+		solveFF(orders);
 		
 		// Compute lower bound and write file
 		//out.println("instance minimum_number_of_crates");
-		Long start = System.currentTimeMillis();
+//		Long start = System.currentTimeMillis();
 //		solveLP(orders, items);
 //		double timeLB = System.currentTimeMillis()-start;
 //		System.out.println("Solution time: "+timeLB/1000);
-		start = System.currentTimeMillis();
+//		start = System.currentTimeMillis();
 //		getPlotOutput(orders.get(457),2);
-		solveBF(orders);
+//		solveBF(orders);
 		
-		double timeBF = System.currentTimeMillis()-start;
-		System.out.println("Solution time: "+timeBF/1000);
+//		double timeBF = System.currentTimeMillis()-start;
+//		System.out.println("Solution time: "+timeBF/1000);
 //		System.out.println("Time:\nLB\tBF\n"+timeLB+"\t"+timeBF);
 //		compair(new File("LB_solution_value.txt"),new File("BF_solution_value.txt"),orders);
 	}
@@ -140,6 +143,56 @@ public class Main {
 //		}
 //		int LB = (int)LowerBoundModel.setCoveringLB(orders.get(27), items);
 	}
+	
+	private static void solveFF(List<Order> orders) throws IOException {
+		FileWriter myWriter = new FileWriter("FF_solution_value.txt");
+		FileWriter myWriter2 = new FileWriter("FF_solution.txt");
+		double totalBins = 0.0;
+		double totalVolume = 0.0;
+		double totalWeight = 0.0;
+		myWriter.write("Order\tamountCrates\n");
+		for(int i = 0 ; i < orders.size() ; i++)
+		{
+			FF ff = new FF(orders.get(i));
+			List<Crate> crates = ff.computeFF();
+//			myWriter.write(i+"\t"+crates.size()+"\n");
+			int test = checkSolution(crates,i);
+			if(test==0)myWriter.write(i+"\t"+crates.size()+"\n");
+			else myWriter.write(i+"\t"+crates.size()+"\t"+test+"\n");
+			myWriter2.write("Order: "+i+"\nCrates: "+crates.size()+"\n");
+			int counter = 1;
+			totalBins += crates.size();
+			for(Crate crate : crates)
+			{
+				List<Item> items = crate.getItemList();
+				double volume = 0.0;
+				double weight = 0.0;
+				for(Item item : items)
+				{
+					volume += item.getVolume();
+					weight += item.getWeight();
+				}
+				totalVolume += volume;
+				totalWeight += weight;
+				double fillRate = Math.round(volume/crate.getVolume()*10000)/100;
+				myWriter2.write(counter+"\t"+fillRate+"\t"+weight+"\t");
+				for(Item item : items)
+				{
+					int id = (int) item.getItemId();
+					if(id>=0)myWriter2.write(id+" ");
+				}
+				myWriter2.write("\n");
+				counter++;
+			}
+			myWriter2.write("\n");
+		}
+		myWriter.close();myWriter2.close();
+		System.out.println("Total Bins: "+(int)totalBins);
+		double averageVolume = Math.round(totalVolume/totalBins/1000);
+		double averageWeight = Math.round(totalWeight/totalBins);
+		System.out.println("Average volume: "+averageVolume/1000);
+		System.out.println("Average weight: "+averageWeight/1000);
+	}
 
 	private static void solveBF(List<Order> orders) throws IOException {
 		FileWriter myWriter = new FileWriter("BF_solution_value.txt");
@@ -190,6 +243,7 @@ public class Main {
 		System.out.println("Average volume: "+averageVolume/1000);
 		System.out.println("Average weight: "+averageWeight/1000);
 	}
+	
 	public static void getPlotOutput(Order order, int crateNumber) throws IOException
 	{
 		BF bf = new BF(order);
