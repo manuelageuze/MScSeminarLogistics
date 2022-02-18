@@ -20,7 +20,8 @@ public class Main {
 //		checkSolution(crates,0);
 //		System.out.println(checkSolution(crates));
 		
-		solveFF(orders);
+//		solveFF(orders);
+		getPlotOutput_FF(orders.get(0),1);
 		
 		// Compute lower bound and write file
 		//out.println("instance minimum_number_of_crates");
@@ -256,6 +257,36 @@ public class Main {
 		else
 		{
 			FileWriter myWriter = new FileWriter("outputPlot.txt");
+			Crate crate = crates.get(crateNumber-1);
+			List<Item> items  =crate.getItemList();
+			myWriter.write("id\tx\ty\tz\tw\tl\th\n");
+			for(int j = 6 ; j < items.size() ; j++)
+			{
+				Item i = items.get(j);
+				int id = (int) i.getItemId();
+				int x = (int) i.getInsertedX();
+				int y = (int) i.getInsertedY();
+				int z = (int) i.getInsertedZ();
+				int w = (int) i.getWidth();
+				int l = (int) i.getLength();
+				int h = (int) i.getHeight();
+				myWriter.write(id+"\t"+x+"\t"+y+"\t"+z+"\t"+w+"\t"+l+"\t"+h+"\n");
+			}
+			myWriter.close();
+		}
+	}
+	public static void getPlotOutput_FF(Order order, int crateNumber) throws IOException
+	{
+		FF ff = new FF(order);
+		List<Crate> crates = ff.computeFF();
+		if(crateNumber > crates.size())
+		{
+			System.out.println("Crate number not feasible");
+			return;
+		}
+		else
+		{
+			FileWriter myWriter = new FileWriter("outputPlot_FF.txt");
 			Crate crate = crates.get(crateNumber-1);
 			List<Item> items  =crate.getItemList();
 			myWriter.write("id\tx\ty\tz\tw\tl\th\n");
