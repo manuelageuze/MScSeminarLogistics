@@ -100,7 +100,8 @@ public class FF {
 							double rsy = ep.getRSy() - rotatedItem.get(r).getLength();
 							double rsz = ep.getRSz() - rotatedItem.get(r).getHeight();
 							if(rsx > 0 && rsy > 0 && rsz > 0) { // Dus het item past in de residual space van het EP
-								if(itemfits(ep, crates.get(k).getItemList(), rotatedItem.get(r)) == true) { // En plaatsing overlapt niet met ander item
+//								if(itemfits(ep, crates.get(k).getItemList(), rotatedItem.get(r)) == true) { // En plaatsing overlapt niet met ander item
+								if(!isOverlapping(ep, crates.get(k).getItemList(), rotatedItem.get(r))) {
 									double compare = rsx + rsy + rsz;
 									if(compare < f) {
 										epIndex = j;
@@ -315,11 +316,40 @@ public class FF {
 					}
 				}
 			}	
-		}	
-		
+		}
 		return true;
 	}
-
+	private boolean isOverlapping(EP ep, List<Item> items, Item item1)
+	{
+		for(int i = 6 ; i < items.size() ; i++)
+		{
+			Item item2 = items.get(i);
+			if(item2.getItemId()==69)
+			{
+				boolean test = false;
+				test =false;
+			}
+			double x1min = ep.getX();
+			double x1max = x1min + item1.getWidth();
+			double y1min = ep.getY();
+			double y1max = y1min + item1.getLength();
+			double z1min = ep.getZ();
+			double z1max = z1min + item1.getHeight();
+			
+			double x2min = item2.getInsertedX();
+			double x2max = x2min + item2.getWidth();
+			double y2min = item2.getInsertedY();
+			double y2max = y2min + item2.getLength();
+			double z2min = item2.getInsertedZ();
+			double z2max = z2min + item2.getHeight();
+			
+			if(x1min < x2max && x2min < x1max 
+					&& y1min < y2max && y2min < y1max
+					&& z1min < z2max && z2min < z1max)return true;
+		}
+		return false;
+	}
+	
 	public boolean isOnSideY(EP ep, Item nItem) {
 		if(nItem.getInsertedY() >= ep.getY() && nItem.getInsertedX()+nItem.getWidth() > ep.getX()) return true;
 		else return false;
