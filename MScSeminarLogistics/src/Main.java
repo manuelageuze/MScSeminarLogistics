@@ -20,8 +20,11 @@ public class Main {
 //		checkSolution(crates,0);
 //		System.out.println(checkSolution(crates));
 		
-//		solveFF(orders);
-		getPlotOutput_FF(orders.get(0),1);
+		Long start = System.currentTimeMillis();
+		solveFF(orders);
+		double timeLB = System.currentTimeMillis()-start;
+		System.out.println("Solution time: "+timeLB/1000);
+//		getPlotOutput_FF(orders.get(0),1);
 		
 		// Compute lower bound and write file
 		//out.println("instance minimum_number_of_crates");
@@ -31,7 +34,7 @@ public class Main {
 //		System.out.println("Solution time: "+timeLB/1000);
 //		start = System.currentTimeMillis();
 //		getPlotOutput(orders.get(457),2);
-//		solveBF(orders);
+		solveBF(orders);
 		
 //		double timeBF = System.currentTimeMillis()-start;
 //		System.out.println("Solution time: "+timeBF/1000);
@@ -318,27 +321,52 @@ public class Main {
 				{
 					Item itemj = items.get(j);
 					if(i==j) continue;
-					double x_i = itemi.getInsertedX();double x_j = itemj.getInsertedX();
-					double y_i = itemi.getInsertedY();double y_j = itemj.getInsertedY();
-					double z_i = itemi.getInsertedZ();double z_j = itemj.getInsertedZ();
-					if(x_i < x_j && x_j < x_i+itemi.getWidth()){
-						if(y_i < y_j && y_j < y_i + itemi.getLength()){
-							if(z_i < z_j && z_j < z_i + itemi.getHeight()) {
-								System.out.println("Order: "+order+", Crate "+counter+".");
-								System.out.println("Item i: "+(int)itemi.getItemId());
-								System.out.println("("+x_i+","+y_i+","+z_i+")"+
-											"("+itemi.getWidth()+","+itemi.getLength()+","+itemi.getHeight()+")");
-								System.out.println("Item j: "+(int)itemj.getItemId());
-								System.out.println("("+x_j+","+y_j+","+z_j+")"+
-										"("+itemj.getWidth()+","+itemj.getLength()+","+itemj.getHeight()+")\n");
-								return counter;
-							}
-						}
+					if(isOverlapping(itemi,itemj))
+					{
+						return counter;
 					}
+//					double x_i = itemi.getInsertedX();double x_j = itemj.getInsertedX();
+//					double y_i = itemi.getInsertedY();double y_j = itemj.getInsertedY();
+//					double z_i = itemi.getInsertedZ();double z_j = itemj.getInsertedZ();
+//					if(x_i < x_j && x_j < x_i+itemi.getWidth()){
+//						if(y_i < y_j && y_j < y_i + itemi.getLength()){
+//							if(z_i < z_j && z_j < z_i + itemi.getHeight()) {
+//								System.out.println("Order: "+order+", Crate "+counter+".");
+//								System.out.println("Item i: "+(int)itemi.getItemId());
+//								System.out.println("("+x_i+","+y_i+","+z_i+")"+
+//											"("+itemi.getWidth()+","+itemi.getLength()+","+itemi.getHeight()+")");
+//								System.out.println("Item j: "+(int)itemj.getItemId());
+//								System.out.println("("+x_j+","+y_j+","+z_j+")"+
+//										"("+itemj.getWidth()+","+itemj.getLength()+","+itemj.getHeight()+")\n");
+//								return counter;
+//							}
+//						}
+//					}
 				}
 			}
 			counter++;
 		}
 		return 0;
+	}
+	private static boolean isOverlapping(Item item1, Item item2)
+	{
+		double x1min = item1.getInsertedX();
+		double x1max = x1min + item1.getWidth();
+		double y1min = item1.getInsertedY();
+		double y1max = y1min + item1.getLength();
+		double z1min = item1.getInsertedZ();
+		double z1max = z1min + item1.getHeight();
+			
+		double x2min = item2.getInsertedX();
+		double x2max = x2min + item2.getWidth();
+		double y2min = item2.getInsertedY();
+		double y2max = y2min + item2.getLength();
+		double z2min = item2.getInsertedZ();
+		double z2max = z2min + item2.getHeight();
+		
+		if(x1min < x2max && x2min < x1max 
+				&& y1min < y2max && y2min < y1max
+				&& z1min < z2max && z2min < z1max)return true;
+		else return false;
 	}
 }
