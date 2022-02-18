@@ -13,6 +13,7 @@ public class Chromosome implements Comparable<Chromosome> {
 	private List<Item> items;
 	private double fitness;
 	private int numCrates;
+	private double orderId;
 	
 	/**
 	 * Constructor of a chromosome (for BRKGA)
@@ -21,13 +22,14 @@ public class Chromosome implements Comparable<Chromosome> {
 	 * @param fitness Fitness value aNB: adjusted number of bins
 	 * @param numCrates Number of crates
 	 */
-	public Chromosome(double[] BPS, double[] VBO, ArrayList<ArrayList<Integer>> openCrates, List<Item> items, double fitness, int numCrates) {
+	public Chromosome(double[] BPS, double[] VBO, ArrayList<ArrayList<Integer>> openCrates, List<Item> items, double fitness, int numCrates, double orderId) {
 		this.BPS = BPS;
 		this.VBO = VBO;
 		this.openCrates = openCrates;
 		this.items = items;
 		this.fitness = fitness;
 		this.numCrates = numCrates;
+		this.orderId = orderId;
 	}
 	
 	/** Get genes of BPS
@@ -116,6 +118,14 @@ public class Chromosome implements Comparable<Chromosome> {
 	 */
 	public void setNumCrates(int numCrates) {
 		this.numCrates = numCrates;
+	}
+	
+	/**
+	 * Get order ID
+	 * @return
+	 */
+	public double getOrderId() {
+		return this.orderId;
 	}
 	
 	/**

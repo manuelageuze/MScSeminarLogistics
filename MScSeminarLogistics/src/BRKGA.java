@@ -19,22 +19,22 @@ public class BRKGA {
 	 * @param order Order to solve problem for
 	 * @param choice_D2_VBO 1 if DFTRC-2^2 is used, 2 if DFTRC-2-VBO is used
 	 */
-	public static Chromosome solve(Order order, double lowerBound, int choice_D2_VBO) {
+	public static Chromosome solve(Order order, double lowerBound) {
 		// Parameters
 		final int numItems = order.getItems().size();
-		final int numPop = 30*numItems; // p : number of vectors in population
+		final int numPop = 1; // p : number of vectors in population TODO: 30*numItems
 		final int numPopElite = (int) (0.1*numPop); // p_e : number of elite vectors in population
 		final int numPopMutant = (int) (0.15*numPop); // p_m : number of mutants in population
 		final double probElite = 0.7; // rho_e : probability offspring inherits elite's vector component
-		final int numGeneration = 200; // Stopping criterion
+		final int numGeneration = 1; // Stopping criterion TODO: zet op 200
 		Random rand = new Random();
 		double aNB = 0.0;
 		int numSameANB = 0;
 		// Initialize population chromosomes
 		ArrayList<Chromosome> population = new ArrayList<Chromosome>();
 		for (int p=0; p < numPop; p++) {
-			population.add(createMutation(order, rand, numItems, choice_D2_VBO));
-		}		
+			population.add(createMutation(order, rand, numItems));
+		}
 		// Start algorithm
 		for (int g=1; g < numGeneration; g++) {
 			Collections.sort(population);
@@ -52,7 +52,7 @@ public class BRKGA {
 				populationG.add(population.get(p));
 			}
 			for (int p=0; p < numPopMutant; p++) { // Create mutations
-				populationG.add(createMutation(order, rand, numItems, choice_D2_VBO));
+				populationG.add(createMutation(order, rand, numItems));
 			}
 			for (int p=0; p < numPop - numPopElite - numPopMutant; p++) { // Create offspring
 				double[] BPS = new double[numItems];
@@ -73,9 +73,9 @@ public class BRKGA {
 					}
 				}
 				List<Item> items = new ArrayList<>(order.getItems());
-				ArrayList<ArrayList<Integer>> openCrates = placement(order, items, BPS, VBO, choice_D2_VBO);
+				ArrayList<ArrayList<Integer>> openCrates = placement(order, items, BPS, VBO);
 				double adjNumBins = getAdjustedNumberBins(order, openCrates);
-				populationG.add(new Chromosome(BPS, VBO, openCrates, items, adjNumBins, (int) adjNumBins));
+				populationG.add(new Chromosome(BPS, VBO, openCrates, items, adjNumBins, (int) adjNumBins, order.getOrderId()));
 			}
 			// Replace by new population
 			population.clear();
@@ -95,7 +95,7 @@ public class BRKGA {
 	 * @param choice_D2_VBO 1 if DFTRC-2^2 is used, 2 if DFTRC-2-VBO is used
 	 * @return a_ij with size numItems*numCrates, value is 1 if item i is in crate j, 0 otherwise
 	 */
-	private static ArrayList<ArrayList<Integer>> placement(Order order, List<Item> items, double[] BPS, double[] VBO, int choice_D2_VBO) {
+	private static ArrayList<ArrayList<Integer>> placement(Order order, List<Item> items, double[] BPS, double[] VBO) {
 		// Initialization
 		ArrayList<Crate> crates = new ArrayList<Crate>(); // List of bins
 		ArrayList<ArrayList<Integer>> openCrates = new ArrayList<ArrayList<Integer>>(); // Let element be 1 if item is in bin, 0 o.w.
@@ -121,12 +121,8 @@ public class BRKGA {
 			List<List<Double>> boxOrientations = boxOrientations(dim);
 			for (int k=0; k < numCrates; k++) {
 				Crate crate = crates.get(k);
-				switch (choice_D2_VBO) { // Box Orientation Selection
-				case 1: EMS = DFTRC2VBO(itemToPack, crate, boxOrientations);
-				break;
-				//				case 2: EMS = DFTRC2VBO(itemToPack, crate, orient, VBO[mapBPSIndex.get(sortedBPS[i])]);
-				//				break;
-				}
+				// Box Orientation Selection
+				EMS = DFTRC2VBO(itemToPack, crate, boxOrientations);
 				if (EMS != null) {
 					crateSelected = crate;
 					crateIndex = k;
@@ -194,43 +190,6 @@ public class BRKGA {
 						maxDist = distance;
 						EMS = EMSi; // Save winning EMS
 					}
-				}
-			}
-		}
-		return EMS;
-	}
-
-	/**
-	 * DFTRC-2-VBO algorithm to find optimal Empty Maximal Space to fit item to pack in
-	 * @param itemToPack
-	 * @param crate
-	 * @param orient
-	 * @param boxOrientation
-	 * @return Empty Maximal Space
-	 */
-	@SuppressWarnings("unused")
-	private static EP DFTRC2VBOold(Item itemToPack, Crate crate, List<Double> orient, double boxOrientation) {
-		double maxDist = -1;
-		EP EMS = null;
-		// Dimensions crate
-		double width = crate.getWidth();
-		double length = crate.getLength();
-		double height = crate.getHeight();
-		for (EP EMSi : crate.getEP()) {
-			// Find boxOrientation
-			double x1 = EMSi.getX();
-			double y1 = EMSi.getY();
-			double z1 = EMSi.getZ();
-			double[] dim = {x1, y1, z1};
-			List<List<Double>> boxOrientations = boxOrientations(dim);
-			int numOrientations = boxOrientations.size();
-			orient.clear();
-			orient.addAll(boxOrientations.get((int) Math.ceil(boxOrientation*numOrientations)-1));
-			if (EMSi.getRSx()-EMSi.getX() >= orient.get(0) && EMSi.getRSy()-EMSi.getY() >= orient.get(1) && EMSi.getRSz()-EMSi.getZ() >= orient.get(2) && crate.getCurrentWeight() + itemToPack.getWeight() <= crate.getMaxWeight()) {
-				double distance = Math.pow(width-x1-orient.get(0), 2) + Math.pow(length-y1-orient.get(1), 2) + Math.pow(height-z1-orient.get(2), 2);
-				if (distance > maxDist) {
-					maxDist = distance;
-					EMS = EMSi;
 				}
 			}
 		}
@@ -310,12 +269,6 @@ public class BRKGA {
 				}
 				else if (!z13 && z42) z3 = z1;
 				else if (z13 && !z42) z4 = z2;
-//				if (x4 > x1) x3 = x1; 
-//				if (x2 > x3) x4 = x2;
-//				if (y4 > y1) y3 = y1;
-//				if (y2 > y3) y4 = y2;
-//				if (z4 > z1) z3 = z1;
-//				if (z2 > z3) z4 = z2;
 			}
 			// Update EMS
 			newList.add(new EP(x1, y1, z1, x3, y2, z2));
@@ -418,7 +371,7 @@ public class BRKGA {
 	 * @param choice_D2_VBO
 	 * @return Chromosome
 	 */
-	private static Chromosome createMutation(Order order, Random rand, int numItems, int choice_D2_VBO) {
+	private static Chromosome createMutation(Order order, Random rand, int numItems) {
 		double[] BPS = new double[numItems]; // Box Packing Sequence BPS
 		double[] VBO = new double[numItems]; // Vector Box Orientation VBO
 		for (int i=0; i < numItems; i++) { 
@@ -426,9 +379,9 @@ public class BRKGA {
 			VBO[i] = rand.nextDouble();
 		}
 		List<Item> items = new ArrayList<>(order.getItems());
-		ArrayList<ArrayList<Integer>> openCrates = placement(order, items, BPS, VBO, choice_D2_VBO);
+		ArrayList<ArrayList<Integer>> openCrates = placement(order, items, BPS, VBO);
 		double adjNumBins = getAdjustedNumberBins(order, openCrates);
-		return new Chromosome(BPS, VBO, openCrates, items, adjNumBins, (int) adjNumBins);
+		return new Chromosome(BPS, VBO, openCrates, items, adjNumBins, (int) adjNumBins, order.getOrderId());
 	}
 
 	/**
