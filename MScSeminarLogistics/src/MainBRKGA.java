@@ -8,10 +8,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import ilog.concert.IloException;
 
 public class MainBRKGA {
+
+	static final int MAX_T = 4; 
 
 	public static void main(String[] args) throws IloException, IOException, InterruptedException {
 		Map<Double, Item> items = readItems();
@@ -23,91 +26,40 @@ public class MainBRKGA {
 			double lowerbound = LowerBoundModel.setCoveringLB(orders.get(i), items);
 			lowerBound[i] = lowerbound;
 		}
-		//		
-		//		File info = new File("GA_solution_info.txt"); 
-		//		File sol = new File("GA_solution.txt");
-		//		PrintWriter outInfo = new PrintWriter(info);
-		//		PrintWriter outSol = new PrintWriter(sol);
-		//		outInfo.println("instance\tnumCrates\tadjNumCrates\tnumCratesLB\tavFillRate\tavWeight\trunTime");
-		//		int totalNumBins = 0;
-		//		Crate crate = new Crate();
-		//		for (int i=0; i < orders.size(); i++) { // TODO: orders.size
-		//			System.out.println("Order nr " + i);
-		//			long startTime = System.nanoTime();
-		//			Chromosome chrom = BRKGA.solve(orders.get(i), lowerBound[i], choice_D2_VBO);
-		//			long endTime   = System.nanoTime();
-		//			long totalTime = (endTime - startTime)/1000000;
-		//			totalNumBins += chrom.getNumCrates();
-		//			double avFillRate = 0.0;
-		//			double avWeight = 0.0;
-		//			for (Item it : orders.get(i).getItems()) {
-		//				avFillRate += it.getVolume();
-		//				avWeight += it.getWeight();
-		//			}
-		//			avFillRate = avFillRate/(chrom.getNumCrates()*crate.getVolume());
-		//			avWeight = avWeight/chrom.getNumCrates();
-		//			outInfo.println(i + "\t" + chrom.getNumCrates() + "\t" + chrom.getFitness() + "\t" + lowerBound[i] + "\t" + avFillRate + "\t" + avWeight + "\t" + totalTime);
-		//			outSol.println("Order: " + i);
-		//			outSol.println("Crates: " + chrom.getNumCrates());
-		//			for (int k=0; k < chrom.getOpenCrates().size(); k++) {
-		//				List<Integer> openCrate = chrom.getOpenCrates().get(k);
-		//				String output = k + "\t";
-		//				for (int j=0; j < openCrate.size(); j++) {
-		//					if (openCrate.get(j) == 1)
-		//						output += (int) chrom.getItems().get(j).getItemId() + " ";
-		//				}
-		//				outSol.println(output);
-		//			}
-		//		}
-		//		outInfo.close();
-		//		outSol.close();
-		//		System.out.println("Total Number of bins bitchessszs " + totalNumBins);
 
-		//		int instance = 88;
-		//		double lowerbound = LowerBoundModel.setCoveringLB(orders.get(instance), items);
-		//		System.out.println(lowerbound);
-		//		Chromosome chrom = BRKGA.solve(orders.get(instance), lowerbound, choice_D2_VBO);
-		//		printCrate(orders.get(instance), chrom);
+
+		// create tasks
+		List<Runnable> runnables = new ArrayList<>();
+		for(int i=0; i < orders.size(); i++) {
+			Runnable runnable = new MultiThread(orders.get(i), 1, lowerBound[i], i);
+			runnables.add(runnable);
+
+		}
+
+		// creates a thread pool with MAX_T no. of 
+		// threads as the fixed pool size(Step 2)
+		ExecutorService pool = Executors.newFixedThreadPool(MAX_T); 
+
+		// passes the MultiThread objects to the pool to execute (Step 3)
+		for(Runnable runnable: runnables) {
+			pool.execute(runnable);
+		}
+
+		awaitTerminationAfterShutdown(pool);
+		// pool shutdown ( Step 4)
+		//pool.shutdown();
 
 		File info = new File("GA_solution_info_multi.txt"); 
 		File sol = new File("GA_solution_multi.txt");
 		PrintWriter outInfo = new PrintWriter(info);
 		PrintWriter outSol = new PrintWriter(sol);
-		outInfo.println("instance\tnumCrates\tadjNumCrates\tnumCratesLB\tavFillRate\tavWeight");
+		outInfo.println("instance\tnumCrates\tadjNumCrates\tnumCratesLB\tavFillRate\tavWeight\trunTime");
 		int totalNumBins = 0;
 		Crate crate = new Crate();
-		List<Thread> threads = new ArrayList<Thread>();
-		long startTime = System.nanoTime();
-		ExecutorService executorService = Executors.newSingleThreadExecutor();
-		executorService.execute(new Runnable() {
-		    public void run() {
-		        System.out.println("Asynchronous task");
-		    }
-		});
+		for (int i=0; i < orders.size(); i++) { // TODO: orders.size
+			System.out.println("Order nr " + i);
+			Chromosome chrom = ((MultiThread) runnables.get(i)).getChromosome();
 
-		executorService.shutdown();
-		for(int i = 0; i < orders.size(); i++) {
-			MultiThread multiThread = new MultiThread(orders.get(i), choice_D2_VBO, lowerBound[i], i);
-			Thread thread = new Thread(multiThread);
-			threads.add(thread);
-			thread.start();
-		}
-		List<Thread> threadsCopy = new ArrayList<Thread>(threads);
-		while (!threadsCopy.isEmpty()) {
-			System.out.println("Number of alive threads: " + threadsCopy.size());
-			Iterator<Thread> iter = threadsCopy.iterator();
-			while(iter.hasNext()){
-				MultiThread threadCopy = iter.next();
-				if(!threadCopy.isAlive()){
-					iter.remove();
-	            }
-			}
-		}
-		long endTime   = System.nanoTime();
-		long totalTime = (endTime - startTime)/1000000;
-		System.out.println("Total time = " + totalTime);
-		for(int i=0; i < orders.size(); i++) {
-			Chromosome chrom = threads.get(i).getChromosome();
 			totalNumBins += chrom.getNumCrates();
 			double avFillRate = 0.0;
 			double avWeight = 0.0;
@@ -117,7 +69,7 @@ public class MainBRKGA {
 			}
 			avFillRate = avFillRate/(chrom.getNumCrates()*crate.getVolume());
 			avWeight = avWeight/chrom.getNumCrates();
-			outInfo.println(i + "\t" + chrom.getNumCrates() + "\t" + chrom.getFitness() + "\t" + lowerBound[i] + "\t" + avFillRate + "\t" + avWeight);
+			outInfo.println(i + "\t" + chrom.getNumCrates() + "\t" + chrom.getFitness() + "\t" + lowerBound[i] + "\t" + avFillRate + "\t" + avWeight + "\t");
 			outSol.println("Order: " + i);
 			outSol.println("Crates: " + chrom.getNumCrates());
 			for (int k=0; k < chrom.getOpenCrates().size(); k++) {
@@ -132,7 +84,53 @@ public class MainBRKGA {
 		}
 		outInfo.close();
 		outSol.close();
-		System.out.println("MULTI THREAD TOTAL NUMBER OF BINS: " + totalNumBins);
+		System.out.println("Total Number Of Bins MULTITHREAD " + totalNumBins);
+
+
+	    // int instance = 88;
+    	//		double lowerbound = LowerBoundModel.setCoveringLB(orders.get(instance), items);
+		//		System.out.println(lowerbound);
+		//		Chromosome chrom = BRKGA.solve(orders.get(instance), lowerbound, choice_D2_VBO);
+		//		printCrate(orders.get(instance), chrom);
+
+		/*
+		 * File info = new File("GA_solution_info_multi.txt"); File sol = new
+		 * File("GA_solution_multi.txt"); PrintWriter outInfo = new PrintWriter(info);
+		 * PrintWriter outSol = new PrintWriter(sol); outInfo.println(
+		 * "instance\tnumCrates\tadjNumCrates\tnumCratesLB\tavFillRate\tavWeight"); int
+		 * totalNumBins = 0; Crate crate = new Crate(); List<Thread> threads = new
+		 * ArrayList<Thread>(); long startTime = System.nanoTime(); ExecutorService
+		 * executorService = Executors.newSingleThreadExecutor();
+		 * executorService.execute(new Runnable() { public void run() {
+		 * System.out.println("Asynchronous task"); } });
+		 * 
+		 * executorService.shutdown(); for(int i = 0; i < orders.size(); i++) {
+		 * MultiThread multiThread = new MultiThread(orders.get(i), choice_D2_VBO,
+		 * lowerBound[i], i); Thread thread = new Thread(multiThread);
+		 * threads.add(thread); thread.start(); } List<Thread> threadsCopy = new
+		 * ArrayList<Thread>(threads); while (!threadsCopy.isEmpty()) {
+		 * System.out.println("Number of alive threads: " + threadsCopy.size());
+		 * Iterator<Thread> iter = threadsCopy.iterator(); while(iter.hasNext()){
+		 * MultiThread threadCopy = iter.next(); if(!threadCopy.isAlive()){
+		 * iter.remove(); } } } long endTime = System.nanoTime(); long totalTime =
+		 * (endTime - startTime)/1000000; System.out.println("Total time = " +
+		 * totalTime); for(int i=0; i < orders.size(); i++) { Chromosome chrom =
+		 * threads.get(i).getChromosome(); totalNumBins += chrom.getNumCrates(); double
+		 * avFillRate = 0.0; double avWeight = 0.0; for (Item it :
+		 * orders.get(i).getItems()) { avFillRate += it.getVolume(); avWeight +=
+		 * it.getWeight(); } avFillRate =
+		 * avFillRate/(chrom.getNumCrates()*crate.getVolume()); avWeight =
+		 * avWeight/chrom.getNumCrates(); outInfo.println(i + "\t" +
+		 * chrom.getNumCrates() + "\t" + chrom.getFitness() + "\t" + lowerBound[i] +
+		 * "\t" + avFillRate + "\t" + avWeight); outSol.println("Order: " + i);
+		 * outSol.println("Crates: " + chrom.getNumCrates()); for (int k=0; k <
+		 * chrom.getOpenCrates().size(); k++) { List<Integer> openCrate =
+		 * chrom.getOpenCrates().get(k); String output = k + "\t"; for (int j=0; j <
+		 * openCrate.size(); j++) { if (openCrate.get(j) == 1) output += (int)
+		 * chrom.getItems().get(j).getItemId() + " "; } outSol.println(output); } }
+		 * outInfo.close(); outSol.close();
+		 * System.out.println("MULTI THREAD TOTAL NUMBER OF BINS: " + totalNumBins);
+		 */
 
 		//		double avWeight = 0.0;
 		//		double avVolume = 0.0;
@@ -146,6 +144,25 @@ public class MainBRKGA {
 		//		avWeight = avWeight/1907;
 		//		avVolume = avVolume/1907;
 		//		System.out.println("Average volume = " + avVolume + ", average weight = " + avWeight);
+	
+	
+	
+	
+	
+	
+	
+	}
+	
+	public static void awaitTerminationAfterShutdown(ExecutorService threadPool) {
+	    threadPool.shutdown();
+	    try {
+	        if (!threadPool.awaitTermination(1, TimeUnit.HOURS)) {
+	            threadPool.shutdownNow();
+	        }
+	    } catch (InterruptedException ex) {
+	        threadPool.shutdownNow();
+	        Thread.currentThread().interrupt();
+	    }
 	}
 
 	@SuppressWarnings("unused")
