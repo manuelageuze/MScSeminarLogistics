@@ -16,10 +16,10 @@ public class Item implements Comparable<Item> {
 	private final double height;
 	private final double weight;
 	private final double volume;
-	double insertedX;
-	double insertedY;
-	double insertedZ;
-	int crateIndex;
+	private double insertedX;
+	private double insertedY;
+	private double insertedZ;
+	private int crateIndex;
 
 	/**
 	 * Constructor that creates a new item

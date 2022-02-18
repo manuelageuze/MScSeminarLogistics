@@ -2,14 +2,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class BF {
+public class FF {
 	private final Order order;
 
-	public BF(Order order) {
+	public FF(Order order) {
 		this.order = order;
 	}
 
-	public List<Crate> computeBF() { // PrintWriter out, int index
+	public List<Crate> computeFF(){
+
 		List<Item> sortedItemList = new ArrayList<>(order.getItems());	
 		Collections.sort(sortedItemList); // Order a list of items
 
@@ -61,12 +62,9 @@ public class BF {
 		crates.get(0).setItemList(sideItems);
 
 		for(int i = 0; i < sortedItemList.size(); i++) {// Voor alle items
-			if(i == 15) {
-				int test = 0;
-				test = test +1;
-			}
-					
-			List<Item> rotatedItem = new ArrayList<>(); // List with all rotations of an item
+
+			// Find the rotation of an item
+			List<Item> rotatedItem = new ArrayList<>();
 			Item a = sortedItemList.get(i);
 			// Rotatie 1
 			Item it = new Item(a.getItemId() , a.getWidth(), a.getLength(), a.getHeight(), a.getWeight());
@@ -92,46 +90,47 @@ public class BF {
 			int crateIndex = 0;
 			int rotatedIndex = 0;
 			double f = Double.POSITIVE_INFINITY;
+
 			for(int k = 0; k < crates.size(); k++) { // Voor alle kratten
-				if(crates.get(k).getCurrentWeight() + sortedItemList.get(i).getWeight() <= crates.get(k).getMaxWeight()) {
+				if(crates.get(k).getCurrentWeight() + sortedItemList.get(i).getWeight() <= crates.get(k).getMaxWeight()) { // Als het past voor gewicht
 					for(int j = 0; j < crates.get(k).getEP().size(); j++) { // Voor alle EP's in de kratten
+						EP ep = crates.get(k).getEP().get(j);
 						for(int r = 0; r < rotatedItem.size();r++) { // Voor alle rotaties
-							EP ep = crates.get(k).getEP().get(j);
 							double rsx = ep.getRSx() - rotatedItem.get(r).getWidth();
 							double rsy = ep.getRSy() - rotatedItem.get(r).getLength();
 							double rsz = ep.getRSz() - rotatedItem.get(r).getHeight();
-							if(rsx > 0 && rsy > 0 && rsz > 0) {
-								double compare = rsx + rsy + rsz;
-								if(compare < f) {
-									epIndex = j;
-									crateIndex = k;
-									f = compare;
-									rotatedIndex = r;
+							if(rsx > 0 && rsy > 0 && rsz > 0) { // Dus het item past in de residual space van het EP
+								if(itemfits(ep, crates.get(k).getItemList(), rotatedItem.get(r)) == true) { // En plaatsing overlapt niet met ander item
+									double compare = rsx + rsy + rsz;
+									if(compare < f) {
+										epIndex = j;
+										crateIndex = k;
+										f = compare;
+										rotatedIndex = r;
+									}
 								}
 							}	
 						}
 					}
 				}
 			}
-			// If no position is found, create new bin, add the item to the bin
 			if(f == Double.POSITIVE_INFINITY) {
 				crateIndex = crates.size();
 				Crate c = new Crate();
 				c.setItemList(sideItems);
 
-				for(int r = 0; r < rotatedItem.size();r++) {
-					rotatedItem.get(r);
+				for(int r = 0; r < rotatedItem.size(); r++) {
 					double rsx = 321 - rotatedItem.get(r).getWidth();
 					double rsy = 501 - rotatedItem.get(r).getLength();
 					double rsz = 273 - rotatedItem.get(r).getHeight();
-					if(rsx > 0 && rsy > 0 && rsz > 0) {
+					if(rsx > 0 && rsy > 0 && rsz > 0) { // Er zijn nog geen andere items, dus niet nodig testen op andere items
+						// Wel nodig testen of past in RS
 						double compare = rsx + rsy + rsz;
 						if(compare < f) {
 							f = compare;
 							rotatedIndex = r;
 						}
 					}
-
 				}
 				// Create the 3 extreme points
 				EP one = new EP(rotatedItem.get(rotatedIndex).getWidth(),0,0);
@@ -172,11 +171,6 @@ public class BF {
 				maxbound[i1] = -1.0;
 			}
 			for(int j = 0; j < crates.get(crateIndex).getItemList().size() - 1; j++) {
-				if(j == 6)
-				{
-					int test = 0;
-					test = test +1;
-				}
 				//#1
 				if(crates.get(crateIndex).getItemList().get(j).getInsertedX() + crates.get(crateIndex).getItemList().get(j).getWidth() > maxbound[0]) {
 					EP ep = canTakeProjectionYX(crates.get(crateIndex).getItemList().get(j), crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1),crates.get(crateIndex).getItemList());
@@ -249,8 +243,8 @@ public class BF {
 			crates.get(crateIndex).setEPList(new ArrayList<>(newlist));
 
 			// Update the RS of all extreme points with algorithm 2
-			Item nItem = crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1);
-			for(int j = 0; j < crates.get(crateIndex).getEP().size(); j++) {
+			Item nItem = crates.get(crateIndex).getItemList().get(crates.get(crateIndex).getItemList().size() - 1); // newly added item
+			for(int j = 0; j < crates.get(crateIndex).getEP().size(); j++) { // For all extreme points
 				EP ep = crates.get(crateIndex).getEP().get(j);
 				if(nItem.getInsertedX()<= ep.getX() && ep.getX() < nItem.getInsertedX()+nItem.getWidth()) {
 					if(nItem.getInsertedY()<= ep.getY() && ep.getY() < nItem.getInsertedY()+nItem.getLength()) {
@@ -261,32 +255,32 @@ public class BF {
 						}
 					}
 				}
-				if(ep.getZ() >= nItem.getInsertedZ() && ep.getZ() < nItem.getInsertedZ() + nItem.getHeight()) {
-					if(isOnSideX(ep,nItem)) {
-						ep.setRSx(Math.min(ep.getRSx(), nItem.getInsertedX() - ep.getX()));
+				if(ep.getZ() >= nItem.getInsertedZ() && ep.getZ() < nItem.getInsertedZ() + nItem.getHeight()) {				
+					if(ep.getX() <= nItem.getInsertedX()) {
+						if(nItem.getInsertedY() <= ep.getY() && ep.getY() < nItem.getInsertedY() + nItem.getLength()) {
+							ep.setRSx(Math.min(ep.getRSx(), nItem.getInsertedX() - ep.getX()));
+						}
 					}
-					if(isOnSideY(ep,nItem)) {
-						ep.setRSy(Math.min(ep.getRSy(),nItem.getInsertedY() - ep.getY()));
-					}
-				}
-				if(ep.getZ() <= nItem.getInsertedZ()) {// && isOnSideY(ep,nItem) && isOnSideX(ep, nItem)
-					if(ep.getX() <= nItem.getInsertedX() && nItem.getInsertedX() <= ep.getX()+ep.getRSx()
-						&& ep.getY() <= nItem.getInsertedY() && nItem.getInsertedY()<=ep.getY()+ep.getRSy())
-					{
-						ep.setRSz(Math.min(ep.getRSz(), nItem.getInsertedZ() - ep.getZ()));
-					}
-					else if(ep.getX() <= nItem.getInsertedX() && nItem.getInsertedX() < ep.getX()+ep.getRSx()
-							&& ep.getY() < nItem.getInsertedY()+ nItem.getLength())
-					{
-						ep.setRSz(Math.min(ep.getRSz(), nItem.getInsertedZ() - ep.getZ()));
-					}
-					else if(ep.getY() <= nItem.getInsertedY() && nItem.getInsertedY() < ep.getY()+ep.getRSy()
-							&& ep.getX() < nItem.getInsertedX()+nItem.getWidth())
-					{
-						ep.setRSz(Math.min(ep.getRSz(), nItem.getInsertedZ() - ep.getZ()));
+					if(ep.getY() <= nItem.getInsertedY()) {
+						if(nItem.getInsertedX() <= ep.getX() && ep.getX() < nItem.getInsertedX() + nItem.getWidth()) {
+							ep.setRSy(Math.min(ep.getRSy(),nItem.getInsertedY() - ep.getY()));
+						}
 					}
 				}
-								
+				if(ep.getZ() <= nItem.getInsertedZ()) { // Als z erboven
+					if(ep.getZ() + ep.getRSz() >= nItem.getInsertedZ()) { // Als het nieuwe item wel in de RS valt
+						
+						if(ep.getX() >= nItem.getInsertedX() && ep.getX() < nItem.getInsertedX() + nItem.getWidth()) {
+							
+							if(ep.getY() >= nItem.getInsertedY() && ep.getY() < nItem.getInsertedY() + nItem.getLength()) {
+								 ep.setRSz(Math.min(ep.getRSz(), nItem.getInsertedZ() - ep.getZ()));
+							}
+							
+						}
+						
+					}
+				}
+
 				// If RS of ep zero, remove EP
 				if(ep.getRSx() <= 0.0) {
 					crates.get(crateIndex).getEP().remove(j);
@@ -302,21 +296,27 @@ public class BF {
 				}
 			}
 		}
-
-
-		// Print solution
-		//		System.out.println("Number of crates used in this order: " + crates.size());
-		//		for(int i = 0; i < crates.size(); i++) {
-		//			Crate c = crates.get(i);
-		//			System.out.print("Crate number " + (i + 1)+"\t");
-		//			for(int j = 6 ; j < c.getItemList().size(); j++) {
-		//				System.out.print((int)c.getItemList().get(j).getItemId() + "\t");
-		//			}
-		//			System.out.println();
-		//		}
-		//		System.out.println("Order "+((int)order.getOrderId()));
 		return crates;
+	}
 
+
+	private boolean itemfits(EP ep, List<Item> itemList, Item nItem) {
+		// This method should display if there is another item in this box that would block the placement of the new item
+		
+		for(int i = 0; i < itemList.size(); i++) {
+			Item itemi = itemList.get(i);
+			
+			
+			if(nItem.getInsertedZ() <= itemi.getInsertedZ() && itemi.getInsertedZ() < nItem.getInsertedZ() + nItem.getHeight()) {
+				if(nItem.getInsertedX() <= itemi.getInsertedX() && itemi.getInsertedX() < nItem.getInsertedX() + nItem.getWidth()) {
+					if(nItem.getInsertedY() <= itemi.getInsertedY() && itemi.getInsertedY() < nItem.getInsertedY() + nItem.getLength()){
+						return false;
+					}
+				}
+			}	
+		}	
+		
+		return true;
 	}
 
 	public boolean isOnSideY(EP ep, Item nItem) {
@@ -348,7 +348,7 @@ public class BF {
 
 			for(int j = 6; j < items.size(); j++) {
 				Item itemj = items.get(j);
-				if(itemj.getItemId() == i.getItemId()) {
+				if(itemj.getItemId() == i.getItemId()) { // Neem het eigen item niet mee
 					if(itemj.getInsertedX() == i.getInsertedX()) {
 						if(itemj.getInsertedY() == i.getInsertedY()) {
 							if(itemj.getInsertedZ() == i.getInsertedZ()) {
@@ -358,44 +358,46 @@ public class BF {
 					}
 				}
 
-				if(newy >= itemj.getInsertedY() + itemj.getLength() || newx >= itemj.getInsertedX() + itemj.getWidth()) {		
+				if(newy >= itemj.getInsertedY() + itemj.getLength() || newx >= itemj.getInsertedX() + itemj.getWidth()) {//1	
 					continue;
 				}
-				if(itemj.getInsertedY() > i.getInsertedY() + i.getLength()) {
-					if(newz <= itemj.getInsertedZ() && rsz > itemj.getInsertedZ()-newz)rsz = itemj.getInsertedZ() - newz;
-					else if(itemj.getInsertedZ() < newz && newz < itemj.getInsertedZ()+itemj.getHeight())
-					{
-						if(rsx > itemj.getInsertedX()-newx)rsx = itemj.getInsertedX() - newx;
-						if(rsy > itemj.getInsertedY()-newy)rsy = itemj.getInsertedY() - newy;
+				if(itemj.getInsertedY() > i.getInsertedY() + i.getLength()) { //2
+					if(itemj.getInsertedZ() < newz && newz < itemj.getInsertedZ()+itemj.getHeight()) { // dus door hoogte blokt het item
+						if(itemj.getInsertedX() <= newx && newx < itemj.getInsertedX() + itemj.getWidth()) {
+							if(rsy > itemj.getInsertedY()-newy) {
+								rsy = itemj.getInsertedY() - newy;
+							}
+						}
 					}
 					continue;
 				}
-				if(itemj.getInsertedX()> k.getInsertedX() + k.getWidth()) {
-					if(newz <= itemj.getInsertedZ() && rsz > itemj.getInsertedZ()-newz)rsz = itemj.getInsertedZ() - newz;
-					else if(itemj.getInsertedZ() < newz && newz < itemj.getInsertedZ()+itemj.getHeight())
-					{
-						if(rsx > itemj.getInsertedX()-newx)rsx = itemj.getInsertedX() - newx;
-						if(rsy > itemj.getInsertedY()-newy)rsy = itemj.getInsertedY() - newy;
+				if(itemj.getInsertedX() > k.getInsertedX() + k.getWidth()) { //3
+					if(itemj.getInsertedZ() < newz && newz < itemj.getInsertedZ()+itemj.getHeight()) {
+						if(itemj.getInsertedY() <= newy && newy < itemj.getInsertedY() + itemj.getLength()) {
+							if(rsx > itemj.getInsertedX()-newx) {
+								rsx = itemj.getInsertedX() - newx;
+							}
+						}
 					}
 					continue;
 				}
-				if(itemj.getInsertedX() >= newx && itemj.getInsertedY() >= newy)
-				{
-					if(newz <= itemj.getInsertedZ()&&rsz > itemj.getInsertedZ()-newz)rsz = itemj.getInsertedZ()-newz;
-					else if(itemj.getInsertedZ() < newz && newz < itemj.getInsertedZ()+ itemj.getHeight())
-					{
-						if(rsx > itemj.getInsertedX()-newx)rsx = itemj.getInsertedX()-newx;
-						if(rsy > itemj.getInsertedY()-newy)rsy = itemj.getInsertedY()-newy;
-					}
+				if(itemj.getInsertedX() >= newx && itemj.getInsertedY() >= newy) {
 					continue;
 				}
-				if(newz < itemj.getInsertedZ())
-				{
-					if(rsz > itemj.getInsertedZ() - newz)rsz = itemj.getInsertedZ()-newz;
-					continue;
-				}
-				if(newz >= itemj.getInsertedZ() + itemj.getHeight())continue;
+				if(newz < itemj.getInsertedZ()) {
+					if(itemj.getInsertedX() <= newx && newx < itemj.getInsertedX() + itemj.getWidth()) {
+						if(itemj.getInsertedY() <= newy && newy < itemj.getInsertedY() + itemj.getLength()) {
+							if(rsz > itemj.getInsertedZ() - newz) {
+								rsz = itemj.getInsertedZ() - newz;
+							}
 
+						}
+					}
+					continue;
+				}
+				if(newz >= itemj.getInsertedZ() + itemj.getHeight()) {
+					continue;
+				}
 				return null;
 			}
 			ep.setRSx(rsx);
@@ -426,7 +428,7 @@ public class BF {
 
 			for(int j = 6; j < items.size(); j++) {
 				Item itemj = items.get(j);
-				if(itemj.getItemId() == i.getItemId()) {
+				if(itemj.getItemId() == i.getItemId()) { // Neem het eigen item niet mee
 					if(itemj.getInsertedX() == i.getInsertedX()) {
 						if(itemj.getInsertedY() == i.getInsertedY()) {
 							if(itemj.getInsertedZ() == i.getInsertedZ()) {
@@ -436,57 +438,56 @@ public class BF {
 					}
 				}
 
-				if(newy >= itemj.getInsertedY() + itemj.getLength() || newz >= itemj.getInsertedZ() + itemj.getHeight()) {		
+				if(newy >= itemj.getInsertedY() + itemj.getLength() || newz >= itemj.getInsertedZ() + itemj.getHeight()) {//1	
 					continue;
 				}
-				if(itemj.getInsertedY() > i.getInsertedY() + i.getLength()) {
-					if(newx <= itemj.getInsertedX() && rsx > itemj.getInsertedX()-newx)rsx = itemj.getInsertedX() - newx;
-					else if(itemj.getInsertedX() < newx && newx < itemj.getInsertedX()+itemj.getWidth())
-					{
-						if(rsz > itemj.getInsertedZ()-newz)rsz = itemj.getInsertedZ() - newz;
-						if(rsy > itemj.getInsertedY()-newy)rsy = itemj.getInsertedY() - newy;
+				if(itemj.getInsertedY() > i.getInsertedY() + i.getLength()) { //2
+					if(itemj.getInsertedX() < newx && newx < itemj.getInsertedX()+itemj.getWidth()) { // dus door hoogte blokt het item
+						if(itemj.getInsertedZ() <= newz && newz < itemj.getInsertedZ() + itemj.getHeight()) {
+							if(rsy > itemj.getInsertedY()-newy) {
+								rsy = itemj.getInsertedY() - newy;
+							}
+						}
 					}
 					continue;
 				}
-				if(itemj.getInsertedZ()> k.getInsertedZ() + k.getLength()) {
-					if(newx <= itemj.getInsertedX() && rsx > itemj.getInsertedX()-newx)rsx = itemj.getInsertedX() - newx;
-					else if(itemj.getInsertedX() < newx && newx < itemj.getInsertedX()+itemj.getWidth())
-					{
-						if(rsz > itemj.getInsertedZ()-newz)rsz = itemj.getInsertedZ() - newz;
-						if(rsy > itemj.getInsertedY()-newy)rsy = itemj.getInsertedY() - newy;
+				if(itemj.getInsertedZ() > k.getInsertedZ() + k.getHeight()) { //3
+					if(itemj.getInsertedX() < newx && newx < itemj.getInsertedX()+itemj.getWidth()) {
+						if(itemj.getInsertedY() <= newy && newy < itemj.getInsertedY() + itemj.getLength()) {
+							if(rsz > itemj.getInsertedZ()-newz) {
+								rsz = itemj.getInsertedZ() - newz;
+							}
+						}
 					}
 					continue;
 				}
-				if(itemj.getInsertedZ() >= newz && itemj.getInsertedY() >= newy)
-				{
-					if(newx <= itemj.getInsertedX()&&rsx > itemj.getInsertedX()-newx)rsx = itemj.getInsertedX()-newx;
-					else if(itemj.getInsertedX() < newx && newx < itemj.getInsertedX()+ itemj.getWidth())
-					{
-						if(rsz > itemj.getInsertedZ()-newx)rsz = itemj.getInsertedZ()-newz;
-						if(rsy > itemj.getInsertedY()-newy)rsy = itemj.getInsertedY()-newy;
-					}
+				if(itemj.getInsertedZ() >= newz && itemj.getInsertedZ() >= newz) {
 					continue;
 				}
-				if(newx < itemj.getInsertedX())
-				{
-					if(rsx > itemj.getInsertedX() - newx)rsx = itemj.getInsertedX()-newx;
-					continue;
-				}
-				if(newx >= itemj.getInsertedX() + itemj.getWidth())
-				{
-					continue;
-				}
+				if(newx < itemj.getInsertedX()) {
+					if(itemj.getInsertedZ() <= newz && newz < itemj.getInsertedZ() + itemj.getHeight()) {
+						if(itemj.getInsertedY() <= newy && newy < itemj.getInsertedY() + itemj.getLength()) {
+							if(rsx > itemj.getInsertedX() - newx) {
+								rsx = itemj.getInsertedX() - newx;
+							}
 
+						}
+					}
+					continue;
+				}
+				if(newx >= itemj.getInsertedX() + itemj.getWidth()) {
+					continue;
+				}
 				return null;
 			}
-
 			ep.setRSx(rsx);
 			ep.setRSy(rsy);
 			ep.setRSz(rsz);
 			if(rsx==0||rsy==0||rsz == 0) return null;
 			return ep;
-		}
+		}	
 		return null;
+
 	}
 
 	//	#3
@@ -517,49 +518,48 @@ public class BF {
 						}
 					}
 				}
-				if(newx  >= itemj.getInsertedX()+itemj.getWidth() || newy >= itemj.getInsertedY()+ itemj.getLength())
-				{
-					continue;
-				}
-				if(itemj.getInsertedY() > k.getInsertedY() + k.getLength())
-				{
-					if(newz <= itemj.getInsertedZ() && rsz > itemj.getInsertedZ()-newz)rsz=itemj.getInsertedZ()-newz;
-					else if(itemj.getInsertedZ() < newz && newz < itemj.getInsertedZ()+itemj.getHeight())
-					{
-						if(rsx > itemj.getInsertedX()-newx)rsx = itemj.getInsertedX()-newx;
-						if(rsy > itemj.getInsertedY()-newy)rsy = itemj.getInsertedY()-newy;
-					}
-					continue;
-				}
-				if(itemj.getInsertedX() > i.getInsertedX()+i.getWidth())
-				{
-					if(newz <= itemj.getInsertedZ() && rsz > itemj.getInsertedZ()-newz)rsz=itemj.getInsertedZ()-newz;
-					else if(itemj.getInsertedZ() < newz && newz < itemj.getInsertedZ()+itemj.getHeight())
-					{
-						if(rsx > itemj.getInsertedX()-newx)rsx = itemj.getInsertedX()-newx;
-						if(rsy > itemj.getInsertedY()-newy)rsy = itemj.getInsertedY()-newy;
-					}
-					continue;
-				}
-				if(itemj.getInsertedX() >= newx && itemj.getInsertedY() >= newy)
-				{
-					if(newz <= itemj.getInsertedZ() && rsz > itemj.getInsertedZ()-newz)rsz=itemj.getInsertedZ()-newz;
-					else if(itemj.getInsertedZ() < newz && newz < itemj.getInsertedZ()+itemj.getHeight())
-					{
-						if(rsx > itemj.getInsertedX()-newx)rsx = itemj.getInsertedX()-newx;
-						if(rsy > itemj.getInsertedY()-newy)rsy = itemj.getInsertedY()-newy;
-					}
-					continue;
-				}
-				if(newz < itemj.getInsertedZ())
-				{
-					if(rsz > itemj.getInsertedZ()-newz)rsz=itemj.getInsertedZ()-newz;
-					continue;
-				}
-				if(newz >= itemj.getInsertedZ()+itemj.getHeight())continue;
 
+				if(newx >= itemj.getInsertedX() + itemj.getWidth() || newy >= itemj.getInsertedY() + itemj.getLength()) {//1	
+					continue;
+				}
+				if(itemj.getInsertedX() > i.getInsertedX() + i.getWidth()) { //2
+					if(itemj.getInsertedZ() < newz && newz < itemj.getInsertedZ()+itemj.getHeight()) { // dus door hoogte blokt het item
+						if(itemj.getInsertedY() <= newy && newy < itemj.getInsertedY() + itemj.getLength()) {
+							if(rsx > itemj.getInsertedX()-newx) {
+								rsx = itemj.getInsertedX() - newx;
+							}
+						}
+					}
+					continue;
+				}
+				if(itemj.getInsertedY() > k.getInsertedY() + k.getLength()) { //3
+					if(itemj.getInsertedZ() < newz && newz < itemj.getInsertedZ()+itemj.getHeight()) {
+						if(itemj.getInsertedX() <= newx && newx < itemj.getInsertedX() + itemj.getWidth()) {
+							if(rsy > itemj.getInsertedY()-newy) {
+								rsy = itemj.getInsertedY() - newy;
+							}
+						}
+					}
+					continue;
+				}
+				if(itemj.getInsertedY() >= newy && itemj.getInsertedY() >= newy) {
+					continue;
+				}
+				if(newz < itemj.getInsertedZ()) {
+					if(itemj.getInsertedY() <= newy && newy < itemj.getInsertedY() + itemj.getLength()) {
+						if(itemj.getInsertedX() <= newx && newx < itemj.getInsertedX() + itemj.getWidth()) {
+							if(rsz > itemj.getInsertedZ() - newz) {
+								rsz = itemj.getInsertedZ() - newz;
+							}
+
+						}
+					}
+					continue;
+				}
+				if(newz >= itemj.getInsertedZ() + itemj.getHeight()) {
+					continue;
+				}
 				return null;
-
 			}
 
 			ep.setRSx(rsx);
@@ -598,49 +598,48 @@ public class BF {
 						}
 					}
 				}
-				if(newx  >= itemj.getInsertedX()+itemj.getWidth() || newz >= itemj.getInsertedZ()+ itemj.getHeight())
-				{
-					continue;
-				}
-				if(itemj.getInsertedZ() > k.getInsertedZ() + k.getHeight())
-				{
-					if(newy <= itemj.getInsertedY() && rsy > itemj.getInsertedY()-newy)rsy=itemj.getInsertedY()-newy;
-					else if(itemj.getInsertedY() < newy && newy < itemj.getInsertedY()+itemj.getLength())
-					{
-						if(rsx > itemj.getInsertedX()-newx)rsx = itemj.getInsertedX()-newx;
-						if(rsz > itemj.getInsertedZ()-newz)rsz = itemj.getInsertedZ()-newz;
-					}
-					continue;
-				}
-				if(itemj.getInsertedX() > i.getInsertedX()+i.getWidth())
-				{
-					if(newy <= itemj.getInsertedY() && rsy > itemj.getInsertedY()-newy)rsy=itemj.getInsertedY()-newy;
-					else if(itemj.getInsertedY() < newy && newy < itemj.getInsertedY()+itemj.getLength())
-					{
-						if(rsx > itemj.getInsertedX()-newx)rsx = itemj.getInsertedX()-newx;
-						if(rsz > itemj.getInsertedZ()-newz)rsz = itemj.getInsertedZ()-newz;
-					}
-					continue;
-				}
-				if(itemj.getInsertedX() >= newx && itemj.getInsertedZ() >= newz)
-				{
-					if(newy <= itemj.getInsertedY() && rsy > itemj.getInsertedY()-newy)rsy=itemj.getInsertedY()-newy;
-					else if(itemj.getInsertedY() < newy && newy < itemj.getInsertedY()+itemj.getLength())
-					{
-						if(rsx > itemj.getInsertedX()-newx)rsx = itemj.getInsertedX()-newx;
-						if(rsz > itemj.getInsertedZ()-newz)rsz = itemj.getInsertedZ()-newz;
-					}
-					continue;
-				}
-				if(newy < itemj.getInsertedY())
-				{
-					if(rsy > itemj.getInsertedY()-newy)rsy=itemj.getInsertedY()-newy;
-					continue;
-				}
-				if(newy >= itemj.getInsertedY()+itemj.getLength())continue;
 
+				if(newx >= itemj.getInsertedX() + itemj.getWidth() || newz >= itemj.getInsertedZ() + itemj.getHeight()) {//1	
+					continue;
+				}
+				if(itemj.getInsertedX() > i.getInsertedX() + i.getWidth()) { //2
+					if(itemj.getInsertedY() < newy && newy < itemj.getInsertedY()+itemj.getLength()) { // dus door hoogte blokt het item
+						if(itemj.getInsertedZ() <= newz && newz < itemj.getInsertedZ() + itemj.getHeight()) {
+							if(rsx > itemj.getInsertedX()-newx) {
+								rsx = itemj.getInsertedX() - newx;
+							}
+						}
+					}
+					continue;
+				}
+				if(itemj.getInsertedZ() > k.getInsertedZ() + k.getHeight()) { //3
+					if(itemj.getInsertedY() < newy && newy < itemj.getInsertedY()+itemj.getLength()) {
+						if(itemj.getInsertedX() <= newx && newx < itemj.getInsertedX() + itemj.getWidth()) {
+							if(rsz > itemj.getInsertedZ()-newz) {
+								rsz = itemj.getInsertedZ() - newz;
+							}
+						}
+					}
+					continue;
+				}
+				if(itemj.getInsertedZ() >= newz && itemj.getInsertedZ() >= newz) {
+					continue;
+				}
+				if(newy < itemj.getInsertedY()) {
+					if(itemj.getInsertedZ() <= newz && newz < itemj.getInsertedZ() + itemj.getHeight()) {
+						if(itemj.getInsertedX() <= newx && newx < itemj.getInsertedX() + itemj.getWidth()) {
+							if(rsy > itemj.getInsertedY() - newy) {
+								rsy = itemj.getInsertedY() - newy;
+							}
+
+						}
+					}
+					continue;
+				}
+				if(newy >= itemj.getInsertedY() + itemj.getLength()) {
+					continue;
+				}
 				return null;
-
 			}
 
 			ep.setRSx(rsx);
@@ -679,44 +678,48 @@ public class BF {
 						}
 					}
 				}
-				if(newx >= itemj.getInsertedX() + itemj.getWidth() || newz >= itemj.getInsertedZ()+itemj.getHeight()) {
+
+				if(newz >= itemj.getInsertedZ() + itemj.getHeight() || newx >= itemj.getInsertedX() + itemj.getWidth()) {//1	
 					continue;
 				}
-				if(itemj.getInsertedZ() > i.getInsertedZ()+i.getHeight()){
-					if(newy <= itemj.getInsertedY() && rsy > itemj.getInsertedY()-newy)rsy = itemj.getInsertedY()-newy;
-					else if(itemj.getInsertedY() < newy && newy < itemj.getInsertedY()+itemj.getLength())
-					{
-						if(rsx > itemj.getInsertedX()-newx)rsx = itemj.getInsertedX()-newx;
-						if(rsz > itemj.getInsertedZ()-newz)rsz = itemj.getInsertedZ()-newz;
+				if(itemj.getInsertedZ() > i.getInsertedZ() + i.getHeight()) { //2
+					if(itemj.getInsertedY() < newy && newy < itemj.getInsertedY()+itemj.getLength()) { // dus door hoogte blokt het item
+						if(itemj.getInsertedX() <= newx && newx < itemj.getInsertedX() + itemj.getWidth()) {
+							if(rsz > itemj.getInsertedZ()-newz) {
+								rsz = itemj.getInsertedZ() - newz;
+							}
+						}
 					}
 					continue;
 				}
-				if(itemj.getInsertedX() > k.getInsertedX()+k.getWidth()) {
-					if(newy <= itemj.getInsertedY() && rsy > itemj.getInsertedY()-newy)rsy = itemj.getInsertedY()-newy;
-					else if(itemj.getInsertedY() < newy && newy < itemj.getInsertedY()+itemj.getLength())
-					{
-						if(rsx > itemj.getInsertedX()-newx)rsx = itemj.getInsertedX()-newx;
-						if(rsz > itemj.getInsertedZ()-newz)rsz = itemj.getInsertedZ()-newz;
+				if(itemj.getInsertedX() > k.getInsertedX() + k.getWidth()) { //3
+					if(itemj.getInsertedY() < newy && newy < itemj.getInsertedY()+itemj.getLength()) {
+						if(itemj.getInsertedZ() <= newz && newz < itemj.getInsertedZ() + itemj.getHeight()) {
+							if(rsx > itemj.getInsertedX()-newx) {
+								rsx = itemj.getInsertedX() - newx;
+							}
+						}
 					}
 					continue;
 				}
 				if(itemj.getInsertedX() >= newx && itemj.getInsertedZ() >= newz) {
-					if(newy <= itemj.getInsertedY() && rsy > itemj.getInsertedY()-newy)rsy = itemj.getInsertedY()-newy;
-					else if(itemj.getInsertedY() < newy && newy < itemj.getInsertedY()+itemj.getLength())
-					{
-						if(rsx > itemj.getInsertedX()-newx)rsx = itemj.getInsertedX()-newx;
-						if(rsz > itemj.getInsertedZ()-newz)rsz = itemj.getInsertedZ()-newz;
-					}
 					continue;
 				}
 				if(newy < itemj.getInsertedY()) {
-					if(rsy > itemj.getInsertedY()-newy)rsy = itemj.getInsertedY()-newy;
+					if(itemj.getInsertedX() <= newx && newx < itemj.getInsertedX() + itemj.getWidth()) {
+						if(itemj.getInsertedZ() <= newz && newz < itemj.getInsertedZ() + itemj.getHeight()) {
+							if(rsy > itemj.getInsertedY() - newy) {
+								rsy = itemj.getInsertedY() - newy;
+							}
+
+						}
+					}
 					continue;
 				}
-				if(newy > itemj.getInsertedY()+itemj.getLength())continue;
-
+				if(newy >= itemj.getInsertedY() + itemj.getLength()) {
+					continue;
+				}
 				return null;
-
 			}
 
 			ep.setRSx(rsx);
@@ -756,45 +759,48 @@ public class BF {
 						}
 					}
 				}
-				if(newy >= itemj.getInsertedY() + itemj.getLength() || newz >= itemj.getInsertedZ()+itemj.getHeight()) {
+				if(newz >= itemj.getInsertedZ() + itemj.getHeight() || newy >= itemj.getInsertedY() + itemj.getLength()) {//1	
 					continue;
 				}
-				if(itemj.getInsertedZ() > i.getInsertedZ()+i.getHeight()) {
-					if(newx <= itemj.getInsertedX() && rsx > itemj.getInsertedX()-newx)rsx = itemj.getInsertedX()-newx;
-					else if(itemj.getInsertedX() < newx && newx < itemj.getInsertedX()+itemj.getWidth())
-					{
-						if(rsy > itemj.getInsertedY()-newy)rsy = itemj.getInsertedY()-newy;
-						if(rsz > itemj.getInsertedZ()-newz)rsz = itemj.getInsertedZ()-newz;
+				if(itemj.getInsertedZ() > i.getInsertedZ() + i.getHeight()) { //2
+					if(itemj.getInsertedX() < newx && newx < itemj.getInsertedX()+itemj.getWidth()) { // dus door hoogte blokt het item
+						if(itemj.getInsertedY() <= newy && newy < itemj.getInsertedY() + itemj.getLength()) {
+							if(rsz > itemj.getInsertedZ()-newz) {
+								rsz = itemj.getInsertedZ() - newz;
+							}
+						}
 					}
 					continue;
 				}
-				if(itemj.getInsertedY() > k.getInsertedY() + k.getLength()) {
-					if(newx <= itemj.getInsertedX() && rsx > itemj.getInsertedX()-newx)rsx = itemj.getInsertedX()-newx;
-					else if(itemj.getInsertedX() < newx && newx < itemj.getInsertedX()+itemj.getWidth())
-					{
-						if(rsy > itemj.getInsertedY()-newy)rsy = itemj.getInsertedY()-newy;
-						if(rsz > itemj.getInsertedZ()-newz)rsz = itemj.getInsertedZ()-newz;
+				if(itemj.getInsertedY() > k.getInsertedY() + k.getLength()) { //3
+					if(itemj.getInsertedX() < newx && newx < itemj.getInsertedX()+itemj.getWidth()) {
+						if(itemj.getInsertedZ() <= newz && newz < itemj.getInsertedZ() + itemj.getHeight()) {
+							if(rsy > itemj.getInsertedY()-newy) {
+								rsy = itemj.getInsertedY() - newy;
+							}
+						}
 					}
 					continue;
 				}
 				if(itemj.getInsertedY() >= newy && itemj.getInsertedZ() >= newz) {
-					if(newx <= itemj.getInsertedX() && rsx > itemj.getInsertedX()-newx)rsx = itemj.getInsertedX()-newx;
-					else if(itemj.getInsertedX() < newx && newx < itemj.getInsertedX()+itemj.getWidth())
-					{
-						if(rsy > itemj.getInsertedY()-newy)rsy = itemj.getInsertedY()-newy;
-						if(rsz > itemj.getInsertedZ()-newz)rsz = itemj.getInsertedZ()-newz;
-					}
 					continue;
 				}
 				if(newx < itemj.getInsertedX()) {
-					if(rsx > itemj.getInsertedX()-newx)rsx = itemj.getInsertedX()-newx;
+					if(itemj.getInsertedY() <= newy && newy < itemj.getInsertedY() + itemj.getLength()) {
+						if(itemj.getInsertedZ() <= newz && newz < itemj.getInsertedZ() + itemj.getHeight()) {
+							if(rsx > itemj.getInsertedX() - newx) {
+								rsx = itemj.getInsertedX() - newx;
+							}
+
+						}
+					}
 					continue;
 				}
-				if(newx > itemj.getInsertedX()+itemj.getWidth())continue;
-
+				if(newx >= itemj.getInsertedX() + itemj.getWidth()) {
+					continue;
+				}
 				return null;
-
-			}
+			}	
 
 			ep.setRSx(rsx);
 			ep.setRSy(rsy);
@@ -804,6 +810,4 @@ public class BF {
 		}
 		return null;
 	}
-
-
 }
