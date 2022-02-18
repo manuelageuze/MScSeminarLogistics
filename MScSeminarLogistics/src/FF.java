@@ -461,7 +461,7 @@ public class FF {
 					}
 					continue;
 				}
-				if(itemj.getInsertedZ() >= newz && itemj.getInsertedZ() >= newz) {
+				if(itemj.getInsertedY() >= newy && itemj.getInsertedZ() >= newz) {
 					continue;
 				}
 				if(newx < itemj.getInsertedX()) {
@@ -542,7 +542,7 @@ public class FF {
 					}
 					continue;
 				}
-				if(itemj.getInsertedY() >= newy && itemj.getInsertedY() >= newy) {
+				if(itemj.getInsertedY() >= newy && itemj.getInsertedX() >= newx) {
 					continue;
 				}
 				if(newz < itemj.getInsertedZ()) {
@@ -622,7 +622,7 @@ public class FF {
 					}
 					continue;
 				}
-				if(itemj.getInsertedZ() >= newz && itemj.getInsertedZ() >= newz) {
+				if(itemj.getInsertedZ() >= newz && itemj.getInsertedX() >= newx) {
 					continue;
 				}
 				if(newy < itemj.getInsertedY()) {
