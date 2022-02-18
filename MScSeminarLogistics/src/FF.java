@@ -303,13 +303,13 @@ public class FF {
 	private boolean itemfits(EP ep, List<Item> itemList, Item nItem) {
 		// This method should display if there is another item in this box that would block the placement of the new item
 		
-		for(int i = 0; i < itemList.size(); i++) {
+		for(int i = 6; i < itemList.size(); i++) {
 			Item itemi = itemList.get(i);
 			
 			
-			if(nItem.getInsertedZ() <= itemi.getInsertedZ() && itemi.getInsertedZ() < nItem.getInsertedZ() + nItem.getHeight()) {
-				if(nItem.getInsertedX() <= itemi.getInsertedX() && itemi.getInsertedX() < nItem.getInsertedX() + nItem.getWidth()) {
-					if(nItem.getInsertedY() <= itemi.getInsertedY() && itemi.getInsertedY() < nItem.getInsertedY() + nItem.getLength()){
+			if(ep.getZ() <= itemi.getInsertedZ() && itemi.getInsertedZ() < ep.getZ() + nItem.getHeight()) {
+				if(ep.getX() <= itemi.getInsertedX() && itemi.getInsertedX() < ep.getX() + nItem.getWidth()) {
+					if(ep.getY() <= itemi.getInsertedY() && itemi.getInsertedY() < ep.getY() + nItem.getLength()){
 						return false;
 					}
 				}
