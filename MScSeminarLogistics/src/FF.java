@@ -302,7 +302,8 @@ public class FF {
 
 	private boolean itemfits(EP ep, List<Item> itemList, Item nItem) {
 		// This method should display if there is another item in this box that would block the placement of the new item
-		
+		int test = 0;
+		test = test + 1;
 		for(int i = 6; i < itemList.size(); i++) {
 			Item itemi = itemList.get(i);
 			
