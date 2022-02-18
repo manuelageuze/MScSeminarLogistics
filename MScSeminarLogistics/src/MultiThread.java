@@ -6,14 +6,12 @@ import java.util.List;
 public class MultiThread implements Runnable {
 
 	private Order order;
-	private int choice_D2_VBO;
 	private double lowerBound;
 	private Chromosome chromosome;
 	private int threadNumber;
 	
-	public MultiThread(Order order, int choice_D2_VBO, double lowerBound, int threadNumber) throws FileNotFoundException {
+	public MultiThread(Order order, double lowerBound, int threadNumber) throws FileNotFoundException {
 		this.order = order;
-		this.choice_D2_VBO = choice_D2_VBO;
 		this.lowerBound = lowerBound;
 		this.threadNumber = threadNumber;
 		this.chromosome = null;
@@ -21,7 +19,7 @@ public class MultiThread implements Runnable {
 	
 	@Override
 	public void run(){
-		Chromosome chrom = BRKGA.solve(this.order, this.lowerBound, this.choice_D2_VBO);
+		Chromosome chrom = BRKGA.solve(this.order, this.lowerBound);
 		this.chromosome = chrom;
 	}
 	

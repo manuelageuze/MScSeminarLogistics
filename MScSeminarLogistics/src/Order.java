@@ -11,7 +11,7 @@ import java.util.Scanner;
  *
  */
 public class Order {
-	private final List<Item> items;
+	private List<Item> items;
 	private final Double orderId;
 	
 	/**
@@ -39,6 +39,29 @@ public class Order {
 	 */
 	public double getOrderId() {
 		return this.orderId;
+	}
+	
+	/**
+	 * Add a single item to the list of items
+	 * @param item Single item
+	 */
+	public void addItem(Item item) {
+		this.items.add(item);
+	}
+	
+	/**
+	 * Add a list of items to the list of items
+	 * @param items List of items
+	 */
+	public void addItems(List<Item> items) {
+		this.items.addAll(items);
+	}
+	
+	/**
+	 * Clear list of items
+	 */
+	public void clearItems() {
+		this.items.clear();
 	}
 	
 	/**
@@ -85,10 +108,5 @@ public class Order {
 			orders.add(o);
 			return orders;	
 		}
-	}
-	
-	
-		
-	
-	
+	}	
 }
