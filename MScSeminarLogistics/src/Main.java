@@ -29,8 +29,10 @@ public class Main {
 			System.out.println("Solution time: "+timeLB/1000);
 		}
 		System.out.println(totalTime);
-		getPlotOutput((new FF(orders.get(0))).computeFF(),1);
+//		getPlotOutput((new FF(orders.get(0))).computeFF(),1);
+
 //		solveFF(orders);
+
 //		solveFFPaper(orders);
 		
 		// Compute lower bound and write file

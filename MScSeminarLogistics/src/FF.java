@@ -90,7 +90,10 @@ public class FF {
 			int crateIndex = 0;
 			int rotatedIndex = 0;
 			double f = Double.POSITIVE_INFINITY;
+			boolean found = false;
 
+			/*
+			// BF
 			for(int k = 0; k < crates.size(); k++) { // Voor alle kratten
 				if(crates.get(k).getCurrentWeight() + sortedItemList.get(i).getWeight() <= crates.get(k).getMaxWeight()) { // Als het past voor gewicht
 					for(int j = 0; j < crates.get(k).getEP().size(); j++) { // Voor alle EP's in de kratten
@@ -100,7 +103,6 @@ public class FF {
 							double rsy = ep.getRSy() - rotatedItem.get(r).getLength();
 							double rsz = ep.getRSz() - rotatedItem.get(r).getHeight();
 							if(rsx > 0 && rsy > 0 && rsz > 0) { // Dus het item past in de residual space van het EP
-//								if(itemfits(ep, crates.get(k).getItemList(), rotatedItem.get(r)) == true) { // En plaatsing overlapt niet met ander item
 								if(!isOverlapping(ep, crates.get(k).getItemList(), rotatedItem.get(r))) {
 									double compare = rsx + rsy + rsz;
 									if(compare < f) {
@@ -108,14 +110,47 @@ public class FF {
 										crateIndex = k;
 										f = compare;
 										rotatedIndex = r;
+										found = true;
 									}
 								}
 							}	
 						}
 					}
 				}
+			}*/
+			// FF 
+			for(int k = 0; k < crates.size(); k++) {
+				if(crates.get(k).getCurrentWeight() + sortedItemList.get(i).getWeight() <= crates.get(k).getMaxWeight()) {
+					List<EP> eplist = crates.get(k).getEP();
+					for(int j = 0; j < eplist.size(); j++) {
+						EP ep = crates.get(k).getEP().get(j);
+						for(int r = 0; r < rotatedItem.size();r++) {
+							double rsx = ep.getRSx() - rotatedItem.get(r).getWidth();
+							double rsy = ep.getRSy() - rotatedItem.get(r).getLength();
+							double rsz = ep.getRSz() - rotatedItem.get(r).getHeight();
+							if(rsx > 0 && rsy > 0 && rsz > 0) {
+								if(!isOverlapping(ep,crates.get(k).getItemList(), rotatedItem.get(r))) {
+									double compare = rsx + rsy + rsz;
+									epIndex = j;
+									crateIndex = k;
+									found = true;
+									rotatedIndex = r;
+									
+									// Then break all loops
+									r = rotatedItem.size();
+									j = crates.get(k).getEP().size();
+									k = crates.size();
+									
+									/*
+									 * in compare kost toevoegen voor gebruiken aisle, hoeveel kost?
+									 */
+								}
+							}
+						}
+					}
+				}
 			}
-			if(f == Double.POSITIVE_INFINITY) {
+			if(found == false) {
 				crateIndex = crates.size();
 				Crate c = new Crate();
 				c.setItemList(sideItems);
@@ -149,18 +184,20 @@ public class FF {
 				c.getEP().add(one); // Add extreme points to the list of extreme points
 				c.getEP().add(two);
 				c.getEP().add(three);
-
+				
 				rotatedItem.get(rotatedIndex).setInsertedX(0.0);
 				rotatedItem.get(rotatedIndex).setInsertedY(0.0);
 				rotatedItem.get(rotatedIndex).setInsertedZ(0.0);
 				// Add it the crate
 				c.addItemToCrate(rotatedItem.get(rotatedIndex));
+				c.setAisles(rotatedItem.get(rotatedIndex).getAisle(), true);
 				crates.add(c);		
 			}
 			else { // so the item is added to an already existing bin
 				rotatedItem.get(rotatedIndex).setInsertedX(crates.get(crateIndex).getEP().get(epIndex).getX());
 				rotatedItem.get(rotatedIndex).setInsertedY(crates.get(crateIndex).getEP().get(epIndex).getY());
 				rotatedItem.get(rotatedIndex).setInsertedZ(crates.get(crateIndex).getEP().get(epIndex).getZ());
+				crates.get(crateIndex).setAisles(rotatedItem.get(rotatedIndex).getAisle(), true); // Aisle has to be visited
 				crates.get(crateIndex).addItemToCrate(rotatedItem.get(rotatedIndex));
 				crates.get(crateIndex).getEP().remove(epIndex);
 			}

@@ -15,6 +15,7 @@ public class Crate {
 		private double currentWeight;
 		private List<EP> ep;
 		private List<Item> items;
+		private boolean[] aisles;
 		
 	/**
 	 * Constructor that creates a new crate with the standard sizes
@@ -23,12 +24,31 @@ public class Crate {
 		this.currentWeight = 0.0;
 		this.ep = new ArrayList<>();
 		this.items = new ArrayList<>();
+		this.aisles = new boolean[8];
 	}
 	
 	public Crate(List<Item> list) {
 		this.currentWeight = 0.0;
 		this.ep = new ArrayList<>();
 		this.items = list; // Gaat dit goed?
+		this.aisles = new boolean[8];
+	}
+	
+	/**
+	 * Method to get the array of aisles used in the crate
+	 * @return aisles
+	 */
+	public boolean[] getAisles() {
+		return this.aisles;
+	}
+	
+	/**
+	 * Method to set the aisle in the crate to either used or not used
+	 * @param index aisle/ index of aisle to set to s
+	 * @param s true or false, to set the boolean to.
+	 */
+	public void setAisles(int index, boolean s) {
+		this.aisles[index] = s;
 	}
 	
 	/**
