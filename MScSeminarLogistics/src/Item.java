@@ -20,6 +20,7 @@ public class Item implements Comparable<Item> {
 	private double insertedY;
 	private double insertedZ;
 	private int crateIndex;
+	private int	aisle;
 
 	/**
 	 * Constructor that creates a new item
@@ -29,7 +30,7 @@ public class Item implements Comparable<Item> {
 	 * @param height in mm
 	 * @param weight in grams
 	 */
-	public Item(double itemId, double width, double length, double height, double weight) {
+	public Item(double itemId, double width, double length, double height, double weight, int aisle) {
 		this.itemId = itemId;
 		this.width = width;
 		this.length = length;
@@ -40,6 +41,7 @@ public class Item implements Comparable<Item> {
 		this.insertedY = 0.0;
 		this.insertedZ = 0.0;
 		this.crateIndex = -1;
+		this.aisle = aisle;
 	}
 
 	/**
@@ -50,7 +52,7 @@ public class Item implements Comparable<Item> {
 	 * @param height in mm
 	 * @param weight in grams
 	 */
-	public Item(double itemId, double width, double length, double height, double weight, double insertedX, double insertedY, double insertedZ, int crateIndex) {
+	public Item(double itemId, double width, double length, double height, double weight, int aisle, double insertedX, double insertedY, double insertedZ, int crateIndex) {
 		this.itemId = itemId;
 		this.width = width;
 		this.length = length;
@@ -61,6 +63,15 @@ public class Item implements Comparable<Item> {
 		this.insertedY = insertedY;
 		this.insertedZ = insertedZ;
 		this.crateIndex = crateIndex;
+		this.aisle = aisle;
+	}
+	
+	/**
+	 * Method to obtain the aisle of the item
+	 * @return aisle
+	 */
+	public int getAisle() {
+		return this.aisle;
 	}
 
 	/**
@@ -150,7 +161,17 @@ public class Item implements Comparable<Item> {
 			Map<Double, Item> items = new HashMap<>();
 			//Ignore first description list
 			s.nextLine();
+			int aisle = 0;
+			int counter = 0;
 			while(s.hasNextLine()) {
+				if(counter <= 36) { aisle = 0;}
+				else if(counter > 36 && counter <= 107) { aisle = 1;}
+				else if(counter > 107 && counter <= 178) { aisle = 2;}
+				else if(counter > 178 && counter <= 249) {aisle = 3;}
+				else if(counter > 249 && counter <= 320) { aisle = 4;}
+				else if(counter > 320 && counter <= 391) { aisle = 5;}
+				else if (counter > 391 && counter <= 462) { aisle = 6;}
+				else {aisle = 7;}
 				String line = s.nextLine();
 				String[] parts = line.split(",");
 				double itemId = Double.parseDouble(parts[0]);
@@ -159,7 +180,7 @@ public class Item implements Comparable<Item> {
 					double length = Double.parseDouble(parts[5]);
 					double height = Double.parseDouble(parts[6]);
 					double weight = Double.parseDouble(parts[7]);
-					Item item = new Item(itemId, width, length, height, weight);
+					Item item = new Item(itemId, width, length, height, weight, aisle);
 					items.put(itemId, item);
 				}
 				else if(itemId == 161 || itemId == 16 || itemId == 180 || itemId == 199 || itemId == 307 || itemId == 223 || itemId == 285) {
@@ -167,7 +188,7 @@ public class Item implements Comparable<Item> {
 					double length = Double.parseDouble(parts[4]);
 					double height = Double.parseDouble((parts[5]));
 					double weight = Double.parseDouble(parts[6]);
-					Item item = new Item(itemId, width, length, height, weight);
+					Item item = new Item(itemId, width, length, height, weight, aisle);
 					items.put(itemId, item);
 				}
 				else {
@@ -175,9 +196,10 @@ public class Item implements Comparable<Item> {
 					double length = Double.parseDouble(parts[3]);
 					double height = Double.parseDouble((parts[4]));
 					double weight = Double.parseDouble(parts[5]);
-					Item item = new Item(itemId, width, length, height, weight);
+					Item item = new Item(itemId, width, length, height, weight, aisle);
 					items.put(itemId, item);
 				}
+				counter++;
 			}
 			return items;	
 		}	
