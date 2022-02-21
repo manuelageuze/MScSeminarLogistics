@@ -19,12 +19,19 @@ public class Main {
 //		List<Crate> crates = bf.computeBF();
 //		checkSolution(crates,0);
 //		System.out.println(checkSolution(crates));
-		
-		Long start = System.currentTimeMillis();
-		solveFF(orders);
-		double timeLB = System.currentTimeMillis()-start;
-		System.out.println("Solution time: "+timeLB/1000);
-//		getPlotOutput_FF(orders.get(0),1);
+		double totalTime = 0;
+		for(int i = 0 ; i < 100 ; i++)
+		{
+			Long start = System.currentTimeMillis();
+			solveFF(orders);
+			double timeLB = System.currentTimeMillis()-start;
+			totalTime += timeLB/1000;
+			System.out.println("Solution time: "+timeLB/1000);
+		}
+		System.out.println(totalTime);
+		getPlotOutput((new FF(orders.get(0))).computeFF(),1);
+//		solveFF(orders);
+//		solveFFPaper(orders);
 		
 		// Compute lower bound and write file
 		//out.println("instance minimum_number_of_crates");
@@ -197,6 +204,56 @@ public class Main {
 		System.out.println("Average volume: "+averageVolume/1000);
 		System.out.println("Average weight: "+averageWeight/1000);
 	}
+	
+	private static void solveFFPaper(List<Order> orders) throws IOException {
+		FileWriter myWriter = new FileWriter("FF_Paper_solution_value.txt");
+		FileWriter myWriter2 = new FileWriter("FF_Paper_solution.txt");
+		double totalBins = 0.0;
+		double totalVolume = 0.0;
+		double totalWeight = 0.0;
+		myWriter.write("Order\tamountCrates\n");
+		for(int i = 0 ; i < orders.size() ; i++)
+		{
+			FF_paper ff = new FF_paper(orders.get(i));
+			List<Crate> crates = ff.computeFF();
+//			myWriter.write(i+"\t"+crates.size()+"\n");
+			int test = checkSolution(crates,i);
+			if(test==0)myWriter.write(i+"\t"+crates.size()+"\n");
+			else myWriter.write(i+"\t"+crates.size()+"\t"+test+"\n");
+			myWriter2.write("Order: "+i+"\nCrates: "+crates.size()+"\n");
+			int counter = 1;
+			totalBins += crates.size();
+			for(Crate crate : crates)
+			{
+				List<Item> items = crate.getItemList();
+				double volume = 0.0;
+				double weight = 0.0;
+				for(Item item : items)
+				{
+					volume += item.getVolume();
+					weight += item.getWeight();
+				}
+				totalVolume += volume;
+				totalWeight += weight;
+				double fillRate = Math.round(volume/crate.getVolume()*10000)/100;
+				myWriter2.write(counter+"\t"+fillRate+"\t"+weight+"\t");
+				for(Item item : items)
+				{
+					int id = (int) item.getItemId();
+					if(id>=0)myWriter2.write(id+" ");
+				}
+				myWriter2.write("\n");
+				counter++;
+			}
+			myWriter2.write("\n");
+		}
+		myWriter.close();myWriter2.close();
+		System.out.println("Total Bins: "+(int)totalBins);
+		double averageVolume = Math.round(totalVolume/totalBins/1000);
+		double averageWeight = Math.round(totalWeight/totalBins);
+		System.out.println("Average volume: "+averageVolume/1000);
+		System.out.println("Average weight: "+averageWeight/1000);
+	}
 
 	private static void solveBF(List<Order> orders) throws IOException {
 		FileWriter myWriter = new FileWriter("BF_solution_value.txt");
@@ -248,7 +305,7 @@ public class Main {
 		System.out.println("Average weight: "+averageWeight/1000);
 	}
 	
-	public static void getPlotOutput(Order order, int crateNumber) throws IOException
+	public static void getPlotOutput_BF(Order order, int crateNumber) throws IOException
 	{
 		BF bf = new BF(order);
 		List<Crate> crates = bf.computeBF();
@@ -278,10 +335,8 @@ public class Main {
 			myWriter.close();
 		}
 	}
-	public static void getPlotOutput_FF(Order order, int crateNumber) throws IOException
+	public static void getPlotOutput(List<Crate> crates, int crateNumber) throws IOException
 	{
-		FF ff = new FF(order);
-		List<Crate> crates = ff.computeFF();
 		if(crateNumber > crates.size())
 		{
 			System.out.println("Crate number not feasible");
@@ -325,23 +380,6 @@ public class Main {
 					{
 						return counter;
 					}
-//					double x_i = itemi.getInsertedX();double x_j = itemj.getInsertedX();
-//					double y_i = itemi.getInsertedY();double y_j = itemj.getInsertedY();
-//					double z_i = itemi.getInsertedZ();double z_j = itemj.getInsertedZ();
-//					if(x_i < x_j && x_j < x_i+itemi.getWidth()){
-//						if(y_i < y_j && y_j < y_i + itemi.getLength()){
-//							if(z_i < z_j && z_j < z_i + itemi.getHeight()) {
-//								System.out.println("Order: "+order+", Crate "+counter+".");
-//								System.out.println("Item i: "+(int)itemi.getItemId());
-//								System.out.println("("+x_i+","+y_i+","+z_i+")"+
-//											"("+itemi.getWidth()+","+itemi.getLength()+","+itemi.getHeight()+")");
-//								System.out.println("Item j: "+(int)itemj.getItemId());
-//								System.out.println("("+x_j+","+y_j+","+z_j+")"+
-//										"("+itemj.getWidth()+","+itemj.getLength()+","+itemj.getHeight()+")\n");
-//								return counter;
-//							}
-//						}
-//					}
 				}
 			}
 			counter++;
