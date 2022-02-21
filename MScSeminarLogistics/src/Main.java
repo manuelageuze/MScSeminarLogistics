@@ -34,7 +34,7 @@ public class Main {
 //		System.out.println("Solution time: "+timeLB/1000);
 //		start = System.currentTimeMillis();
 //		getPlotOutput(orders.get(457),2);
-		solveBF(orders);
+//		solveBF(orders);
 		
 //		double timeBF = System.currentTimeMillis()-start;
 //		System.out.println("Solution time: "+timeBF/1000);
