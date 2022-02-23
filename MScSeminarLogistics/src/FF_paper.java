@@ -90,7 +90,9 @@ public class FF_paper {
 			int crateIndex = 0;
 			int rotatedIndex = 0;
 			double f = Double.POSITIVE_INFINITY;
+			boolean found = false;
 
+			// BF
 			for(int k = 0; k < crates.size(); k++) { // Voor alle kratten
 				if(crates.get(k).getCurrentWeight() + sortedItemList.get(i).getWeight() <= crates.get(k).getMaxWeight()) { // Als het past voor gewicht
 					for(int j = 0; j < crates.get(k).getEP().size(); j++) { // Voor alle EP's in de kratten
@@ -100,7 +102,6 @@ public class FF_paper {
 							double rsy = ep.getRSy() - rotatedItem.get(r).getLength();
 							double rsz = ep.getRSz() - rotatedItem.get(r).getHeight();
 							if(rsx > 0 && rsy > 0 && rsz > 0) { // Dus het item past in de residual space van het EP
-//								if(itemfits(ep, crates.get(k).getItemList(), rotatedItem.get(r)) == true) { // En plaatsing overlapt niet met ander item
 								if(!isOverlapping(ep, crates.get(k).getItemList(), rotatedItem.get(r))) {
 									double compare = rsx + rsy + rsz;
 									if(compare < f) {
@@ -108,6 +109,7 @@ public class FF_paper {
 										crateIndex = k;
 										f = compare;
 										rotatedIndex = r;
+										found = true;
 									}
 								}
 							}	
@@ -115,7 +117,39 @@ public class FF_paper {
 					}
 				}
 			}
-			if(f == Double.POSITIVE_INFINITY) {
+
+			// FF 
+			/*
+			for(int k = 0; k < crates.size(); k++) {
+				if(crates.get(k).getCurrentWeight() + sortedItemList.get(i).getWeight() <= crates.get(k).getMaxWeight()) {
+					List<EP> eplist = crates.get(k).getEP();
+					for(int j = 0; j < eplist.size(); j++) {
+						EP ep = crates.get(k).getEP().get(j);
+						for(int r = 0; r < rotatedItem.size();r++) {
+							double rsx = ep.getRSx() - rotatedItem.get(r).getWidth();
+							double rsy = ep.getRSy() - rotatedItem.get(r).getLength();
+							double rsz = ep.getRSz() - rotatedItem.get(r).getHeight();
+							if(rsx > 0 && rsy > 0 && rsz > 0) {
+								if(!isOverlapping(ep,crates.get(k).getItemList(), rotatedItem.get(r))) {
+									double compare = rsx + rsy + rsz;
+									epIndex = j;
+									crateIndex = k;
+									found = true;
+									rotatedIndex = r;
+
+									// Then break all loops
+									r = rotatedItem.size();
+									j = crates.get(k).getEP().size();
+									k = crates.size();
+
+								}
+							}
+						}
+					}
+				}
+			}
+			*/
+			if(found == false) {
 				crateIndex = crates.size();
 				Crate c = new Crate();
 				c.setItemList(sideItems);
@@ -155,12 +189,14 @@ public class FF_paper {
 				rotatedItem.get(rotatedIndex).setInsertedZ(0.0);
 				// Add it the crate
 				c.addItemToCrate(rotatedItem.get(rotatedIndex));
+				c.setAisles(rotatedItem.get(rotatedIndex).getAisle(), true);
 				crates.add(c);		
 			}
 			else { // so the item is added to an already existing bin
 				rotatedItem.get(rotatedIndex).setInsertedX(crates.get(crateIndex).getEP().get(epIndex).getX());
 				rotatedItem.get(rotatedIndex).setInsertedY(crates.get(crateIndex).getEP().get(epIndex).getY());
 				rotatedItem.get(rotatedIndex).setInsertedZ(crates.get(crateIndex).getEP().get(epIndex).getZ());
+				crates.get(crateIndex).setAisles(rotatedItem.get(rotatedIndex).getAisle(), true); // Aisle has to be visited
 				crates.get(crateIndex).addItemToCrate(rotatedItem.get(rotatedIndex));
 				crates.get(crateIndex).getEP().remove(epIndex);
 			}
@@ -270,15 +306,15 @@ public class FF_paper {
 				}
 				if(ep.getZ() <= nItem.getInsertedZ()) { // Als z erboven
 					if(ep.getZ() + ep.getRSz() >= nItem.getInsertedZ()) { // Als het nieuwe item wel in de RS valt
-						
+
 						if(ep.getX() >= nItem.getInsertedX() && ep.getX() < nItem.getInsertedX() + nItem.getWidth()) {
-							
+
 							if(ep.getY() >= nItem.getInsertedY() && ep.getY() < nItem.getInsertedY() + nItem.getLength()) {
-								 ep.setRSz(Math.min(ep.getRSz(), nItem.getInsertedZ() - ep.getZ()));
+								ep.setRSz(Math.min(ep.getRSz(), nItem.getInsertedZ() - ep.getZ()));
 							}
-							
+
 						}
-						
+
 					}
 				}
 
@@ -311,21 +347,21 @@ public class FF_paper {
 			double y1max = y1min + item1.getLength();
 			double z1min = ep.getZ();
 			double z1max = z1min + item1.getHeight();
-			
+
 			double x2min = item2.getInsertedX();
 			double x2max = x2min + item2.getWidth();
 			double y2min = item2.getInsertedY();
 			double y2max = y2min + item2.getLength();
 			double z2min = item2.getInsertedZ();
 			double z2max = z2min + item2.getHeight();
-			
+
 			if(x1min < x2max && x2min < x1max 
 					&& y1min < y2max && y2min < y1max
 					&& z1min < z2max && z2min < z1max)return true;
 		}
 		return false;
 	}
-	
+
 	public boolean isOnSideY(EP ep, Item nItem) {
 		if(nItem.getInsertedY() >= ep.getY() && nItem.getInsertedX()+nItem.getWidth() > ep.getX()) return true;
 		else return false;

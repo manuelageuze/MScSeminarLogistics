@@ -2,6 +2,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.Scanner;
 
 /**
@@ -162,15 +163,16 @@ public class Item implements Comparable<Item> {
 			//Ignore first description list
 			s.nextLine();
 			int aisle = 0;
-			int counter = 0;
+			Random r = new Random(399);
 			while(s.hasNextLine()) {
-				if(counter <= 36) { aisle = 0;}
-				else if(counter > 36 && counter <= 107) { aisle = 1;}
-				else if(counter > 107 && counter <= 178) { aisle = 2;}
-				else if(counter > 178 && counter <= 249) {aisle = 3;}
-				else if(counter > 249 && counter <= 320) { aisle = 4;}
-				else if(counter > 320 && counter <= 391) { aisle = 5;}
-				else if (counter > 391 && counter <= 462) { aisle = 6;}
+				int counter = r.nextInt(14);
+				if(counter == 0) { aisle = 0;}
+				else if(counter == 1 || counter == 2) { aisle = 1;}
+				else if(counter == 3 || counter == 4){ aisle = 2;}
+				else if(counter == 5 || counter == 6) {aisle = 3;}
+				else if(counter == 7 || counter == 8) { aisle = 4;}
+				else if(counter == 9 || counter == 10) { aisle = 5;}
+				else if(counter == 11 || counter == 12) { aisle = 6;}
 				else {aisle = 7;}
 				String line = s.nextLine();
 				String[] parts = line.split(",");
