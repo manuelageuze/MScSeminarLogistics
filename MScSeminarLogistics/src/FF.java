@@ -91,9 +91,36 @@ public class FF {
 			int rotatedIndex = 0;
 			double f = Double.POSITIVE_INFINITY;
 			boolean found = false;
+			
+			// BF without aisles
+			for(int k = 0; k < crates.size(); k++) { // Voor alle kratten
+				if(crates.get(k).getCurrentWeight() + sortedItemList.get(i).getWeight() <= crates.get(k).getMaxWeight()) {
+					for(int j = 0; j < crates.get(k).getEP().size(); j++) { // Voor alle EP's in de kratten
+						for(int r = 0; r < rotatedItem.size();r++) { // Voor alle rotaties
+							EP ep = crates.get(k).getEP().get(j);
+							double rsx = ep.getRSx() - rotatedItem.get(r).getWidth();
+							double rsy = ep.getRSy() - rotatedItem.get(r).getLength();
+							double rsz = ep.getRSz() - rotatedItem.get(r).getHeight();
+							if(rsx > 0 && rsy > 0 && rsz > 0) {
+								if(!isOverlapping(ep, crates.get(k).getItemList(), rotatedItem.get(r))) {
+									double compare = rsx + rsy + rsz;
+									if(compare < f) {
+										epIndex = j;
+										crateIndex = k;
+										f = compare;
+										rotatedIndex = r;
+										found = true;
+									}
+								}
 
+							}	
+						}
+					}
+				}
+			}
+			// BF with aisles
+			
 			/*
-			// BF
 			for(int k = 0; k < crates.size(); k++) { // Voor alle kratten
 				if(crates.get(k).getCurrentWeight() + sortedItemList.get(i).getWeight() <= crates.get(k).getMaxWeight()) { // Als het past voor gewicht
 					for(int j = 0; j < crates.get(k).getEP().size(); j++) { // Voor alle EP's in de kratten
@@ -102,9 +129,16 @@ public class FF {
 							double rsx = ep.getRSx() - rotatedItem.get(r).getWidth();
 							double rsy = ep.getRSy() - rotatedItem.get(r).getLength();
 							double rsz = ep.getRSz() - rotatedItem.get(r).getHeight();
+							int aislecost = 0;
 							if(rsx > 0 && rsy > 0 && rsz > 0) { // Dus het item past in de residual space van het EP
 								if(!isOverlapping(ep, crates.get(k).getItemList(), rotatedItem.get(r))) {
-									double compare = rsx + rsy + rsz;
+									int aisle = rotatedItem.get(r).getAisle();
+									if(crates.get(k).getAisles()[aisle] == false) {
+										// Then the aisle is not used in the crate yet
+										// So add extra cost to placing in this bin.
+										aislecost = 10;
+									}
+									double compare = rsx + rsy + rsz + aislecost;
 									if(compare < f) {
 										epIndex = j;
 										crateIndex = k;
@@ -118,6 +152,8 @@ public class FF {
 					}
 				}
 			}*/
+			
+			/*
 			// FF 
 			for(int k = 0; k < crates.size(); k++) {
 				if(crates.get(k).getCurrentWeight() + sortedItemList.get(i).getWeight() <= crates.get(k).getMaxWeight()) {
@@ -135,26 +171,25 @@ public class FF {
 									crateIndex = k;
 									found = true;
 									rotatedIndex = r;
-									
+
 									// Then break all loops
 									r = rotatedItem.size();
 									j = crates.get(k).getEP().size();
 									k = crates.size();
-									
-									/*
-									 * in compare kost toevoegen voor gebruiken aisle, hoeveel kost?
-									 */
+
 								}
 							}
 						}
 					}
 				}
 			}
+			 */
 			if(found == false) {
 				crateIndex = crates.size();
 				Crate c = new Crate();
 				c.setItemList(sideItems);
 
+				// Kies de beste rotatie
 				for(int r = 0; r < rotatedItem.size(); r++) {
 					double rsx = 321 - rotatedItem.get(r).getWidth();
 					double rsy = 501 - rotatedItem.get(r).getLength();
@@ -184,14 +219,15 @@ public class FF {
 				c.getEP().add(one); // Add extreme points to the list of extreme points
 				c.getEP().add(two);
 				c.getEP().add(three);
-				
+
 				rotatedItem.get(rotatedIndex).setInsertedX(0.0);
 				rotatedItem.get(rotatedIndex).setInsertedY(0.0);
 				rotatedItem.get(rotatedIndex).setInsertedZ(0.0);
-				// Add it the crate
+				// Add item to the crate
 				c.addItemToCrate(rotatedItem.get(rotatedIndex));
 				c.setAisles(rotatedItem.get(rotatedIndex).getAisle(), true);
-				crates.add(c);		
+				crates.add(c);	
+
 			}
 			else { // so the item is added to an already existing bin
 				rotatedItem.get(rotatedIndex).setInsertedX(crates.get(crateIndex).getEP().get(epIndex).getX());
@@ -307,15 +343,15 @@ public class FF {
 				}
 				if(ep.getZ() <= nItem.getInsertedZ()) { // Als z erboven
 					if(ep.getZ() + ep.getRSz() >= nItem.getInsertedZ()) { // Als het nieuwe item wel in de RS valt
-						
+
 						if(ep.getX() >= nItem.getInsertedX() && ep.getX() < nItem.getInsertedX() + nItem.getWidth()) {
-							
+
 							if(ep.getY() >= nItem.getInsertedY() && ep.getY() < nItem.getInsertedY() + nItem.getLength()) {
-								 ep.setRSz(Math.min(ep.getRSz(), nItem.getInsertedZ() - ep.getZ()));
+								ep.setRSz(Math.min(ep.getRSz(), nItem.getInsertedZ() - ep.getZ()));
 							}
-							
+
 						}
-						
+
 					}
 				}
 
@@ -344,8 +380,8 @@ public class FF {
 		test = test + 1;
 		for(int i = 6; i < itemList.size(); i++) {
 			Item itemi = itemList.get(i);
-			
-			
+
+
 			if(ep.getZ() <= itemi.getInsertedZ() && itemi.getInsertedZ() < ep.getZ() + nItem.getHeight()) {
 				if(ep.getX() <= itemi.getInsertedX() && itemi.getInsertedX() < ep.getX() + nItem.getWidth()) {
 					if(ep.getY() <= itemi.getInsertedY() && itemi.getInsertedY() < ep.getY() + nItem.getLength()){
@@ -356,6 +392,7 @@ public class FF {
 		}
 		return true;
 	}
+
 	private boolean isOverlapping(EP ep, List<Item> items, Item item1)
 	{
 		for(int i = 6 ; i < items.size() ; i++)
@@ -372,21 +409,21 @@ public class FF {
 			double y1max = y1min + item1.getLength();
 			double z1min = ep.getZ();
 			double z1max = z1min + item1.getHeight();
-			
+
 			double x2min = item2.getInsertedX();
 			double x2max = x2min + item2.getWidth();
 			double y2min = item2.getInsertedY();
 			double y2max = y2min + item2.getLength();
 			double z2min = item2.getInsertedZ();
 			double z2max = z2min + item2.getHeight();
-			
+
 			if(x1min < x2max && x2min < x1max 
 					&& y1min < y2max && y2min < y1max
 					&& z1min < z2max && z2min < z1max)return true;
 		}
 		return false;
 	}
-	
+
 	public boolean isOnSideY(EP ep, Item nItem) {
 		if(nItem.getInsertedY() >= ep.getY() && nItem.getInsertedX()+nItem.getWidth() > ep.getX()) return true;
 		else return false;
