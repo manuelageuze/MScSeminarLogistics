@@ -15,20 +15,35 @@ public class Main {
 
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
-
 		Graph g = createGraph(items,orders);
 
-		//		FileWriter w = new FileWriter("ItemsAisles.txt");
-		//		for(Map.Entry<Double, Item> entry: items.entrySet()) {
-		//			w.write(entry.getValue().getItemId()+" "+entry.getValue().getAisle()+ "\n");
-		//		}
-		//		w.close();
+		//computeLowerBound(orders,items); // Computes lowerbound
+		
+		// Solve FF
+		List<Crate> crates = solveFF(orders);
+		
+		// Voor alle 2000 kratten individueel
+		// Make a shortest path class
+		ShortestPath sp = new ShortestPath(crates, g);
+		// Compute the number of aisles
+		List<ArrayList<Integer>> aisles = sp.computeAisles();
+		// Compute the shortest path per crate. Displays for each crate the amount of aisles needed to traversed for the shortest path, but not which aisles
+		List<Integer> shortestPaths = sp.computeShortestPath();
+		
+		
+		// Voor set van 8 kratten
+		List<OrderPicker> orderpickers = orderPicking(crates);
+		int total = 0;
+		for(int i = 0; i < orderpickers.size(); i++) {
+			ShortestPath spath = new ShortestPath(orderpickers.get(i).getCrates(), g);
+			int value = spath.computeShortestPathOneCrate(orderpickers.get(i).getAislesToVisist());
+			orderpickers.get(i).setShortestPath(value);
+			System.out.println(value);
+		}
 
 
-		//		BF bf = new BF(orders.get(0));
-		//		List<Crate> crates = bf.computeBF();
-		//		checkSolution(crates,0);
-		//		System.out.println(checkSolution(crates));
+
+		// Solve 100 times for average time
 		//		double totalTime = 0;
 		//		for(int i = 0 ; i < 100 ; i++)
 		//		{
@@ -39,133 +54,58 @@ public class Main {
 		//			System.out.println("Solution time: "+timeLB/1000);
 		//		}
 		//		System.out.println(totalTime);
-		//		getPlotOutput((new FF(orders.get(0))).computeFF(),1);
+		
+		// List<ArrayList<Integer>> aisles = solveFFFiles(orders);
 
-		List<ArrayList<Integer>> aisles = solveFF(orders);
+	}
 	
-		List<Integer> numAisleTraversed = new ArrayList<>();
-		FileWriter myWriter = new FileWriter("FF_shortestpath.txt");
-		for(int i = 0; i < aisles.size();i++) { // for all crates
-			int length = 0;
-			// Add length from s to first aisle
-			length = length + (int) shortestPath(g, 0, aisles.get(i).get(0)+1);
-			for(int j = 0; j < aisles.get(i).size() - 1; j++) {
-				length = (int) (length + shortestPath(g, aisles.get(i).get(j)+1, aisles.get(i).get(j+1)+1));
+	public static List<OrderPicker> orderPicking(List<Crate> crates) {
+		double numPickers = Math.ceil((double) crates.size()/8.0);
+		List<OrderPicker> orderpickers = new ArrayList<>();
+		int index = 0;
+		for(int i = 0; i < numPickers; i++) {
+			if(i == 8) {
+				int k = 0;
+				k = k + 1;
 			}
-			// add length form last aisle to t
-			length = length + (int) shortestPath(g, aisles.get(i).get(aisles.get(i).size() - 1) + 1, 9);
-			numAisleTraversed.add(length);
-			myWriter.write(i + " " + length + "\n");
-
-		}
-		myWriter.close();
-		int k = 0;
-		k = k + 1;
-
-		//		solveFFPaper(orders);
-
-		// Compute lower bound and write file
-		//out.println("instance minimum_number_of_crates");
-		//		Long start = System.currentTimeMillis();
-		//		solveLP(orders, items);
-		//		double timeLB = System.currentTimeMillis()-start;
-		//		System.out.println("Solution time: "+timeLB/1000);
-		//		start = System.currentTimeMillis();
-		//		getPlotOutput(orders.get(457),2);
-		//		solveBF(orders);
-
-		//		double timeBF = System.currentTimeMillis()-start;
-		//		System.out.println("Solution time: "+timeBF/1000);
-		//		System.out.println("Time:\nLB\tBF\n"+timeLB+"\t"+timeBF);
-		//		compair(new File("LB_solution_value.txt"),new File("BF_solution_value.txt"),orders);
-	}
-
-	private static Graph createGraph(Map<Double, Item> items, List<Order> orders) {
-		Graph g = new Graph();
-
-		// Add nodes
-		Node S = new Node('S', -1); // Source heeft -1 als index
-		Node A = new Node('A', 0);
-		Node B = new Node('B', 1);
-		Node C = new Node('C', 2);
-		Node D = new Node('D', 3);
-		Node E = new Node('E', 4);
-		Node F = new Node('F', 5);
-		Node G = new Node('G', 6);
-		Node H = new Node('H', 7);
-		Node T = new Node('T', -2); // Sink heeft -2 als index
-		g.addNode(S);
-		g.addNode(A);
-		g.addNode(B);
-		g.addNode(C);
-		g.addNode(D);
-		g.addNode(E);
-		g.addNode(F);
-		g.addNode(G);
-		g.addNode(H);
-		g.addNode(T);
-
-		// Add arcs
-		g.addArc(S, A, 1);
-		g.addArc(S, C, 1);
-		g.addArc(S, E, 1);
-		g.addArc(S, G, 1);
-		g.addArc(A, B, 1);
-		g.addArc(A, D, 1);
-		g.addArc(A, F, 1);
-		g.addArc(A, H, 1);
-		g.addArc(B, E, 1);
-		g.addArc(B, G, 1);
-		g.addArc(B, C, 1);
-		g.addArc(B, T, 0);
-		g.addArc(C, D, 1);
-		g.addArc(C, F, 1);
-		g.addArc(C, H, 1);
-		g.addArc(D, E, 1);
-		g.addArc(D, G, 1);
-		g.addArc(D, T, 0);
-		g.addArc(E, H, 1);
-		g.addArc(E, F, 1);
-		g.addArc(F, G, 1);
-		g.addArc(F, T, 0);
-		g.addArc(G, H, 1);
-		g.addArc(H, T, 0);
-
-		return g;	
-	}
-
-	/**
-	 * Computes shortest path from one node to another
-	 * @param g
-	 * @param beginIndex index of beginnode in list of nodes, So node A has index 1.
-	 * @param endIndex Node T has index 9
-	 * @return
-	 */
-	private static double shortestPath(Graph g, int beginIndex, int endIndex) {
-		List<Node> nodes = g.getNodes();
-		for(int i = 0; i < nodes.size(); i++) { // Set all things to zero or null after beginIndex
-			nodes.get(i).setDijkstra(Double.POSITIVE_INFINITY);
-			nodes.get(i).setPredecessor(null);
-		}
-		nodes.get(beginIndex).setDijkstra(0.0); // Set start distance to zero
-
-		for(int i = beginIndex + 1; i <= endIndex;i++) { // For all nodes starting from beginnode
-			// Go over all predecessors
-			List<Arc> inarcs = g.getInArcs(nodes.get(i));// Get the inarcs of the node
-			double minCost = Double.POSITIVE_INFINITY;
-			Node predecessor = null;
-			for(int j = 0; j < inarcs.size(); j++) {
-				double cost = inarcs.get(j).getFrom().getDijkstra() + inarcs.get(j).getWeight();
-				if(cost < minCost) { // If better, remember it
-					minCost = cost;
-					predecessor = inarcs.get(j).getFrom();
+			List<Crate> partCrates = new ArrayList<>();
+			for(int j = index; j < index + 8; j++) {
+				if(j >= crates.size()) {
+					break;
+				}
+				partCrates.add(crates.get(j));
+			}
+			index = (i+1)*8;
+			boolean[] visited = new boolean[8];
+			for(Crate crate : partCrates) {
+				for(int j = 0; j < 8; j++) {
+					if(crate.getAisles()[j] == true) {
+						visited[j] = true;
+					}
 				}
 			}
-			nodes.get(i).setDijkstra(minCost);
-			nodes.get(i).setPredecessor(predecessor);
+			int counter = 0;
+			List<Integer> aislesToVisit = new ArrayList<>();
+			for(int j = 0; j < 8; j++) {
+				if(visited[j] == true) {
+					counter++;
+					aislesToVisit.add(j);
+				}
+			}	
+			OrderPicker test = new OrderPicker(i, partCrates, counter, aislesToVisit);
+			orderpickers.add(test);
 		}
-		double shortestPathCost = nodes.get(endIndex).getDijkstra();
-		return shortestPathCost;	
+		return orderpickers;
+	}
+
+	private static void computeLowerBound(List<Order> orders, Map<Double,Item> items) throws IloException, IOException {
+		// Compute lower bound and write file
+		Long start = System.currentTimeMillis();
+		solveLP(orders, items);
+		double timeLB = System.currentTimeMillis()-start;
+		System.out.println("Solution time: "+timeLB/1000);
+		start = System.currentTimeMillis();
+		compair(new File("LB_solution_value.txt"),new File("BF_solution_value.txt"),orders);
 	}
 
 	/**
@@ -178,7 +118,6 @@ public class Main {
 		Map<Double, Item> items = Item.readItems(itemFile);
 		return items;	
 	}
-
 	/**
 	 * Read orders
 	 * @param items
@@ -190,7 +129,6 @@ public class Main {
 		List<Order> orders = Order.readOrder(orderFile, items);
 		return orders;
 	}
-
 	private static void compair(File sol1, File sol2, List<Order> orders) throws FileNotFoundException
 	{
 		Scanner s1 = new Scanner(sol1);
@@ -241,7 +179,6 @@ public class Main {
 		System.out.println("Medium:\t"+(int)difMedium+"\t"+difMedium/amountMedium);
 		System.out.println("Large:\t"+(int)difLarge+"\t"+difLarge/amountLarge);
 	}
-
 	private static void solveLP(List<Order> orders, Map<Double, Item> items) throws IloException, IOException {
 		FileWriter myWriter = new FileWriter("LB_solution_value.txt");
 		myWriter.write("Order\tCrates\n");
@@ -272,14 +209,28 @@ public class Main {
 		//		}
 		//		int LB = (int)LowerBoundModel.setCoveringLB(orders.get(27), items);
 	}
-
-	private static List<ArrayList<Integer>> solveFF(List<Order> orders) throws IOException {
+	private static List<Crate> solveFF(List<Order> orders) throws IOException {
+		List<Crate> crates = new ArrayList<>();
+		double totalBins = 0.0;		
+		for(int i = 0; i < orders.size(); i++) {
+			FF ff = new FF(orders.get(i));
+			List<Crate> c = ff.computeFF();
+			totalBins += c.size();
+			
+			for(Crate crate : c) {
+				crates.add(crate);
+			}	
+		}
+		System.out.println("Total Bins: "+(int)totalBins);
+		return crates;
+	}
+	private static List<ArrayList<Integer>> solveFFFiles(List<Order> orders) throws IOException {
 		List<ArrayList<Integer>> aisles = new ArrayList<>();
-		FileWriter myWriter = new FileWriter("FF_solution_value.txt");
-		FileWriter myWriter2 = new FileWriter("FF_solution.txt");
-		FileWriter myWriter3 = new FileWriter("FF_aisles.txt");
-		FileWriter myWriter4 = new FileWriter("FF_numAisles.txt");
-		FileWriter myWriter5 = new FileWriter("FF_CrateAisleList.txt");
+		//		FileWriter myWriter = new FileWriter("FF_solution_value.txt");
+		//		FileWriter myWriter2 = new FileWriter("FF_solution.txt");
+		//		FileWriter myWriter3 = new FileWriter("FF_aisles.txt");
+		//		FileWriter myWriter4 = new FileWriter("FF_numAisles.txt");
+		//		FileWriter myWriter5 = new FileWriter("FF_CrateAisleList.txt");
 
 		double totalBins = 0.0;
 		double totalVolume = 0.0;
@@ -293,7 +244,7 @@ public class Main {
 		int sixCounter = 0;
 		int sevenCounter = 0;
 		int eightCounter = 0;
-		myWriter.write("Order\tamountCrates\n");
+		//		myWriter.write("Order\tamountCrates\n");
 		for(int i = 0 ; i < orders.size() ; i++)
 		{
 			FF ff = new FF(orders.get(i));
@@ -301,13 +252,13 @@ public class Main {
 			//			myWriter.write(i+"\t"+crates.size()+"\n");
 			int test = checkSolution(crates,i);
 			if(test==0) {
-				myWriter.write(i+"\t"+crates.size()+"\n");
+				//				myWriter.write(i+"\t"+crates.size()+"\n");
 			}
 			else {
-				myWriter.write(i+"\t"+crates.size()+"\t"+test+"\n");
+				//				myWriter.write(i+"\t"+crates.size()+"\t"+test+"\n");
 			}
-			myWriter2.write("Order: "+i+"\nCrates: "+crates.size()+"\n");
-			myWriter3.write("Order: "+i+"\nCrates: "+crates.size()+ "\n");
+			//			myWriter2.write("Order: "+i+"\nCrates: "+crates.size()+"\n");
+			//			myWriter3.write("Order: "+i+"\nCrates: "+crates.size()+ "\n");
 			int counter = 1;
 			totalBins += crates.size();
 			for(Crate crate : crates)
@@ -324,22 +275,22 @@ public class Main {
 				totalVolume += volume;
 				totalWeight += weight;
 				double fillRate = Math.round(volume/crate.getVolume()*10000)/100;
-				myWriter2.write(counter+"\t"+fillRate+"\t"+weight+"\t");
-				myWriter4.write(crateCounter + "\t");
-				myWriter5.write(crateCounter + "\t");
+				//				myWriter2.write(counter+"\t"+fillRate+"\t"+weight+"\t");
+				//				myWriter4.write(crateCounter + "\t");
+				//				myWriter5.write(crateCounter + "\t");
 				int aisleCounter = 0;
 				for(Item item : items)
 				{
 					int id = (int) item.getItemId();
-					if(id>=0)myWriter2.write(id+" ");
+					//					if(id>=0)myWriter2.write(id+" ");
 				}
 				ArrayList<Integer> ail = new ArrayList<Integer>(); 
 				for(int j = 0; j < 8; j++) {
 					if(crate.getAisles()[j] == true) {
 						aisleCounter++;
-						myWriter3.write(j+ " ");
+						//						myWriter3.write(j+ " ");
 						ail.add(j);
-						myWriter5.write(j + " ");
+						//						myWriter5.write(j + " ");
 
 					}
 				}
@@ -352,16 +303,16 @@ public class Main {
 				if(aisleCounter == 6) {sixCounter++;}
 				if(aisleCounter == 7) {sevenCounter++;}
 				if(aisleCounter == 6) {eightCounter++;}
-				myWriter4.write(aisleCounter + "\n");
-				myWriter2.write("\n");
-				myWriter3.write("\n");
-				myWriter5.write("\n");
+				//				myWriter4.write(aisleCounter + "\n");
+				//				myWriter2.write("\n");
+				//				myWriter3.write("\n");
+				//				myWriter5.write("\n");
 				counter++;
 			}
-			myWriter2.write("\n");
-			myWriter3.write("\n");
+			//			myWriter2.write("\n");
+			//			myWriter3.write("\n");
 		}
-		myWriter.close();myWriter2.close();myWriter3.close();myWriter4.close();myWriter5.close();
+		//		myWriter.close();myWriter2.close();myWriter3.close();myWriter4.close();myWriter5.close();
 		System.out.println("Total Bins: "+(int)totalBins);
 		double averageVolume = Math.round(totalVolume/totalBins/1000);
 		double averageWeight = Math.round(totalWeight/totalBins);
@@ -377,7 +328,6 @@ public class Main {
 		System.out.println("Times 8 aisles used: " + eightCounter);
 		return aisles;
 	}
-
 	private static void solveFFPaper(List<Order> orders) throws IOException {
 		FileWriter myWriter = new FileWriter("FF_Paper_solution_value.txt");
 		FileWriter myWriter2 = new FileWriter("FF_Paper_solution.txt");
@@ -580,5 +530,58 @@ public class Main {
 				&& y1min < y2max && y2min < y1max
 				&& z1min < z2max && z2min < z1max)return true;
 		else return false;
+	}
+	private static Graph createGraph(Map<Double, Item> items, List<Order> orders) {
+		Graph g = new Graph();
+
+		// Add nodes
+		Node S = new Node('S', -1); // Source heeft -1 als index
+		Node A = new Node('A', 0);
+		Node B = new Node('B', 1);
+		Node C = new Node('C', 2);
+		Node D = new Node('D', 3);
+		Node E = new Node('E', 4);
+		Node F = new Node('F', 5);
+		Node G = new Node('G', 6);
+		Node H = new Node('H', 7);
+		Node T = new Node('T', -2); // Sink heeft -2 als index
+		g.addNode(S);
+		g.addNode(A);
+		g.addNode(B);
+		g.addNode(C);
+		g.addNode(D);
+		g.addNode(E);
+		g.addNode(F);
+		g.addNode(G);
+		g.addNode(H);
+		g.addNode(T);
+
+		// Add arcs
+		g.addArc(S, A, 1);
+		g.addArc(S, C, 1);
+		g.addArc(S, E, 1);
+		g.addArc(S, G, 1);
+		g.addArc(A, B, 1);
+		g.addArc(A, D, 1);
+		g.addArc(A, F, 1);
+		g.addArc(A, H, 1);
+		g.addArc(B, E, 1);
+		g.addArc(B, G, 1);
+		g.addArc(B, C, 1);
+		g.addArc(B, T, 0);
+		g.addArc(C, D, 1);
+		g.addArc(C, F, 1);
+		g.addArc(C, H, 1);
+		g.addArc(D, E, 1);
+		g.addArc(D, G, 1);
+		g.addArc(D, T, 0);
+		g.addArc(E, H, 1);
+		g.addArc(E, F, 1);
+		g.addArc(F, G, 1);
+		g.addArc(F, T, 0);
+		g.addArc(G, H, 1);
+		g.addArc(H, T, 0);
+
+		return g;	
 	}
 }

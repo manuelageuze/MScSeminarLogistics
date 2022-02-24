@@ -17,6 +17,7 @@ public class Crate {
 		private List<Item> items;
 		private boolean[] aisles;
 		private int numAisles;
+		private ArrayList<Integer> aisleList;
 		
 	/**
 	 * Constructor that creates a new crate with the standard sizes
@@ -26,6 +27,7 @@ public class Crate {
 		this.ep = new ArrayList<>();
 		this.items = new ArrayList<>();
 		this.aisles = new boolean[8];
+		this.aisleList = new ArrayList<Integer>();
 	}
 	
 	public Crate(List<Item> list) {
@@ -33,6 +35,14 @@ public class Crate {
 		this.ep = new ArrayList<>();
 		this.items = list; // Gaat dit goed?
 		this.aisles = new boolean[8];
+		this.aisleList = new ArrayList<Integer>();
+	}
+	
+	public void setAisleList(ArrayList<Integer> list) {
+		this.aisleList = list;
+	}
+	public List<Integer> getAisleList(){
+		return this.aisleList;
 	}
 	
 	public int getNumAisles() {
