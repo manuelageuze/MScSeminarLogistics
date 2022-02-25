@@ -29,6 +29,7 @@ public class ShortestPath {
 			for(int j = 0; j < 8; j++) {
 				if(crate.getAisles()[j] == true) {
 					ail.add(j);
+					crate.increaseNumAisles();
 				}
 			}
 			crate.setAisleList(ail);
@@ -62,6 +63,7 @@ public class ShortestPath {
 			// add length form last aisle to t
 			length = length + (int) shortestPath(g, aisles.get(i).get(aisles.get(i).size() - 1) + 1, 9);
 			pathSizes.add(length);
+			crates.get(i).setShortestPathLength(length);
 		}
 		return pathSizes;
 	}

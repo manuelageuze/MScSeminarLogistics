@@ -3,6 +3,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -18,10 +19,12 @@ public class Main {
 		Graph g = createGraph(items,orders);
 
 		//computeLowerBound(orders,items); // Computes lowerbound
-		
+
 		// Solve FF
-		List<Crate> crates = solveFF(orders);
-		
+		//List<Crate> crates = solveFF(orders);
+		// Solve BF
+		List<Crate> crates = solveBF(orders);
+
 		// Voor alle 2000 kratten individueel
 		// Make a shortest path class
 		ShortestPath sp = new ShortestPath(crates, g);
@@ -29,17 +32,35 @@ public class Main {
 		List<ArrayList<Integer>> aisles = sp.computeAisles();
 		// Compute the shortest path per crate. Displays for each crate the amount of aisles needed to traversed for the shortest path, but not which aisles
 		List<Integer> shortestPaths = sp.computeShortestPath();
+		// Geeft lijst met integers die de lengte van het korste pad aangeven
+		
+		// Sorteer je lijst met kratten gebaseerd op shortestpath length
+		Collections.sort(crates);
+		// Compute number of crates with a shortest path of 8
+		double counter = 0.0;
+		for(int i = 0; i < crates.size();i++) {
+			if(crates.get(i).getShortestPathLength() == 8) {
+				counter++;
+			}
+		}
+		// Create list of all orderpickers who need to visit all 8 aisles anyway
+		List<OrderPicker> orderpickers = fullOrderPickers(counter, crates);
+		int numCrates = orderpickers.size()*8; // index start of which crates are not yet added to an orderpicker
 		
 		
+		
+
+
+		/*
 		// Voor set van 8 kratten
 		List<OrderPicker> orderpickers = orderPicking(crates);
-		int total = 0;
 		for(int i = 0; i < orderpickers.size(); i++) {
 			ShortestPath spath = new ShortestPath(orderpickers.get(i).getCrates(), g);
 			int value = spath.computeShortestPathOneCrate(orderpickers.get(i).getAislesToVisist());
 			orderpickers.get(i).setShortestPath(value);
 			System.out.println(value);
 		}
+		*/
 
 
 
@@ -54,20 +75,53 @@ public class Main {
 		//			System.out.println("Solution time: "+timeLB/1000);
 		//		}
 		//		System.out.println(totalTime);
-		
+
 		// List<ArrayList<Integer>> aisles = solveFFFiles(orders);
 
 	}
+	public static List<OrderPicker> fullOrderPickers(double counter, List<Crate> crates){
+		List<OrderPicker> orderpickers = new ArrayList<>();
+		int numOrderPickers8Aisles = (int) Math.floor(counter/8.0);
+		int index = 0;
+		int orderPickerIndex = 0;
+		for(int i = 0; i < numOrderPickers8Aisles; i++) { // Voor alle kratten met shortest path 8, stop ze bij elkaar
+			List<Crate> partCrates = new ArrayList<>();
+			for(int j = index; j < index + 8; j++) {
+				if(j >= crates.size()) {
+					break;
+				}
+				partCrates.add(crates.get(j));
+			}
+			index = (i+1)*8;
+			boolean[] visited = new boolean[8];
+			for(Crate crate : partCrates) {
+				for(int j = 0; j < 8; j++) {
+					if(crate.getAisles()[j] == true) {
+						visited[j] = true;
+					}
+				}
+			}
+			int co = 0;
+			List<Integer> aislesToVisit = new ArrayList<>();
+			for(int j = 0; j < 8; j++) {
+				if(visited[j] == true) {
+					co++;
+					aislesToVisit.add(j);
+				}
+			}	
+			orderPickerIndex = i;
+			OrderPicker test = new OrderPicker(i, partCrates, co, aislesToVisit);
+			orderpickers.add(test);
+		}
+		return orderpickers;
+	}
 	
+	// Dit is voor random 8 kratten toewijzen
 	public static List<OrderPicker> orderPicking(List<Crate> crates) {
 		double numPickers = Math.ceil((double) crates.size()/8.0);
 		List<OrderPicker> orderpickers = new ArrayList<>();
 		int index = 0;
 		for(int i = 0; i < numPickers; i++) {
-			if(i == 8) {
-				int k = 0;
-				k = k + 1;
-			}
 			List<Crate> partCrates = new ArrayList<>();
 			for(int j = index; j < index + 8; j++) {
 				if(j >= crates.size()) {
@@ -209,6 +263,21 @@ public class Main {
 		//		}
 		//		int LB = (int)LowerBoundModel.setCoveringLB(orders.get(27), items);
 	}
+	private static List<Crate> solveBF(List<Order> orders) {
+		List<Crate> crates = new ArrayList<>();
+		double totalBins = 0.0;
+		for(int i = 0; i < orders.size(); i++) {
+			BF bf = new BF(orders.get(i));
+			List<Crate> c = bf.computeBF();
+			totalBins += c.size();
+			for(Crate crate : c) {
+				crates.add(crate);
+			}
+		}
+		System.out.println("Total Bins: "+(int) totalBins);
+		return crates;
+	}
+
 	private static List<Crate> solveFF(List<Order> orders) throws IOException {
 		List<Crate> crates = new ArrayList<>();
 		double totalBins = 0.0;		
@@ -216,7 +285,7 @@ public class Main {
 			FF ff = new FF(orders.get(i));
 			List<Crate> c = ff.computeFF();
 			totalBins += c.size();
-			
+
 			for(Crate crate : c) {
 				crates.add(crate);
 			}	
@@ -226,11 +295,11 @@ public class Main {
 	}
 	private static List<ArrayList<Integer>> solveFFFiles(List<Order> orders) throws IOException {
 		List<ArrayList<Integer>> aisles = new ArrayList<>();
-		//		FileWriter myWriter = new FileWriter("FF_solution_value.txt");
-		//		FileWriter myWriter2 = new FileWriter("FF_solution.txt");
-		//		FileWriter myWriter3 = new FileWriter("FF_aisles.txt");
-		//		FileWriter myWriter4 = new FileWriter("FF_numAisles.txt");
-		//		FileWriter myWriter5 = new FileWriter("FF_CrateAisleList.txt");
+		FileWriter myWriter = new FileWriter("FF_solution_value.txt");
+		FileWriter myWriter2 = new FileWriter("FF_solution.txt");
+		FileWriter myWriter3 = new FileWriter("FF_aisles.txt");
+		FileWriter myWriter4 = new FileWriter("FF_numAisles.txt");
+		FileWriter myWriter5 = new FileWriter("FF_CrateAisleList.txt");
 
 		double totalBins = 0.0;
 		double totalVolume = 0.0;
@@ -244,21 +313,21 @@ public class Main {
 		int sixCounter = 0;
 		int sevenCounter = 0;
 		int eightCounter = 0;
-		//		myWriter.write("Order\tamountCrates\n");
+		myWriter.write("Order\tamountCrates\n");
 		for(int i = 0 ; i < orders.size() ; i++)
 		{
 			FF ff = new FF(orders.get(i));
 			List<Crate> crates = ff.computeFF();
-			//			myWriter.write(i+"\t"+crates.size()+"\n");
+			myWriter.write(i+"\t"+crates.size()+"\n");
 			int test = checkSolution(crates,i);
 			if(test==0) {
-				//				myWriter.write(i+"\t"+crates.size()+"\n");
+				myWriter.write(i+"\t"+crates.size()+"\n");
 			}
 			else {
-				//				myWriter.write(i+"\t"+crates.size()+"\t"+test+"\n");
+				myWriter.write(i+"\t"+crates.size()+"\t"+test+"\n");
 			}
-			//			myWriter2.write("Order: "+i+"\nCrates: "+crates.size()+"\n");
-			//			myWriter3.write("Order: "+i+"\nCrates: "+crates.size()+ "\n");
+			myWriter2.write("Order: "+i+"\nCrates: "+crates.size()+"\n");
+			myWriter3.write("Order: "+i+"\nCrates: "+crates.size()+ "\n");
 			int counter = 1;
 			totalBins += crates.size();
 			for(Crate crate : crates)
@@ -275,22 +344,22 @@ public class Main {
 				totalVolume += volume;
 				totalWeight += weight;
 				double fillRate = Math.round(volume/crate.getVolume()*10000)/100;
-				//				myWriter2.write(counter+"\t"+fillRate+"\t"+weight+"\t");
-				//				myWriter4.write(crateCounter + "\t");
-				//				myWriter5.write(crateCounter + "\t");
+				myWriter2.write(counter+"\t"+fillRate+"\t"+weight+"\t");
+				myWriter4.write(crateCounter + "\t");
+				myWriter5.write(crateCounter + "\t");
 				int aisleCounter = 0;
 				for(Item item : items)
 				{
 					int id = (int) item.getItemId();
-					//					if(id>=0)myWriter2.write(id+" ");
+					if(id>=0)myWriter2.write(id+" ");
 				}
 				ArrayList<Integer> ail = new ArrayList<Integer>(); 
 				for(int j = 0; j < 8; j++) {
 					if(crate.getAisles()[j] == true) {
 						aisleCounter++;
-						//						myWriter3.write(j+ " ");
+						myWriter3.write(j+ " ");
 						ail.add(j);
-						//						myWriter5.write(j + " ");
+						myWriter5.write(j + " ");
 
 					}
 				}
@@ -303,16 +372,16 @@ public class Main {
 				if(aisleCounter == 6) {sixCounter++;}
 				if(aisleCounter == 7) {sevenCounter++;}
 				if(aisleCounter == 6) {eightCounter++;}
-				//				myWriter4.write(aisleCounter + "\n");
-				//				myWriter2.write("\n");
-				//				myWriter3.write("\n");
-				//				myWriter5.write("\n");
+				myWriter4.write(aisleCounter + "\n");
+				myWriter2.write("\n");
+				myWriter3.write("\n");
+				myWriter5.write("\n");
 				counter++;
 			}
-			//			myWriter2.write("\n");
-			//			myWriter3.write("\n");
+			myWriter2.write("\n");
+			myWriter3.write("\n");
 		}
-		//		myWriter.close();myWriter2.close();myWriter3.close();myWriter4.close();myWriter5.close();
+		myWriter.close();myWriter2.close();myWriter3.close();myWriter4.close();myWriter5.close();
 		System.out.println("Total Bins: "+(int)totalBins);
 		double averageVolume = Math.round(totalVolume/totalBins/1000);
 		double averageWeight = Math.round(totalWeight/totalBins);
@@ -378,86 +447,7 @@ public class Main {
 		System.out.println("Average weight: "+averageWeight/1000);
 	}
 
-	private static void solveBF(List<Order> orders) throws IOException {
-		FileWriter myWriter = new FileWriter("BF_solution_value.txt");
-		FileWriter myWriter2 = new FileWriter("BF_solution.txt");
-		double totalBins = 0.0;
-		double totalVolume = 0.0;
-		double totalWeight = 0.0;
-		myWriter.write("Order\tamountCrates\n");
-		for(int i = 0 ; i < orders.size() ; i++)
-		{
-			BF bf = new BF(orders.get(i));
-			List<Crate> crates = bf.computeBF();
-			//			myWriter.write(i+"\t"+crates.size()+"\n");
-			int test = checkSolution(crates,i);
-			if(test==0)myWriter.write(i+"\t"+crates.size()+"\n");
-			else myWriter.write(i+"\t"+crates.size()+"\t"+test+"\n");
-			myWriter2.write("Order: "+i+"\nCrates: "+crates.size()+"\n");
-			int counter = 1;
-			totalBins += crates.size();
-			for(Crate crate : crates)
-			{
-				List<Item> items = crate.getItemList();
-				double volume = 0.0;
-				double weight = 0.0;
-				for(Item item : items)
-				{
-					volume += item.getVolume();
-					weight += item.getWeight();
-				}
-				totalVolume += volume;
-				totalWeight += weight;
-				double fillRate = Math.round(volume/crate.getVolume()*10000)/100;
-				myWriter2.write(counter+"\t"+fillRate+"\t"+weight+"\t");
-				for(Item item : items)
-				{
-					int id = (int) item.getItemId();
-					if(id>=0)myWriter2.write(id+" ");
-				}
-				myWriter2.write("\n");
-				counter++;
-			}
-			myWriter2.write("\n");
-		}
-		myWriter.close();myWriter2.close();
-		System.out.println("Total Bins: "+(int)totalBins);
-		double averageVolume = Math.round(totalVolume/totalBins/1000);
-		double averageWeight = Math.round(totalWeight/totalBins);
-		System.out.println("Average volume: "+averageVolume/1000);
-		System.out.println("Average weight: "+averageWeight/1000);
-	}
 
-	public static void getPlotOutput_BF(Order order, int crateNumber) throws IOException
-	{
-		BF bf = new BF(order);
-		List<Crate> crates = bf.computeBF();
-		if(crateNumber > crates.size())
-		{
-			System.out.println("Crate number not feasible");
-			return;
-		}
-		else
-		{
-			FileWriter myWriter = new FileWriter("outputPlot.txt");
-			Crate crate = crates.get(crateNumber-1);
-			List<Item> items  =crate.getItemList();
-			myWriter.write("id\tx\ty\tz\tw\tl\th\n");
-			for(int j = 6 ; j < items.size() ; j++)
-			{
-				Item i = items.get(j);
-				int id = (int) i.getItemId();
-				int x = (int) i.getInsertedX();
-				int y = (int) i.getInsertedY();
-				int z = (int) i.getInsertedZ();
-				int w = (int) i.getWidth();
-				int l = (int) i.getLength();
-				int h = (int) i.getHeight();
-				myWriter.write(id+"\t"+x+"\t"+y+"\t"+z+"\t"+w+"\t"+l+"\t"+h+"\n");
-			}
-			myWriter.close();
-		}
-	}
 
 	public static void getPlotOutput(List<Crate> crates, int crateNumber) throws IOException
 	{
