@@ -17,8 +17,9 @@ public class Crate implements Comparable<Crate> {
 	private List<Item> items;
 	private boolean[] aisles;
 	private int numAisles;
-	private int shortestPathLength;
 	private ArrayList<Integer> aisleList;
+	private int shortestPathLength;
+	private ArrayList<Integer> shortestPathList;
 	private int orderIndex;
 
 	/**
@@ -32,6 +33,7 @@ public class Crate implements Comparable<Crate> {
 		this.aisleList = new ArrayList<Integer>();
 		this.orderIndex = 0;
 		this.shortestPathLength = 0;
+		this.shortestPathList = new ArrayList<Integer>();
 	}
 
 	public Crate(List<Item> list) {
@@ -42,6 +44,15 @@ public class Crate implements Comparable<Crate> {
 		this.aisleList = new ArrayList<Integer>();
 		this.orderIndex = 0;
 		this.shortestPathLength = 0;
+		this.shortestPathList = new ArrayList<Integer>();
+	}
+	
+	public ArrayList<Integer> getShortestPathList(){
+		return this.shortestPathList;
+	}
+	
+	public void setShortestPathList(ArrayList<Integer> list) {
+		this.shortestPathList = list;
 	}
 
 	public int getShortestPathLength() {
