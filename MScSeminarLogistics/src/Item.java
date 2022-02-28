@@ -53,7 +53,7 @@ public class Item implements Comparable<Item> {
 	 * @param height in mm
 	 * @param weight in grams
 	 */
-	public Item(double itemId, double width, double length, double height, double weight, int aisle, double insertedX, double insertedY, double insertedZ, int crateIndex) {
+	public Item(double itemId, double width, double length, double height, double weight, double insertedX, double insertedY, double insertedZ, int crateIndex, int aisle) {
 		this.itemId = itemId;
 		this.width = width;
 		this.length = length;
