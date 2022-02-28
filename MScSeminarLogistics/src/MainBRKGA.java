@@ -16,12 +16,26 @@ public class MainBRKGA {
 	static final int MAX_T = 8; 
 
 	public static void main(String[] args) throws IloException, IOException, InterruptedException {
+		// Variables, parameters and results
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
-		int choiceSplit = 2; // Choice for order splitting or not: 1 for no splitting, 2 for splitting
-		int numExecutions = 1;
 		Crate crate = new Crate();
-
+		int choiceSplit = 2; // Choice for order splitting or not: 1 for no splitting, 2 for splitting
+		int choiceAisles = 2; // Choice for incorporating number of aisles or not: 1 for not incorporating, 2 for incorporating
+		int numExecutions = 1;
+		double totalNumBins = 0.0;
+		int[] numCrates = new int[numExecutions];
+		double[] avVolume = new double[numExecutions];
+		double[] avWeight = new double[numExecutions];
+		double[] avFillRate = new double[numExecutions];
+		double[] avWeightRate = new double[numExecutions];
+		double totalAvVolume = 0.0;
+		double totalAvWeight = 0.0;
+		double totalAvFillRate = 0.0;
+		double totalAvWeightRate = 0.0;
+		long totalRunTime = 0;
+		List<Chromosome> chromosomes = new ArrayList<Chromosome>();
+		
 		double[] lowerBound = new double[orders.size()];
 		for(int i=0; i < orders.size(); i++) {
 			double lowerbound = LowerBoundModel.setCoveringLB(orders.get(i), items);
@@ -38,7 +52,7 @@ public class MainBRKGA {
 				totalWeight += order.get(j).getWeight();	
 			}
 		}
-		
+
 		// Order splitting
 		if (choiceSplit == 2) {
 			splitOrders(orders, lowerBound);
@@ -48,25 +62,15 @@ public class MainBRKGA {
 				lowerBound[i] = lowerbound;
 			}
 		}
-		
-		double totalNumBins = 0.0;
-		int[] numBins = new int[numExecutions];
-		double[] avVolume = new double[numExecutions];
-		double[] avWeight = new double[numExecutions];
-		double[] avFillRate = new double[numExecutions];
-		double[] avWeightRate = new double[numExecutions];
-		double totalAvVolume = 0.0;
-		double totalAvWeight = 0.0;
-		double totalAvFillRate = 0.0;
-		double totalAvWeightRate = 0.0;
-		long totalRunTime = 0;
+
 		for (int j=0; j < numExecutions; j++) {
+			int[] thisNumCrates = new int[orders.size()];
 			long startTime = System.nanoTime();
 
 			// Create tasks
 			List<Runnable> runnables = new ArrayList<>();
 			for(int i=0; i < orders.size(); i++) {
-				Runnable runnable = new MultiThread(orders.get(i), lowerBound[i], i);
+				Runnable runnable = new MultiThread(i, orders.get(i), lowerBound[i], 1, 0);
 				runnables.add(runnable);
 			}
 			// Creates a thread pool with MAX_T nr of threads as the fixed pool size
@@ -80,18 +84,28 @@ public class MainBRKGA {
 			long endTime = System.nanoTime();
 			long totalTime = (endTime - startTime)/1000000000; // seconds
 
+			for (int i=0; i < runnables.size(); i++) {
+				chromosomes.add(((MultiThread) runnables.get(i)).getChromosome());
+			}
+			
+			if (choiceAisles == 2) {
+				optAisles(orders, chromosomes, lowerBound, thisNumCrates);
+				endTime = System.nanoTime();
+				totalTime = (endTime - startTime)/1000000000; // seconds
+			}
+			
 			// Write solution
-			int numBinsJ = 0;
+			int numCratesJ = 0;
 			switch (choiceSplit) {
-			case 1: numBinsJ = writeSolNoSplit(orders, lowerBound, runnables);
+			case 1: numCratesJ = writeSolNoSplit(orders, lowerBound, chromosomes);
 			break;
-			case 2: numBinsJ = writeSolSplit(orders, lowerBound, runnables);
+			case 2: numCratesJ = writeSolSplit(orders, lowerBound, chromosomes);
 			break;
 			}
-			totalNumBins += numBinsJ;
-			numBins[j] = numBinsJ;
-			avVolume[j] = totalVolume/numBinsJ;
-			avWeight[j] = totalWeight/numBinsJ;
+			totalNumBins += numCratesJ;
+			numCrates[j] = numCratesJ;
+			avVolume[j] = totalVolume/numCratesJ;
+			avWeight[j] = totalWeight/numCratesJ;
 			avFillRate[j] = avVolume[j]/crate.getVolume();
 			avWeightRate[j] = avWeight[j]/crate.getMaxWeight();
 			totalAvVolume += avVolume[j];
@@ -122,6 +136,31 @@ public class MainBRKGA {
 
 	}
 
+	private static void optAisles(List<Order> orders, List<Chromosome> chromosomes, double[] lowerBound, int[] thisNumCrates) throws FileNotFoundException {
+		// Create tasks
+		List<Runnable> runnables = new ArrayList<>();
+		for(int i=0; i < orders.size(); i++) {
+			Runnable runnable = new MultiThread(i, orders.get(i), lowerBound[i], 2, thisNumCrates[i]);
+			runnables.add(runnable);
+		}
+		// Creates a thread pool with MAX_T nr of threads as the fixed pool size
+		ExecutorService pool = Executors.newFixedThreadPool(MAX_T); 
+		// Passes the MultiThread objects to the pool to execute
+		for(Runnable runnable: runnables) {
+			pool.execute(runnable);
+		}
+		awaitTerminationAfterShutdown(pool);
+		
+		// Check if number of crates is equal to original. If so, take new solution. If not, keep original solution
+		for (int i=0; i < runnables.size(); i++) {
+			Chromosome chrom = ((MultiThread) runnables.get(i)).getChromosome();
+			if (chrom.getNumCrates() <= thisNumCrates[i]) {
+				System.out.println("lekker bezig in thread " + ((MultiThread) runnables.get(i)).getThreadNumber());
+				chromosomes.set(i, chrom);
+			}
+		}
+	}
+
 	private static void splitOrders(List<Order> orders, double[] lowerBound) {
 		double LBBound = 3.0;
 		int numItemsBound = 50;
@@ -141,7 +180,7 @@ public class MainBRKGA {
 		}
 	}
 
-	private static int writeSolNoSplit(List<Order> orders, double[] lowerBound, List<Runnable> runnables) throws FileNotFoundException {
+	private static int writeSolNoSplit(List<Order> orders, double[] lowerBound, List<Chromosome> chromosomes) throws FileNotFoundException {
 		File info = new File("GA_solution_info_multi.txt"); 
 		File sol = new File("GA_solution_multi.txt");
 		PrintWriter outInfo = new PrintWriter(info);
@@ -150,7 +189,7 @@ public class MainBRKGA {
 		int totalNumBins = 0;
 		Crate crate = new Crate();
 		for (int i=0; i < orders.size(); i++) {
-			Chromosome chrom = ((MultiThread) runnables.get(i)).getChromosome();
+			Chromosome chrom = chromosomes.get(i);
 			totalNumBins += chrom.getNumCrates();
 			double avFillRate = 0.0;
 			double avWeight = 0.0;
@@ -179,7 +218,7 @@ public class MainBRKGA {
 		return totalNumBins;
 	}
 
-	private static int writeSolSplit(List<Order> orders, double[] lowerBound, List<Runnable> runnables) throws FileNotFoundException {
+	private static int writeSolSplit(List<Order> orders, double[] lowerBound, List<Chromosome> chromosomes) throws FileNotFoundException {
 		File info = new File("GA_solution_info_multi.txt"); 
 		File sol = new File("GA_solution_multi.txt");
 		PrintWriter outInfo = new PrintWriter(info);
@@ -188,12 +227,12 @@ public class MainBRKGA {
 		int totalNumBins = 0;
 		Crate crate = new Crate();
 		for (int i=0; i < orders.size(); i++) {
-			Chromosome chrom = ((MultiThread) runnables.get(i)).getChromosome();
+			Chromosome chrom = chromosomes.get(i);
 			Chromosome chrom2 = null;
 			int numCrates = chrom.getNumCrates();
 			double fitness = chrom.getFitness();
 			if (chrom.getOrderId() - (int) chrom.getOrderId() > 0) { // Check if order has been split
-				chrom2 = ((MultiThread) runnables.get(i+1)).getChromosome();
+				chrom2 = chromosomes.get(i+1);
 				numCrates += chrom2.getNumCrates();
 				fitness = fitness - (int) fitness > chrom2.getFitness() - (int) chrom2.getFitness() ? chrom2.getFitness()+chrom.getNumCrates() : fitness+chrom2.getNumCrates();
 			}
@@ -243,7 +282,7 @@ public class MainBRKGA {
 		return totalNumBins;
 	}
 
-	public static void awaitTerminationAfterShutdown(ExecutorService threadPool) {
+	private static void awaitTerminationAfterShutdown(ExecutorService threadPool) {
 		threadPool.shutdown();
 		try {
 			if (!threadPool.awaitTermination(1, TimeUnit.HOURS)) {

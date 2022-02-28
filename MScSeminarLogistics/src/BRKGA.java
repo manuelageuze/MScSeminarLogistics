@@ -17,23 +17,24 @@ public class BRKGA {
 	/**
 	 * Solve Bin Packing Problem
 	 * @param order Order to solve problem for
-	 * @param choice_D2_VBO 1 if DFTRC-2^2 is used, 2 if DFTRC-2-VBO is used
+	 * @param lowerBound Lower bound of an order
+	 * @param choiceAisles Choice of incorporating number of aisles or not: 1 for incorporating, 2 for not
 	 */
-	public static Chromosome solve(Order order, double lowerBound) {
+	public static Chromosome solve(Order order, double lowerBound, int choiceAisles, int numCrates) {
 		// Parameters
 		final int numItems = order.getItems().size();
-		final int numPop = 30*numItems; // p : number of vectors in population TODO: 30*numItems
+		final int numPop = 30*numItems; // p : number of vectors in population
 		final int numPopElite = (int) (0.1*numPop); // p_e : number of elite vectors in population
 		final int numPopMutant = (int) (0.15*numPop); // p_m : number of mutants in population
 		final double probElite = 0.7; // rho_e : probability offspring inherits elite's vector component
-		final int numGeneration = 200; // Stopping criterion TODO: zet op 200
+		final int numGeneration = 200; // Stopping criterion
 		Random rand = new Random();
 		double aNB = 0.0;
 		int numSameANB = 0;
 		// Initialize population chromosomes
 		ArrayList<Chromosome> population = new ArrayList<Chromosome>();
 		for (int p=0; p < numPop; p++) {
-			population.add(createMutation(order, rand, numItems));
+			population.add(createMutation(order, rand, numItems, choiceAisles, numCrates));
 		}
 		// Start algorithm
 		for (int g=1; g < numGeneration; g++) {
@@ -52,7 +53,7 @@ public class BRKGA {
 				populationG.add(population.get(p));
 			}
 			for (int p=0; p < numPopMutant; p++) { // Create mutations
-				populationG.add(createMutation(order, rand, numItems));
+				populationG.add(createMutation(order, rand, numItems, choiceAisles, numCrates));
 			}
 			for (int p=0; p < numPop - numPopElite - numPopMutant; p++) { // Create offspring
 				double[] BPS = new double[numItems];
@@ -73,7 +74,13 @@ public class BRKGA {
 					}
 				}
 				List<Item> items = new ArrayList<>(order.getItems());
-				ArrayList<ArrayList<Integer>> openCrates = placement(order, items, BPS, VBO);
+				ArrayList<ArrayList<Integer>> openCrates = new ArrayList<ArrayList<Integer>>();
+				switch (choiceAisles) {
+				case 1: openCrates = placement(order, items, BPS, VBO);
+				break;
+				case 2: openCrates = placementOptAisles(order, items, BPS, VBO, numCrates);
+				break;
+				}
 				double adjNumBins = getAdjustedNumberBins(order, openCrates);
 				populationG.add(new Chromosome(BPS, VBO, openCrates, items, adjNumBins, (int) adjNumBins, order.getOrderId()));
 			}
@@ -471,7 +478,7 @@ public class BRKGA {
 	 * @param choice_D2_VBO
 	 * @return Chromosome
 	 */
-	private static Chromosome createMutation(Order order, Random rand, int numItems) {
+	private static Chromosome createMutation(Order order, Random rand, int numItems, int choiceAisles, int numCrates) {
 		double[] BPS = new double[numItems]; // Box Packing Sequence BPS
 		double[] VBO = new double[numItems]; // Vector Box Orientation VBO
 		for (int i=0; i < numItems; i++) { 
@@ -479,7 +486,13 @@ public class BRKGA {
 			VBO[i] = rand.nextDouble();
 		}
 		List<Item> items = new ArrayList<>(order.getItems());
-		ArrayList<ArrayList<Integer>> openCrates = placement(order, items, BPS, VBO);
+		ArrayList<ArrayList<Integer>> openCrates = new ArrayList<ArrayList<Integer>>();
+		switch (choiceAisles) {
+		case 1: openCrates = placement(order, items, BPS, VBO);
+		break;
+		case 2: openCrates = placementOptAisles(order, items, BPS, VBO, numCrates);
+		break;
+		}
 		double adjNumBins = getAdjustedNumberBins(order, openCrates);
 		return new Chromosome(BPS, VBO, openCrates, items, adjNumBins, (int) adjNumBins, order.getOrderId());
 	}
