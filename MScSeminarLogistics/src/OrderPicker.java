@@ -8,6 +8,14 @@ public class OrderPicker {
 	private int shortestPath;
 	private List<Integer> aislesToVisit;
 
+	public OrderPicker(int index, List<Crate> crates) {
+		this.index = index;
+		this.crates = crates;
+		this.numAisles = 0;
+		this.shortestPath = 0;
+		this.aislesToVisit = new ArrayList<Integer>();
+	}
+	
 	public OrderPicker(int index, List<Crate> crates, int numaisles, List<Integer> aislesToVisit) {
 		this.index = index;
 		this.crates = crates;

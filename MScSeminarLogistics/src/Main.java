@@ -4,6 +4,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -31,25 +32,111 @@ public class Main {
 		// Compute the number of aisles
 		List<ArrayList<Integer>> aisles = sp.computeAisles();
 		// Compute the shortest path per crate. Displays for each crate the amount of aisles needed to traversed for the shortest path, but not which aisles
-		List<Integer> shortestPaths = sp.computeShortestPath();
+		//List<Integer> shortestPaths = sp.computeShortestPathSize();
 		// Geeft lijst met integers die de lengte van het korste pad aangeven
-		
-		// Sorteer je lijst met kratten gebaseerd op shortestpath length
-		Collections.sort(crates);
+		List<ArrayList<Integer>> shortestPathList = sp.computeShortestPathList();
+		// Geeft lijst van het korste pad per krat (dus de nummers van de aisles)
+		List<Integer> shortestPaths = sp.computeShortestPathListLenght();
+
+		// Maak nieuwe lijst
+		List<Crate> cratesToPick = new ArrayList<>(crates);
+		Collections.sort(cratesToPick); // Sorteer je lijst met kratten gebaseerd op shortestpath length
 		// Compute number of crates with a shortest path of 8
-		double counter = 0.0;
+		double eightcounter = 0.0;
 		for(int i = 0; i < crates.size();i++) {
 			if(crates.get(i).getShortestPathLength() == 8) {
-				counter++;
+				eightcounter++;
 			}
 		}
-		// Create list of all orderpickers who need to visit all 8 aisles anyway
-		List<OrderPicker> orderpickers = fullOrderPickers(counter, crates);
-		int numCrates = orderpickers.size()*8; // index start of which crates are not yet added to an orderpicker
+		double counter = Math.ceil(eightcounter/8.0);
+		List<OrderPicker> orderpickers = new ArrayList<OrderPicker>();
+
+		Iterator<Crate> iter = cratesToPick.iterator();
+		for(int j = 0; j < counter; j++) {
+			List<Crate> cr = new ArrayList<Crate>();
+			for(int i = 0; i < 8; i++) {
+				Crate c = iter.next();
+				cr.add(c);
+				iter.remove();
+			}
+			OrderPicker picker = new OrderPicker(j, cr, 8, cr.get(0).getAisleList());
+			orderpickers.add(picker);
+		}
+		// alles van 8 is er nu uit + 2 zesjes
+				
+		
+		List<Crate> restList = new ArrayList<Crate>();
+		while(cratesToPick.isEmpty() == false) {
+			Iterator<Crate> iterate = cratesToPick.iterator();
+			List<Crate> cr = new ArrayList<Crate>();
+			Crate first = cratesToPick.get(0);
+			while(iterate.hasNext() && cr.size() < 8) {
+				Crate c = iterate.next();
+				if(first.getShortestPathList().equals(c.getShortestPathList())) {
+					cr.add(c);
+					iterate.remove();
+				}
+				else {
+					// ga naar volgende crate en check deze
+				}
+			}
+			if(cr.size() == 8) {
+				OrderPicker picker = new OrderPicker(orderpickers.size(), cr, cr.get(0).getNumAisles(), cr.get(0).getAisleList());
+				orderpickers.add(picker);
+			}
+			else { // size is kleiner
+				restList.addAll(cr);
+			}
+		}
+		
+		double restcounter = Math.ceil(restList.size()/8.0);
+		Iterator<Crate> iterator = cratesToPick.iterator();
+		for(int j = 0; j < restcounter; j++) {
+			List<Crate> cr = new ArrayList<Crate>();
+			for(int i = 0; i < 8; i++) {
+				if(iter.hasNext() == false) {
+					break;
+				}
+				Crate c = iter.next();
+				cr.add(c);
+				iter.remove();
+			}
+			boolean[] testaisles = new boolean[8];
+			for(Crate crate : crates) {
+				for(int z = 0; z < 8; z++) {
+					if(crate.getAisles()[z] == true) {
+						testaisles[z] = true;;
+					}
+				}	
+			}
+			List<Integer> aislesToVisit = new ArrayList<Integer>();
+			for(int z = 0; z <8;z++) {
+				if(testaisles[z] == true) {
+					aislesToVisit.add(z);
+				}
+			}
+			OrderPicker picker = new OrderPicker(j, cr, aislesToVisit.size(), aislesToVisit);
+			orderpickers.add(picker);
+		}
+		
+		double total = 0.0;
+		for(int i = 0; i < orderpickers.size(); i++) {
+			ShortestPath spath = new ShortestPath(orderpickers.get(i).getCrates(), g);
+			int value = spath.computeShortestPathOneCrate(orderpickers.get(i).getAislesToVisist());
+			orderpickers.get(i).setShortestPath(value);
+			total = total + value;
+			System.out.println(value);
+		}
+		System.out.println("Total number of aisles needed: " + total);
+		
 		
 		
 		
 
+
+		// Create list of all orderpickers who need to visit all 8 aisles anyway
+		//List<OrderPicker> orderpickers = fullOrderPickers(counter, crates);
+		//int numCrates = orderpickers.size()*8; // index start of which crates are not yet added to an orderpicker
 
 		/*
 		// Voor set van 8 kratten
@@ -60,7 +147,7 @@ public class Main {
 			orderpickers.get(i).setShortestPath(value);
 			System.out.println(value);
 		}
-		*/
+		 */
 
 
 
@@ -115,7 +202,7 @@ public class Main {
 		}
 		return orderpickers;
 	}
-	
+
 	// Dit is voor random 8 kratten toewijzen
 	public static List<OrderPicker> orderPicking(List<Crate> crates) {
 		double numPickers = Math.ceil((double) crates.size()/8.0);
