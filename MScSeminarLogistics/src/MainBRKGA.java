@@ -19,12 +19,26 @@ public class MainBRKGA {
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
 		int choiceSplit = 2; // Choice for order splitting or not: 1 for no splitting, 2 for splitting
+		int numExecutions = 1;
+		Crate crate = new Crate();
 
 		double[] lowerBound = new double[orders.size()];
 		for(int i=0; i < orders.size(); i++) {
 			double lowerbound = LowerBoundModel.setCoveringLB(orders.get(i), items);
 			lowerBound[i] = lowerbound;
 		}
+
+		// Total volume and weight of all orders
+		double totalVolume = 0.0;
+		double totalWeight = 0.0;
+		for (int i=0; i < orders.size(); i++) {
+			List<Item> order = orders.get(i).getItems();
+			for (int j=0; j < order.size(); j++) {
+				totalVolume += order.get(j).getVolume();
+				totalWeight += order.get(j).getWeight();	
+			}
+		}
+		
 		// Order splitting
 		if (choiceSplit == 2) {
 			splitOrders(orders, lowerBound);
@@ -34,34 +48,71 @@ public class MainBRKGA {
 				lowerBound[i] = lowerbound;
 			}
 		}
+		
+		double totalNumBins = 0.0;
+		int[] numBins = new int[numExecutions];
+		double[] avVolume = new double[numExecutions];
+		double[] avWeight = new double[numExecutions];
+		double[] avFillRate = new double[numExecutions];
+		double[] avWeightRate = new double[numExecutions];
+		double totalAvVolume = 0.0;
+		double totalAvWeight = 0.0;
+		double totalAvFillRate = 0.0;
+		double totalAvWeightRate = 0.0;
+		long totalRunTime = 0;
+		for (int j=0; j < numExecutions; j++) {
+			long startTime = System.nanoTime();
 
-		long startTime = System.nanoTime();
-		// Create tasks
-		List<Runnable> runnables = new ArrayList<>();
-		for(int i=0; i < orders.size(); i++) {
-			Runnable runnable = new MultiThread(orders.get(i), lowerBound[i], i);
-			runnables.add(runnable);
-		}
-		// Creates a thread pool with MAX_T no. of threads as the fixed pool size(Step 2)
-		ExecutorService pool = Executors.newFixedThreadPool(MAX_T); 
-		// Passes the MultiThread objects to the pool to execute (Step 3)
-		for(Runnable runnable: runnables) {
-			pool.execute(runnable);
-		}
-		awaitTerminationAfterShutdown(pool);
-		//pool.shutdown();
-		long endTime = System.nanoTime();
-		long totalTime = (endTime - startTime)/1000000000; // seconds
+			// Create tasks
+			List<Runnable> runnables = new ArrayList<>();
+			for(int i=0; i < orders.size(); i++) {
+				Runnable runnable = new MultiThread(orders.get(i), lowerBound[i], i);
+				runnables.add(runnable);
+			}
+			// Creates a thread pool with MAX_T nr of threads as the fixed pool size
+			ExecutorService pool = Executors.newFixedThreadPool(MAX_T); 
+			// Passes the MultiThread objects to the pool to execute
+			for(Runnable runnable: runnables) {
+				pool.execute(runnable);
+			}
+			awaitTerminationAfterShutdown(pool);
+			//pool.shutdown();
+			long endTime = System.nanoTime();
+			long totalTime = (endTime - startTime)/1000000000; // seconds
 
-		// Merge orders, if split
-		switch (choiceSplit) {
-		case 1: writeSolNoSplit(orders, lowerBound, runnables);
-		break;
-		case 2: writeSolSplit(orders, lowerBound, runnables);
-		break;
+			// Write solution
+			int numBinsJ = 0;
+			switch (choiceSplit) {
+			case 1: numBinsJ = writeSolNoSplit(orders, lowerBound, runnables);
+			break;
+			case 2: numBinsJ = writeSolSplit(orders, lowerBound, runnables);
+			break;
+			}
+			totalNumBins += numBinsJ;
+			numBins[j] = numBinsJ;
+			avVolume[j] = totalVolume/numBinsJ;
+			avWeight[j] = totalWeight/numBinsJ;
+			avFillRate[j] = avVolume[j]/crate.getVolume();
+			avWeightRate[j] = avWeight[j]/crate.getMaxWeight();
+			totalAvVolume += avVolume[j];
+			totalAvWeight += avWeight[j];
+			totalAvFillRate += avFillRate[j];
+			totalAvWeightRate += avWeightRate[j];
+			totalRunTime += totalTime;
+			System.out.println("Total runtime MULTITHREAD execution " + j + ": " + totalTime + " s");
 		}
 
-		System.out.println("Total runtime MULTITHREAD: " + totalTime + " s");
+		double avTotalNumBins = totalNumBins/numExecutions;
+		double gap = (avTotalNumBins-1748)/1748;
+		double avTotalVolume = totalAvVolume/numExecutions;
+		double avTotalWeight = totalAvWeight/numExecutions;
+		double avTotalFillRate = totalAvFillRate/numExecutions;
+		double avTotalWeightRate = totalAvWeightRate/numExecutions;
+		double avRunTime = (double) totalRunTime/numExecutions;
+		System.out.println("Average total number of bins over " + numExecutions + " executions: " + avTotalNumBins + ", gap: " + gap);
+		System.out.println("Average volume: " + avTotalVolume + ", average fill rate: " + avTotalFillRate);
+		System.out.println("Average weight: " + avTotalWeight + ", average weight rate: " + avTotalWeightRate);
+		System.out.println("Average runtime: " + avRunTime);
 
 		// 		int instance = 88;
 		//		double lowerbound = LowerBoundModel.setCoveringLB(orders.get(instance), items);
@@ -69,18 +120,6 @@ public class MainBRKGA {
 		//		Chromosome chrom = BRKGA.solve(orders.get(instance), lowerbound, choice_D2_VBO);
 		//		printCrate(orders.get(instance), chrom);
 
-		//		double avWeight = 0.0;
-		//		double avVolume = 0.0;
-		//		for (int i=0; i < orders.size(); i++) {
-		//			List<Item> order = orders.get(i).getItems();
-		//			for (int j=0; j < order.size(); j++) {
-		//				avWeight += order.get(j).getWeight();
-		//				avVolume += order.get(j).getVolume();
-		//			}
-		//		}
-		//		avWeight = avWeight/1907;
-		//		avVolume = avVolume/1907;
-		//		System.out.println("Average volume = " + avVolume + ", average weight = " + avWeight);
 	}
 
 	private static void splitOrders(List<Order> orders, double[] lowerBound) {
@@ -102,7 +141,7 @@ public class MainBRKGA {
 		}
 	}
 
-	private static void writeSolNoSplit(List<Order> orders, double[] lowerBound, List<Runnable> runnables) throws FileNotFoundException {
+	private static int writeSolNoSplit(List<Order> orders, double[] lowerBound, List<Runnable> runnables) throws FileNotFoundException {
 		File info = new File("GA_solution_info_multi.txt"); 
 		File sol = new File("GA_solution_multi.txt");
 		PrintWriter outInfo = new PrintWriter(info);
@@ -137,9 +176,10 @@ public class MainBRKGA {
 		outInfo.close();
 		outSol.close();
 		System.out.println("Total Number Of Bins MULTITHREAD: " + totalNumBins);
+		return totalNumBins;
 	}
 
-	private static void writeSolSplit(List<Order> orders, double[] lowerBound, List<Runnable> runnables) throws FileNotFoundException {
+	private static int writeSolSplit(List<Order> orders, double[] lowerBound, List<Runnable> runnables) throws FileNotFoundException {
 		File info = new File("GA_solution_info_multi.txt"); 
 		File sol = new File("GA_solution_multi.txt");
 		PrintWriter outInfo = new PrintWriter(info);
@@ -200,6 +240,7 @@ public class MainBRKGA {
 		outInfo.close();
 		outSol.close();
 		System.out.println("Total Number Of Bins MULTITHREAD: " + totalNumBins);
+		return totalNumBins;
 	}
 
 	public static void awaitTerminationAfterShutdown(ExecutorService threadPool) {

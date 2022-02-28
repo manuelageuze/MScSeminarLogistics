@@ -20,6 +20,7 @@ public class MultiThread implements Runnable {
 	@Override
 	public void run(){
 		Chromosome chrom = BRKGA.solve(this.order, this.lowerBound);
+		System.out.println("Thread " + threadNumber + " solved :)");
 		this.chromosome = chrom;
 	}
 	
