@@ -3,6 +3,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -19,12 +20,14 @@ public class MainBRKGA {
 		// Variables, parameters and results
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
+		Graph graph = Graph.createGraph();
 		Crate crate = new Crate();
 		int choiceSplit = 2; // Choice for order splitting or not: 1 for no splitting, 2 for splitting
 		int choiceAisles = 2; // Choice for incorporating number of aisles or not: 1 for not incorporating, 2 for incorporating
 		int numExecutions = 1;
 		double totalNumBins = 0.0;
 		int[] numCrates = new int[numExecutions];
+		int[] numAisles = new int[numExecutions];
 		double[] avVolume = new double[numExecutions];
 		double[] avWeight = new double[numExecutions];
 		double[] avFillRate = new double[numExecutions];
@@ -65,6 +68,7 @@ public class MainBRKGA {
 
 		for (int j=0; j < numExecutions; j++) {
 			int[] thisNumCrates = new int[orders.size()];
+			int[] thisNumAisles = new int[orders.size()];
 			long startTime = System.nanoTime();
 
 			// Create tasks
@@ -84,15 +88,44 @@ public class MainBRKGA {
 			long endTime = System.nanoTime();
 			long totalTime = (endTime - startTime)/1000000000; // seconds
 
+			int numAislesJ = 0;	
 			for (int i=0; i < runnables.size(); i++) {
-				chromosomes.add(((MultiThread) runnables.get(i)).getChromosome());
+				Chromosome chrom = ((MultiThread) runnables.get(i)).getChromosome();
+				chromosomes.add(chrom);
+				thisNumCrates[i] = chrom.getNumCrates();
+				List<Crate> crates = chrom.getCrates();
+				ShortestPath shortestPath = new ShortestPath(crates, graph);
+				List<Integer> pathSizes = shortestPath.getPathSizes();
+				for (Integer integer : pathSizes) {
+					thisNumAisles[i] = integer;
+					numAislesJ += integer;
+				}	
 			}
+			numAisles[j] = numAislesJ;
+			System.out.println("Num aisles original: ");
+			System.out.println(Arrays.toString(thisNumAisles));
+			System.out.println("Total num aisles original: " + numAisles[j]);
 			
 			if (choiceAisles == 2) {
 				optAisles(orders, chromosomes, lowerBound, thisNumCrates);
 				endTime = System.nanoTime();
 				totalTime = (endTime - startTime)/1000000000; // seconds
 			}
+			
+			numAislesJ = 0;
+			for (int i=0; i < chromosomes.size(); i++) {
+				List<Crate> crates = chromosomes.get(i).getCrates();
+				ShortestPath shortestPath = new ShortestPath(crates, graph);
+				List<Integer> pathSizes = shortestPath.getPathSizes();
+				for (Integer integer : pathSizes) {
+					thisNumAisles[i] = integer;
+					numAislesJ += integer;
+				}
+			}
+			numAisles[j] = numAislesJ;
+			System.out.println("Num aisles after optimizing: ");
+			System.out.println(Arrays.toString(thisNumAisles));
+			System.out.println("Total num aisles after optimizing: " + numAisles[j]);
 			
 			// Write solution
 			int numCratesJ = 0;
@@ -152,13 +185,16 @@ public class MainBRKGA {
 		awaitTerminationAfterShutdown(pool);
 		
 		// Check if number of crates is equal to original. If so, take new solution. If not, keep original solution
+		int numOrdersImproved = 0;
 		for (int i=0; i < runnables.size(); i++) {
 			Chromosome chrom = ((MultiThread) runnables.get(i)).getChromosome();
 			if (chrom.getNumCrates() <= thisNumCrates[i]) {
 				System.out.println("lekker bezig in thread " + ((MultiThread) runnables.get(i)).getThreadNumber());
+				numOrdersImproved++;
 				chromosomes.set(i, chrom);
 			}
 		}
+		System.out.println("Number of orders improved: " + numOrdersImproved);
 	}
 
 	private static void splitOrders(List<Order> orders, double[] lowerBound) {
