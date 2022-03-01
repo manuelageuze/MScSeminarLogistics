@@ -11,11 +11,13 @@ public class ShortestPath {
 
  	public ShortestPath(List<Crate> crates, Graph g) {
 		this.crates = crates;
-		this.pathSizes = new ArrayList<>();
-		this.aisles = new ArrayList<ArrayList<Integer>>();
 		this.g = g;
+		this.aisles = new ArrayList<ArrayList<Integer>>();
+		this.aisles = this.computeAisles();
+		this.shortestPathList = this.computeShortestPathList();
+		this.pathSizes = new ArrayList<Integer>();
+		this.pathSizes = this.computeShortestPathListLength();
 		this.pathSizeOneCrate = 0;
-		this.shortestPathList = new ArrayList<ArrayList<Integer>>();
 	}
 
 	public List<Integer> getPathSizes(){
@@ -25,22 +27,30 @@ public class ShortestPath {
 		return this.crates;
 	}
 
+	/**
+	 * Method that gives a list containing the aisle numbers that a crate must go through, for each crate
+	 * @return
+	 */
 	public List<ArrayList<Integer>> computeAisles() {
 		for(Crate crate : crates) {
-			ArrayList<Integer> ail = new ArrayList<Integer>(); 
+			ArrayList<Integer> aisle = new ArrayList<Integer>(); 
 			for(int j = 0; j < 8; j++) {
 				if(crate.getAisles()[j] == true) {
-					ail.add(j);
+					aisle.add(j);
 					crate.increaseNumAisles();
 				}
 			}
-			crate.setAisleList(ail);
-			aisles.add(ail);
+			crate.setAisleList(aisle);
+			aisles.add(aisle);
 		}
 		return aisles;
 	}
 	
-	public List<Integer> computeShortestPathListLenght(){
+	/**
+	 * Method that returns the number of aisles that a crate must to go through, for each crate
+	 * @return
+	 */
+	public List<Integer> computeShortestPathListLength(){
 		List<Integer> list = new ArrayList<Integer>();
 		for(int i = 0; i < crates.size(); i++) {
 			int value = shortestPathList.get(i).size();
@@ -51,43 +61,47 @@ public class ShortestPath {
 		return list;
 	}
 	
+	/**
+	 * Method that computes the shortest path for each crate
+	 * @return
+	 */
 	public List<ArrayList<Integer>> computeShortestPathList(){
 		List<ArrayList<Integer>> list = new ArrayList<ArrayList<Integer>>();
 		for(int i = 0; i < crates.size();i++) {
-			ArrayList<Integer> ail = new ArrayList<Integer>();
+			ArrayList<Integer> aisle = new ArrayList<Integer>();
 			for(int j = 0; j < crates.get(i).getAisleList().size(); j++) {
 				int index = crates.get(i).getAisleList().get(j);
 				if(j == 0) {
 					if(index % 2 == 0) {
 						// Dan is het goed
-						ail.add(index);
+						aisle.add(index);
 					} 
 					else {
-						ail.add(index - 1);
-						ail.add(index);
+						aisle.add(index - 1);
+						aisle.add(index);
 					}
 				}
 				else {
 					int prevIndex = crates.get(i).getAisleList().get(j - 1);
 					int space = index - prevIndex;
 					if(space % 2 != 0) { // dan is het goed
-						ail.add(index);
+						aisle.add(index);
 					}
 					else {
-						ail.add(index - 1);
-						ail.add(index);
+						aisle.add(index - 1);
+						aisle.add(index);
 					}
 				}
 				if(j == crates.get(i).getAisleList().size() - 1) {
 					// Als laatste Isle oneven is, kan je meteen naar eindpunt. Doe niets. Laatste ail al toegevoegd in vorige if statement
 					if(index % 2 == 0) { 
 						// Als laatste aisle even is, moet je nog terug door een aisle
-						ail.add(index + 1);
+						aisle.add(index + 1);
 					}
 				}	
 			}
-			crates.get(i).setShortestPathList(ail);
-			list.add(ail);
+			crates.get(i).setShortestPathList(aisle);
+			list.add(aisle);
 			this.shortestPathList = list;
 		}
 		return list;

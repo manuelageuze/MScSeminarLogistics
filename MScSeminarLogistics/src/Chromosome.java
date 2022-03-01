@@ -9,6 +9,7 @@ import java.util.List;
 public class Chromosome implements Comparable<Chromosome> {
 	private double[] BPS;
 	private double[] VBO;
+	private List<Crate> crates;
 	private ArrayList<ArrayList<Integer>> openCrates;
 	private List<Item> items;
 	private double fitness;
@@ -22,9 +23,10 @@ public class Chromosome implements Comparable<Chromosome> {
 	 * @param fitness Fitness value aNB: adjusted number of bins
 	 * @param numCrates Number of crates
 	 */
-	public Chromosome(double[] BPS, double[] VBO, ArrayList<ArrayList<Integer>> openCrates, List<Item> items, double fitness, int numCrates, double orderId) {
+	public Chromosome(double[] BPS, double[] VBO, List<Crate> crates, ArrayList<ArrayList<Integer>> openCrates, List<Item> items, double fitness, int numCrates, double orderId) {
 		this.BPS = BPS;
 		this.VBO = VBO;
+		this.crates = crates;
 		this.openCrates = openCrates;
 		this.items = items;
 		this.fitness = fitness;
@@ -62,6 +64,20 @@ public class Chromosome implements Comparable<Chromosome> {
 		this.VBO = VBO;
 	}
 
+	/** Get crates
+	 * @return crates
+	 */
+	public List<Crate> getCrates() {
+		return crates;
+	}
+
+	/** Set crates
+	 * @param crates the crates to set
+	 */
+	public void setCrates(List<Crate> crates) {
+		this.crates = crates;
+	}
+	
 	/** Get open crates: element is 1 if item is in bin, 0 o.w.
 	 * @return openCrates
 	 */
@@ -139,4 +155,5 @@ public class Chromosome implements Comparable<Chromosome> {
 			return -1;
 		else return 0;
 	}
+
 }

@@ -40,7 +40,7 @@ public class BRKGA {
 		for (int g=1; g < numGeneration; g++) {
 			Collections.sort(population);
 			double newANB = population.get(0).getFitness();
-			if (population.get(0).getNumCrates() == lowerBound) break;
+			if (choiceAisles == 1 && population.get(0).getNumCrates() == lowerBound) break;
 			if (Math.abs(newANB-aNB) <= 1E-6) {
 				numSameANB++;
 				if (numSameANB == 10) break;
@@ -74,15 +74,16 @@ public class BRKGA {
 					}
 				}
 				List<Item> items = new ArrayList<>(order.getItems());
-				ArrayList<ArrayList<Integer>> openCrates = new ArrayList<ArrayList<Integer>>();
+				List<Crate> crates = new ArrayList<Crate>();
 				switch (choiceAisles) {
-				case 1: openCrates = placement(order, items, BPS, VBO);
+				case 1: crates = placement(order, items, BPS, VBO);
 				break;
-				case 2: openCrates = placementOptAisles(order, items, BPS, VBO, numCrates);
+				case 2: crates = placementOptAisles(order, items, BPS, VBO, numCrates);
 				break;
 				}
+				ArrayList<ArrayList<Integer>> openCrates = getOpenCrates(crates);
 				double adjNumBins = getAdjustedNumberBins(order, openCrates);
-				populationG.add(new Chromosome(BPS, VBO, openCrates, items, adjNumBins, (int) adjNumBins, order.getOrderId()));
+				populationG.add(new Chromosome(BPS, VBO, crates, openCrates, items, adjNumBins, (int) adjNumBins, order.getOrderId()));
 			}
 			// Replace by new population
 			population.clear();
@@ -101,9 +102,9 @@ public class BRKGA {
 	 * @param VBO Vector of Box Orientations of choromose of order to pack
 	 * @return a_ij with size numItems*numCrates, value is 1 if item i is in crate j, 0 otherwise
 	 */
-	private static ArrayList<ArrayList<Integer>> placement(Order order, List<Item> items, double[] BPS, double[] VBO) {
+	private static List<Crate> placement(Order order, List<Item> items, double[] BPS, double[] VBO) {
 		// Initialization
-		ArrayList<Crate> crates = new ArrayList<Crate>(); // List of bins
+		List<Crate> crates = new ArrayList<Crate>(); // List of bins
 		ArrayList<ArrayList<Integer>> openCrates = new ArrayList<ArrayList<Integer>>(); // Let element be 1 if item is in bin, 0 o.w.
 		int numCrates = 0; // Number of open bins
 		List<Item> itemsToPack = new ArrayList<Item>(items);
@@ -146,6 +147,7 @@ public class BRKGA {
 				for (int j=0; j < BPS.length; j++) {
 					openCrate.add(0);
 				}
+				crateSelected.setOpenCrate(openCrate);
 				openCrates.add(openCrate);
 				numCrates++;
 				crateIndex = openCrates.size()-1;
@@ -161,6 +163,7 @@ public class BRKGA {
 			}
 			List<Double> orient = new ArrayList<Double>(boxOrientations.get((int) Math.ceil(VBO[mapBPSIndex.get(sortedBPS[i])]*boxOrientations.size()-1)));
 			// Item packing
+			crates.get(crateIndex).getOpenCrate().set(mapBPSIndex.get(sortedBPS[i]), 1);
 			openCrates.get(crateIndex).set(mapBPSIndex.get(sortedBPS[i]), 1);
 			crateSelected.addItemToCrate(itemToPack);
 			itemsToPack.remove(itemToPack);
@@ -168,7 +171,8 @@ public class BRKGA {
 			// Update EMSs of crate
 			crateSelected.setEPList(updateEMS(crateSelected, itemsToPack, EMS, orient));
 		}
-		return openCrates;
+		for (Crate crate : crates) crate.setAllAisles();
+		return crates;
 	}
 	/**
 	 * Placement of items in bins for a given chromosome
@@ -177,7 +181,7 @@ public class BRKGA {
 	 * @param VBO Vector of Box Orientations of choromose of order to pack
 	 * @return a_ij with size numItems*numCrates, value is 1 if item i is in crate j, 0 otherwise
 	 */
-	private static ArrayList<ArrayList<Integer>> placementOptAisles(Order order, List<Item> items, double[] BPS, double[] VBO, int numCrates) {
+	private static List<Crate> placementOptAisles(Order order, List<Item> items, double[] BPS, double[] VBO, int numCrates) {
 		// Initialization
 		ArrayList<Crate> crates = new ArrayList<Crate>(); // List of bins
 		ArrayList<ArrayList<Integer>> openCrates = new ArrayList<ArrayList<Integer>>(); // Let element be 1 if item is in bin, 0 o.w.
@@ -191,6 +195,7 @@ public class BRKGA {
 			for (int j=0; j < BPS.length; j++) {
 				openCrate.add(0);
 			}
+			newCrate.setOpenCrate(openCrate);
 			openCrates.add(openCrate);
 			isAislesVisited.add(new boolean[8]);
 		}
@@ -218,19 +223,21 @@ public class BRKGA {
 			for (int k=0; k < numCrates; k++) {
 				Crate crate = crates.get(k);
 				// Box Orientation Selection
-				EMS = DFTRC2VBO(itemToPack, crate, boxOrientations);
-				if (EMS != null) { // Determine number of aisles to go through
+				EP EMSCrateK = DFTRC2VBO(itemToPack, crate, boxOrientations);
+				if (EMSCrateK != null) { // Determine number of aisles to go through
 					boolean inCrate = isAislesVisited.get(k)[itemToPack.getAisle()];
-					int numAisles = getNumAisles(isAislesVisited.get(k), itemToPack);
+					int numAisles = getNumAisles(isAislesVisited.get(k), itemToPack); // TODO: het verschil bepalen
 					if (inCrate) {
 						minNumAisles = numAisles;
 						crateSelected = crate;
+						EMS = EMSCrateK;
 						crateIndex = k;
 						break;
 					}
 					else if (numAisles < minNumAisles) {
 						minNumAisles = numAisles;
 						crateSelected = crate;
+						EMS = EMSCrateK;
 						crateIndex = k;
 					}
 				}
@@ -246,7 +253,9 @@ public class BRKGA {
 				for (int j=0; j < BPS.length; j++) {
 					openCrate.add(0);
 				}
+				crateSelected.setOpenCrate(openCrate);
 				openCrates.add(openCrate);
+				isAislesVisited.add(new boolean[8]);
 				numCrates++;
 				crateIndex = openCrates.size()-1;
 				EMS = newEMS;
@@ -261,6 +270,7 @@ public class BRKGA {
 			}
 			List<Double> orient = new ArrayList<Double>(boxOrientations.get((int) Math.ceil(VBO[mapBPSIndex.get(sortedBPS[i])]*boxOrientations.size()-1)));
 			// Item packing
+			crates.get(crateIndex).getOpenCrate().set(mapBPSIndex.get(sortedBPS[i]), 1);
 			openCrates.get(crateIndex).set(mapBPSIndex.get(sortedBPS[i]), 1);
 			crateSelected.addItemToCrate(itemToPack);
 			isAislesVisited.get(crateIndex)[itemToPack.getAisle()] = true;
@@ -269,7 +279,8 @@ public class BRKGA {
 			// Update EMSs of crate
 			crateSelected.setEPList(updateEMS(crateSelected, itemsToPack, EMS, orient));
 		}
-		return openCrates;
+		for (Crate crate : crates) crate.setAllAisles();
+		return crates;
 	}
 
 	/**
@@ -486,15 +497,16 @@ public class BRKGA {
 			VBO[i] = rand.nextDouble();
 		}
 		List<Item> items = new ArrayList<>(order.getItems());
-		ArrayList<ArrayList<Integer>> openCrates = new ArrayList<ArrayList<Integer>>();
+		List<Crate> crates = new ArrayList<Crate>();
 		switch (choiceAisles) {
-		case 1: openCrates = placement(order, items, BPS, VBO);
+		case 1: crates = placement(order, items, BPS, VBO);
 		break;
-		case 2: openCrates = placementOptAisles(order, items, BPS, VBO, numCrates);
+		case 2: crates = placementOptAisles(order, items, BPS, VBO, numCrates);
 		break;
 		}
+		ArrayList<ArrayList<Integer>> openCrates = getOpenCrates(crates);
 		double adjNumBins = getAdjustedNumberBins(order, openCrates);
-		return new Chromosome(BPS, VBO, openCrates, items, adjNumBins, (int) adjNumBins, order.getOrderId());
+		return new Chromosome(BPS, VBO, crates, openCrates, items, adjNumBins, (int) adjNumBins, order.getOrderId());
 	}
 
 	/**
@@ -541,5 +553,13 @@ public class BRKGA {
 			else if (isAislesVisited[i] || item.getAisle() == i) right++;
 		}
 		return 2*Math.max(left, right);
+	}
+	
+	private static ArrayList<ArrayList<Integer>> getOpenCrates(List<Crate> crates) {
+		ArrayList<ArrayList<Integer>> openCrates = new ArrayList<ArrayList<Integer>>();
+		for (Crate crate : crates) {
+			openCrates.add(crate.getOpenCrate());
+		}
+		return openCrates;
 	}
 }

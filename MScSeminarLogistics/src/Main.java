@@ -17,7 +17,7 @@ public class Main {
 
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
-		Graph g = createGraph(items,orders);
+		Graph g = Graph.createGraph();
 
 		//computeLowerBound(orders,items); // Computes lowerbound
 
@@ -36,7 +36,7 @@ public class Main {
 		// Geeft lijst met integers die de lengte van het korste pad aangeven
 		List<ArrayList<Integer>> shortestPathList = sp.computeShortestPathList();
 		// Geeft lijst van het korste pad per krat (dus de nummers van de aisles)
-		List<Integer> shortestPaths = sp.computeShortestPathListLenght();
+		List<Integer> shortestPaths = sp.computeShortestPathListLength();
 
 		// Maak nieuwe lijst
 		List<Crate> cratesToPick = new ArrayList<>(crates);
@@ -587,6 +587,7 @@ public class Main {
 		}
 		return 0;
 	}
+	
 	private static boolean isOverlapping(Item item1, Item item2)
 	{
 		double x1min = item1.getInsertedX();
@@ -607,58 +608,5 @@ public class Main {
 				&& y1min < y2max && y2min < y1max
 				&& z1min < z2max && z2min < z1max)return true;
 		else return false;
-	}
-	private static Graph createGraph(Map<Double, Item> items, List<Order> orders) {
-		Graph g = new Graph();
-
-		// Add nodes
-		Node S = new Node('S', -1); // Source heeft -1 als index
-		Node A = new Node('A', 0);
-		Node B = new Node('B', 1);
-		Node C = new Node('C', 2);
-		Node D = new Node('D', 3);
-		Node E = new Node('E', 4);
-		Node F = new Node('F', 5);
-		Node G = new Node('G', 6);
-		Node H = new Node('H', 7);
-		Node T = new Node('T', -2); // Sink heeft -2 als index
-		g.addNode(S);
-		g.addNode(A);
-		g.addNode(B);
-		g.addNode(C);
-		g.addNode(D);
-		g.addNode(E);
-		g.addNode(F);
-		g.addNode(G);
-		g.addNode(H);
-		g.addNode(T);
-
-		// Add arcs
-		g.addArc(S, A, 1);
-		g.addArc(S, C, 1);
-		g.addArc(S, E, 1);
-		g.addArc(S, G, 1);
-		g.addArc(A, B, 1);
-		g.addArc(A, D, 1);
-		g.addArc(A, F, 1);
-		g.addArc(A, H, 1);
-		g.addArc(B, E, 1);
-		g.addArc(B, G, 1);
-		g.addArc(B, C, 1);
-		g.addArc(B, T, 0);
-		g.addArc(C, D, 1);
-		g.addArc(C, F, 1);
-		g.addArc(C, H, 1);
-		g.addArc(D, E, 1);
-		g.addArc(D, G, 1);
-		g.addArc(D, T, 0);
-		g.addArc(E, H, 1);
-		g.addArc(E, F, 1);
-		g.addArc(F, G, 1);
-		g.addArc(F, T, 0);
-		g.addArc(G, H, 1);
-		g.addArc(H, T, 0);
-
-		return g;	
 	}
 }

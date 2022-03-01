@@ -15,9 +15,10 @@ public class Crate implements Comparable<Crate> {
 	private double currentWeight;
 	private List<EP> ep;
 	private List<Item> items;
+	private ArrayList<Integer> openCrate;
 	private boolean[] aisles;
 	private int numAisles;
-	private ArrayList<Integer> aisleList;
+	private List<Integer> aisleList;
 	private int shortestPathLength;
 	private ArrayList<Integer> shortestPathList;
 	private int orderIndex;
@@ -29,6 +30,7 @@ public class Crate implements Comparable<Crate> {
 		this.currentWeight = 0.0;
 		this.ep = new ArrayList<>();
 		this.items = new ArrayList<>();
+		this.openCrate = new ArrayList<Integer>();
 		this.aisles = new boolean[8];
 		this.aisleList = new ArrayList<Integer>();
 		this.orderIndex = 0;
@@ -71,7 +73,7 @@ public class Crate implements Comparable<Crate> {
 		this.orderIndex = value;
 	}
 
-	public void setAisleList(ArrayList<Integer> list) {
+	public void setAisleList(List<Integer> list) {
 		this.aisleList = list;
 	}
 	public List<Integer> getAisleList(){
@@ -101,6 +103,15 @@ public class Crate implements Comparable<Crate> {
 	 */
 	public void setAisles(int index, boolean s) {
 		this.aisles[index] = s;
+	}
+	
+	/**
+	 * Method that sets booleans of all aisles, iterates over all items in crate
+	 */
+	public void setAllAisles() {
+		for (Item item : this.items) {
+			this.aisles[item.getAisle()] = true;
+		}
 	}
 
 	/**
@@ -208,6 +219,14 @@ public class Crate implements Comparable<Crate> {
 		return this.volume;
 	}
 
+	public ArrayList<Integer> getOpenCrate() {
+		return openCrate;
+	}
+
+	public void setOpenCrate(ArrayList<Integer> openCrate) {
+		this.openCrate = openCrate;
+	}
+	
 	@Override
 	public int compareTo(Crate o) {
 		// Sorteer op lengte shortest path, 8 eerst, 2 laatste
@@ -221,4 +240,5 @@ public class Crate implements Comparable<Crate> {
 		}
 		return 0;
 	}
+
 }

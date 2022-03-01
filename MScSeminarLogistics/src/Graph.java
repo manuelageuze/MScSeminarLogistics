@@ -116,5 +116,63 @@ public class Graph {
 	{
 		return getOutArcs(node).size();
 	}
+	
+	/**
+	 * Create AH warehouse graph
+	 * @param items
+	 * @param orders
+	 * @return
+	 */
+	public static Graph createGraph() {
+		Graph g = new Graph();
+		// Add nodes
+		Node S = new Node('S', -1); // Source heeft -1 als index
+		Node A = new Node('A', 0);
+		Node B = new Node('B', 1);
+		Node C = new Node('C', 2);
+		Node D = new Node('D', 3);
+		Node E = new Node('E', 4);
+		Node F = new Node('F', 5);
+		Node G = new Node('G', 6);
+		Node H = new Node('H', 7);
+		Node T = new Node('T', -2); // Sink heeft -2 als index
+		g.addNode(S);
+		g.addNode(A);
+		g.addNode(B);
+		g.addNode(C);
+		g.addNode(D);
+		g.addNode(E);
+		g.addNode(F);
+		g.addNode(G);
+		g.addNode(H);
+		g.addNode(T);
+
+		// Add arcs
+		g.addArc(S, A, 1);
+		g.addArc(S, C, 1);
+		g.addArc(S, E, 1);
+		g.addArc(S, G, 1);
+		g.addArc(A, B, 1);
+		g.addArc(A, D, 1);
+		g.addArc(A, F, 1);
+		g.addArc(A, H, 1);
+		g.addArc(B, E, 1);
+		g.addArc(B, G, 1);
+		g.addArc(B, C, 1);
+		g.addArc(B, T, 0);
+		g.addArc(C, D, 1);
+		g.addArc(C, F, 1);
+		g.addArc(C, H, 1);
+		g.addArc(D, E, 1);
+		g.addArc(D, G, 1);
+		g.addArc(D, T, 0);
+		g.addArc(E, H, 1);
+		g.addArc(E, F, 1);
+		g.addArc(F, G, 1);
+		g.addArc(F, T, 0);
+		g.addArc(G, H, 1);
+		g.addArc(H, T, 0);
+		return g;	
+	}
 }
 
