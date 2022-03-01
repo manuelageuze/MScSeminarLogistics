@@ -89,20 +89,22 @@ public class Main {
 			}
 		}
 		
+		/*
+		// Restlist with heuristic
 		double restcounter = Math.ceil(restList.size()/8.0);
-		Iterator<Crate> iterator = cratesToPick.iterator();
+		Iterator<Crate> iterator = restList.iterator();
 		for(int j = 0; j < restcounter; j++) {
 			List<Crate> cr = new ArrayList<Crate>();
 			for(int i = 0; i < 8; i++) {
-				if(iter.hasNext() == false) {
+				if(iterator.hasNext() == false) {
 					break;
 				}
-				Crate c = iter.next();
+				Crate c = iterator.next();
 				cr.add(c);
-				iter.remove();
+				iterator.remove();
 			}
 			boolean[] testaisles = new boolean[8];
-			for(Crate crate : crates) {
+			for(Crate crate : cr) {
 				for(int z = 0; z < 8; z++) {
 					if(crate.getAisles()[z] == true) {
 						testaisles[z] = true;;
@@ -110,15 +112,38 @@ public class Main {
 				}	
 			}
 			List<Integer> aislesToVisit = new ArrayList<Integer>();
-			for(int z = 0; z <8;z++) {
+			for(int z = 0; z < 8 ; z++) {
 				if(testaisles[z] == true) {
 					aislesToVisit.add(z);
 				}
 			}
 			OrderPicker picker = new OrderPicker(j, cr, aislesToVisit.size(), aislesToVisit);
 			orderpickers.add(picker);
-		}
+		}*/
 		
+		
+		//Restlist with cplex
+		Model model = new Model();
+		List<ArrayList<Crate>> crat = model.solveModel(restList);
+		for(int i = 0; i < crat.size(); i++) {
+			boolean[] testaisles = new boolean[8];
+			for(Crate crate : crat.get(i)) {
+				for(int z = 0; z < 8; z++) {
+					if(crate.getAisles()[z] == true) {
+						testaisles[z] = true;;
+					}
+				}	
+			}
+			List<Integer> aislesToVisit = new ArrayList<Integer>();
+			for(int z = 0; z < 8 ; z++) {
+				if(testaisles[z] == true) {
+					aislesToVisit.add(z);
+				}
+			}
+			OrderPicker picker = new OrderPicker(orderpickers.size(), crat.get(i), aislesToVisit.size(), aislesToVisit);
+			orderpickers.add(picker);
+		}
+			
 		double total = 0.0;
 		for(int i = 0; i < orderpickers.size(); i++) {
 			ShortestPath spath = new ShortestPath(orderpickers.get(i).getCrates(), g);
