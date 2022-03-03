@@ -15,7 +15,7 @@ public class MainBRKGA {
 
 	static final int MAX_T = 8; 
 
-	public static void main(String[] args) throws IloException, IOException, InterruptedException {
+	public static List<Chromosome> main(String[] args) throws IloException, IOException, InterruptedException {
 		// Variables, parameters and results
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
@@ -23,7 +23,7 @@ public class MainBRKGA {
 		Crate crate = new Crate();
 		int choiceSplit = 1; // Choice for order splitting or not: 1 for no splitting, 2 for splitting
 		int choiceAisles = 2; // Choice for incorporating number of aisles or not: 1 for not incorporating, 2 for only incorporating aisles, 3 for incorporating aisles and fill rate
-		int choiceAlgorithm = 1; // Choice for original algorithm: 1 for BRKGA, 2 for BF
+		int choiceAlgorithm = 2; // Choice for original algorithm: 1 for BRKGA, 2 for BF
 		// Results
 		double totalNumCrates = 0.0;
 		int totalNumAislesBefore = 0;
@@ -117,7 +117,7 @@ public class MainBRKGA {
 			}
 			endTime = System.nanoTime();
 			totalTime = (endTime - startTime)/1000000000; // seconds
-			break;	
+			break;
 		}
 
 		if (choiceAisles == 2) {
@@ -159,7 +159,7 @@ public class MainBRKGA {
 		//		System.out.println(lowerbound);
 		//		Chromosome chrom = BRKGA.solve(orders.get(instance), lowerbound, choice_D2_VBO);
 		//		printCrate(orders.get(instance), chrom);
-
+		return chromosomes;
 	}
 
 	private static void optAisles(List<Order> orders, Graph graph, List<Chromosome> chromosomes, double[] lowerBound, int[] numCrates, int[] numAislesOriginal) throws FileNotFoundException {

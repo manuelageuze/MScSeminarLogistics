@@ -10,7 +10,6 @@ public class FF {
 	}
 
 	public List<Crate> computeFF(){
-
 		List<Item> sortedItemList = new ArrayList<>(order.getItems());	
 		Collections.sort(sortedItemList); // Order a list of items
 
@@ -62,8 +61,7 @@ public class FF {
 
 		crates.get(0).setItemList(sideItems);
 
-		for(int i = 0; i < sortedItemList.size(); i++) {// Voor alle items
-
+		for(int i = 0; i < sortedItemList.size(); i++) { // Voor alle items
 			// Find the rotation of an item
 			List<Item> rotatedItem = new ArrayList<>();
 			Item a = sortedItemList.get(i);
@@ -104,6 +102,7 @@ public class FF {
 							double rsz = ep.getRSz() - rotatedItem.get(r).getHeight();
 							if(rsx > 0 && rsy > 0 && rsz > 0) {
 								if(!isOverlapping(ep,crates.get(k).getItemList(), rotatedItem.get(r))) {
+									@SuppressWarnings("unused")
 									double compare = rsx + rsy + rsz;
 									epIndex = j;
 									crateIndex = k;
@@ -313,6 +312,7 @@ public class FF {
 	}
 
 
+	@SuppressWarnings("unused")
 	private boolean itemfits(EP ep, List<Item> itemList, Item nItem) {
 		// This method should display if there is another item in this box that would block the placement of the new item
 		int test = 0;
@@ -339,8 +339,9 @@ public class FF {
 			Item item2 = items.get(i);
 			if(item2.getItemId()==69)
 			{
+				@SuppressWarnings("unused")
 				boolean test = false;
-				test =false;
+				test = false;
 			}
 			double x1min = ep.getX();
 			double x1max = x1min + item1.getWidth();
