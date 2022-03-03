@@ -86,7 +86,7 @@ public class Main {
 			}
 			else { // size is kleiner
 				restList.addAll(cr);
-			}
+			 }
 		}
 		
 		/*
