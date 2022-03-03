@@ -13,31 +13,34 @@ import ilog.concert.IloException;
 
 public class Main {
 
-	public static void main(String[] args) throws IloException, IOException {
-
+	public static void main(String[] args) throws IloException, IOException, InterruptedException {
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
-		Graph g = Graph.createGraph();
+		Graph graph = Graph.createGraph();
+		int choiceOriginal = 2; // Choice for initial algorithm: 1 for FF, 2 for BF, 3 for BRKGA
+		
+		// computeLowerBound(orders,items); // Computes lowerbound
 
-		//computeLowerBound(orders,items); // Computes lowerbound
-
-		// Solve FF
-		//List<Crate> crates = solveFF(orders);
-		// Solve BF
-		List<Crate> crates = solveBF(orders);
-
-		// Voor alle 2000 kratten individueel
-		// Make a shortest path class
-		ShortestPath sp = new ShortestPath(crates, g);
-		// Compute the number of aisles
-		List<ArrayList<Integer>> aisles = sp.computeAisles();
-		// Compute the shortest path per crate. Displays for each crate the amount of aisles needed to traversed for the shortest path, but not which aisles
-		//List<Integer> shortestPaths = sp.computeShortestPathSize();
-		// Geeft lijst met integers die de lengte van het korste pad aangeven
-		List<ArrayList<Integer>> shortestPathList = sp.computeShortestPathList();
-		// Geeft lijst van het korste pad per krat (dus de nummers van de aisles)
-		List<Integer> shortestPaths = sp.computeShortestPathListLength();
-
+		List<Crate> crates = new ArrayList<Crate>();
+		switch(choiceOriginal) {
+		case 1:
+			crates = solveFF(orders);
+			break;
+		case 2:
+			crates = solveBF(orders);
+			break;
+		case 3:
+			List<Chromosome> chromosomes = MainBRKGA.main(args);
+			for(int i=0; i < chromosomes.size(); i++) {
+				crates.addAll(chromosomes.get(i).getCrates());
+			}
+		}
+		
+		solveExtension2Heuristic(crates, graph);
+		
+	}
+	
+	private static void solveExtension2Heuristic(List<Crate> crates, Graph graph) {
 		// Maak nieuwe lijst
 		List<Crate> cratesToPick = new ArrayList<>(crates);
 		Collections.sort(cratesToPick); // Sorteer je lijst met kratten gebaseerd op shortestpath length
@@ -62,9 +65,9 @@ public class Main {
 			OrderPicker picker = new OrderPicker(j, cr, 8, cr.get(0).getAisleList());
 			orderpickers.add(picker);
 		}
-		// alles van 8 is er nu uit + 2 zesjes
-				
-		
+		// alles van 8 is er nu uit + een paar zesjes
+
+
 		List<Crate> restList = new ArrayList<Crate>();
 		while(cratesToPick.isEmpty() == false) {
 			Iterator<Crate> iterate = cratesToPick.iterator();
@@ -76,8 +79,7 @@ public class Main {
 					cr.add(c);
 					iterate.remove();
 				}
-				else {
-					// ga naar volgende crate en check deze
+				else { // ga naar volgende crate en check deze
 				}
 			}
 			if(cr.size() == 8) {
@@ -86,10 +88,8 @@ public class Main {
 			}
 			else { // size is kleiner
 				restList.addAll(cr);
-			 }
+			}
 		}
-		
-		/*
 		// Restlist with heuristic
 		double restcounter = Math.ceil(restList.size()/8.0);
 		Iterator<Crate> iterator = restList.iterator();
@@ -119,49 +119,17 @@ public class Main {
 			}
 			OrderPicker picker = new OrderPicker(j, cr, aislesToVisit.size(), aislesToVisit);
 			orderpickers.add(picker);
-		}*/
-		
-		
-		//Restlist with cplex
-		Model model = new Model();
-		List<ArrayList<Crate>> crat = model.solveModel(restList);
-		for(int i = 0; i < crat.size(); i++) {
-			boolean[] testaisles = new boolean[8];
-			for(Crate crate : crat.get(i)) {
-				for(int z = 0; z < 8; z++) {
-					if(crate.getAisles()[z] == true) {
-						testaisles[z] = true;;
-					}
-				}	
-			}
-			List<Integer> aislesToVisit = new ArrayList<Integer>();
-			for(int z = 0; z < 8 ; z++) {
-				if(testaisles[z] == true) {
-					aislesToVisit.add(z);
-				}
-			}
-			OrderPicker picker = new OrderPicker(orderpickers.size(), crat.get(i), aislesToVisit.size(), aislesToVisit);
-			orderpickers.add(picker);
 		}
-			
+
 		double total = 0.0;
 		for(int i = 0; i < orderpickers.size(); i++) {
-			ShortestPath spath = new ShortestPath(orderpickers.get(i).getCrates(), g);
+			ShortestPath spath = new ShortestPath(orderpickers.get(i).getCrates(), graph);
 			int value = spath.computeShortestPathOneCrate(orderpickers.get(i).getAislesToVisist());
 			orderpickers.get(i).setShortestPath(value);
 			total = total + value;
 			System.out.println(value);
 		}
 		System.out.println("Total number of aisles needed: " + total);
-		
-		
-		
-		
-
-
-		// Create list of all orderpickers who need to visit all 8 aisles anyway
-		//List<OrderPicker> orderpickers = fullOrderPickers(counter, crates);
-		//int numCrates = orderpickers.size()*8; // index start of which crates are not yet added to an orderpicker
 
 		/*
 		// Voor set van 8 kratten
@@ -173,188 +141,23 @@ public class Main {
 			System.out.println(value);
 		}
 		 */
-
-
-
-		// Solve 100 times for average time
-		//		double totalTime = 0;
-		//		for(int i = 0 ; i < 100 ; i++)
-		//		{
-		//			Long start = System.currentTimeMillis();
-		//			solveFFPaper(orders);
-		//			double timeLB = System.currentTimeMillis()-start;
-		//			totalTime += timeLB/1000;
-		//			System.out.println("Solution time: "+timeLB/1000);
-		//		}
-		//		System.out.println(totalTime);
-
-		// List<ArrayList<Integer>> aisles = solveFFFiles(orders);
-
-	}
-	public static List<OrderPicker> fullOrderPickers(double counter, List<Crate> crates){
-		List<OrderPicker> orderpickers = new ArrayList<>();
-		int numOrderPickers8Aisles = (int) Math.floor(counter/8.0);
-		int index = 0;
-		int orderPickerIndex = 0;
-		for(int i = 0; i < numOrderPickers8Aisles; i++) { // Voor alle kratten met shortest path 8, stop ze bij elkaar
-			List<Crate> partCrates = new ArrayList<>();
-			for(int j = index; j < index + 8; j++) {
-				if(j >= crates.size()) {
-					break;
-				}
-				partCrates.add(crates.get(j));
-			}
-			index = (i+1)*8;
-			boolean[] visited = new boolean[8];
-			for(Crate crate : partCrates) {
-				for(int j = 0; j < 8; j++) {
-					if(crate.getAisles()[j] == true) {
-						visited[j] = true;
-					}
-				}
-			}
-			int co = 0;
-			List<Integer> aislesToVisit = new ArrayList<>();
-			for(int j = 0; j < 8; j++) {
-				if(visited[j] == true) {
-					co++;
-					aislesToVisit.add(j);
-				}
-			}	
-			orderPickerIndex = i;
-			OrderPicker test = new OrderPicker(i, partCrates, co, aislesToVisit);
-			orderpickers.add(test);
-		}
-		return orderpickers;
-	}
-
-	// Dit is voor random 8 kratten toewijzen
-	public static List<OrderPicker> orderPicking(List<Crate> crates) {
-		double numPickers = Math.ceil((double) crates.size()/8.0);
-		List<OrderPicker> orderpickers = new ArrayList<>();
-		int index = 0;
-		for(int i = 0; i < numPickers; i++) {
-			List<Crate> partCrates = new ArrayList<>();
-			for(int j = index; j < index + 8; j++) {
-				if(j >= crates.size()) {
-					break;
-				}
-				partCrates.add(crates.get(j));
-			}
-			index = (i+1)*8;
-			boolean[] visited = new boolean[8];
-			for(Crate crate : partCrates) {
-				for(int j = 0; j < 8; j++) {
-					if(crate.getAisles()[j] == true) {
-						visited[j] = true;
-					}
-				}
-			}
-			int counter = 0;
-			List<Integer> aislesToVisit = new ArrayList<>();
-			for(int j = 0; j < 8; j++) {
-				if(visited[j] == true) {
-					counter++;
-					aislesToVisit.add(j);
-				}
-			}	
-			OrderPicker test = new OrderPicker(i, partCrates, counter, aislesToVisit);
-			orderpickers.add(test);
-		}
-		return orderpickers;
-	}
-
-	private static void computeLowerBound(List<Order> orders, Map<Double,Item> items) throws IloException, IOException {
-		// Compute lower bound and write file
-		Long start = System.currentTimeMillis();
-		solveLP(orders, items);
-		double timeLB = System.currentTimeMillis()-start;
-		System.out.println("Solution time: "+timeLB/1000);
-		start = System.currentTimeMillis();
-		compair(new File("LB_solution_value.txt"),new File("BF_solution_value.txt"),orders);
 	}
 
 	/**
-	 * Read items
-	 * @return Map containing items
-	 * @throws FileNotFoundException
-	 */
-	private static Map<Double, Item> readItems() throws FileNotFoundException {
-		File itemFile = new File("items.csv");
-		Map<Double, Item> items = Item.readItems(itemFile);
-		return items;	
-	}
-	/**
-	 * Read orders
+	 * Method that solves LP problem for the lower bound
+	 * @param orders
 	 * @param items
-	 * @return List of orders
-	 * @throws FileNotFoundException
+	 * @throws IloException
+	 * @throws IOException
 	 */
-	private static List<Order> readOrders(Map<Double, Item> items) throws FileNotFoundException {
-		File orderFile = new File("orders.csv");
-		List<Order> orders = Order.readOrder(orderFile, items);
-		return orders;
-	}
-	private static void compair(File sol1, File sol2, List<Order> orders) throws FileNotFoundException
-	{
-		Scanner s1 = new Scanner(sol1);
-		Scanner s2 = new Scanner(sol2);
-		s1.nextLine();s2.nextLine();
-		double small = 23;
-		double large = 101;
-
-		double dif = 0.0;
-		double amountSmall = 0.0; double amountLarge = 0.0;double amountMedium = 0.0;
-		double difSmall = 0.0;double difMedium = 0.0;double difLarge = 0.0;
-
-		for(int i = 0 ; i < 1000 ; i++)
-		{
-			int order1 = s1.nextInt();
-			int order2 = s2.nextInt();
-			double difBin = s2.nextInt()-s1.nextInt();
-			if(order1==order2&& difBin >= 0)
-			{
-				dif += difBin;
-				int size = orders.get(order1).getItems().size();
-				if(size <= small)
-				{
-					difSmall += difBin;
-					amountSmall++;
-				}
-				else if(small < size && size < large)
-				{
-					difMedium += difBin;
-					amountMedium++;
-				}
-				else
-				{
-					difLarge += difBin;
-					amountLarge++;
-				}
-			}
-			else
-			{
-				System.out.println("fout opgetreden");
-				s1.close();s2.close();
-				return;
-			}
-		}
-		s1.close();s2.close();
-		System.out.println("Total:\t"+(int)dif+"\t"+dif/1000.0);
-		System.out.println("Small:\t"+(int)difSmall +"\t"+difSmall/amountSmall);
-		System.out.println("Medium:\t"+(int)difMedium+"\t"+difMedium/amountMedium);
-		System.out.println("Large:\t"+(int)difLarge+"\t"+difLarge/amountLarge);
-	}
 	private static void solveLP(List<Order> orders, Map<Double, Item> items) throws IloException, IOException {
 		FileWriter myWriter = new FileWriter("LB_solution_value.txt");
 		myWriter.write("Order\tCrates\n");
 		double totalBins = 0.0;
 		double totalVolume = 0.0;
 		double totalWeight = 0.0;
-		for(Order order : orders)
-		{
-			for(Item i : order.getItems())
-			{
+		for(Order order : orders) {
+			for(Item i : order.getItems()) {
 				totalVolume += i.getVolume();
 				totalWeight += i.getWeight();
 			}
@@ -369,12 +172,13 @@ public class Main {
 		System.out.println("Average volume: "+averageVolume/1000);
 		System.out.println("Average weight: "+averageWeight/1000);
 		myWriter.close();
-		//		for(int i = 900 ; i < 1000 ; i++)
-		//		{
-		//			int LB = (int)LowerBoundModel.setCoveringLB(orders.get(i), items);
-		//		}
-		//		int LB = (int)LowerBoundModel.setCoveringLB(orders.get(27), items);
 	}
+
+	/**
+	 * Method that performs BF
+	 * @param orders
+	 * @return
+	 */
 	private static List<Crate> solveBF(List<Order> orders) {
 		List<Crate> crates = new ArrayList<>();
 		double totalBins = 0.0;
@@ -390,6 +194,13 @@ public class Main {
 		return crates;
 	}
 
+	/**
+	 * Method that performs FF
+	 * @param orders
+	 * @return
+	 * @throws IOException
+	 */
+	@SuppressWarnings("unused")
 	private static List<Crate> solveFF(List<Order> orders) throws IOException {
 		List<Crate> crates = new ArrayList<>();
 		double totalBins = 0.0;		
@@ -397,14 +208,21 @@ public class Main {
 			FF ff = new FF(orders.get(i));
 			List<Crate> c = ff.computeFF();
 			totalBins += c.size();
-
 			for(Crate crate : c) {
 				crates.add(crate);
 			}	
 		}
-		System.out.println("Total Bins: "+(int)totalBins);
+		System.out.println("Total Bins: " + (int) totalBins);
 		return crates;
 	}
+
+	/**
+	 * Method that performs FF and writes solution files
+	 * @param orders
+	 * @return
+	 * @throws IOException
+	 */
+	@SuppressWarnings("unused")
 	private static List<ArrayList<Integer>> solveFFFiles(List<Order> orders) throws IOException {
 		List<ArrayList<Integer>> aisles = new ArrayList<>();
 		FileWriter myWriter = new FileWriter("FF_solution_value.txt");
@@ -412,7 +230,6 @@ public class Main {
 		FileWriter myWriter3 = new FileWriter("FF_aisles.txt");
 		FileWriter myWriter4 = new FileWriter("FF_numAisles.txt");
 		FileWriter myWriter5 = new FileWriter("FF_CrateAisleList.txt");
-
 		double totalBins = 0.0;
 		double totalVolume = 0.0;
 		double totalWeight = 0.0;
@@ -426,8 +243,7 @@ public class Main {
 		int sevenCounter = 0;
 		int eightCounter = 0;
 		myWriter.write("Order\tamountCrates\n");
-		for(int i = 0 ; i < orders.size() ; i++)
-		{
+		for(int i = 0 ; i < orders.size() ; i++) {
 			FF ff = new FF(orders.get(i));
 			List<Crate> crates = ff.computeFF();
 			myWriter.write(i+"\t"+crates.size()+"\n");
@@ -442,14 +258,12 @@ public class Main {
 			myWriter3.write("Order: "+i+"\nCrates: "+crates.size()+ "\n");
 			int counter = 1;
 			totalBins += crates.size();
-			for(Crate crate : crates)
-			{
+			for(Crate crate : crates) {
 				crateCounter++;
 				List<Item> items = crate.getItemList();
 				double volume = 0.0;
 				double weight = 0.0;
-				for(Item item : items)
-				{
+				for(Item item : items) {
 					volume += item.getVolume();
 					weight += item.getWeight();
 				}
@@ -460,8 +274,7 @@ public class Main {
 				myWriter4.write(crateCounter + "\t");
 				myWriter5.write(crateCounter + "\t");
 				int aisleCounter = 0;
-				for(Item item : items)
-				{
+				for(Item item : items) {
 					int id = (int) item.getItemId();
 					if(id>=0)myWriter2.write(id+" ");
 				}
@@ -472,7 +285,6 @@ public class Main {
 						myWriter3.write(j+ " ");
 						ail.add(j);
 						myWriter5.write(j + " ");
-
 					}
 				}
 				aisles.add(ail);
@@ -509,6 +321,13 @@ public class Main {
 		System.out.println("Times 8 aisles used: " + eightCounter);
 		return aisles;
 	}
+
+	/**
+	 * Method that performs FF according to the paper
+	 * @param orders
+	 * @throws IOException
+	 */
+	@SuppressWarnings("unused")
 	private static void solveFFPaper(List<Order> orders) throws IOException {
 		FileWriter myWriter = new FileWriter("FF_Paper_solution_value.txt");
 		FileWriter myWriter2 = new FileWriter("FF_Paper_solution.txt");
@@ -516,8 +335,7 @@ public class Main {
 		double totalVolume = 0.0;
 		double totalWeight = 0.0;
 		myWriter.write("Order\tamountCrates\n");
-		for(int i = 0 ; i < orders.size() ; i++)
-		{
+		for(int i = 0 ; i < orders.size() ; i++) {
 			FF_paper ff = new FF_paper(orders.get(i));
 			List<Crate> crates = ff.computeFF();
 			//			myWriter.write(i+"\t"+crates.size()+"\n");
@@ -527,13 +345,11 @@ public class Main {
 			myWriter2.write("Order: "+i+"\nCrates: "+crates.size()+"\n");
 			int counter = 1;
 			totalBins += crates.size();
-			for(Crate crate : crates)
-			{
+			for(Crate crate : crates) {
 				List<Item> items = crate.getItemList();
 				double volume = 0.0;
 				double weight = 0.0;
-				for(Item item : items)
-				{
+				for(Item item : items) {
 					volume += item.getVolume();
 					weight += item.getWeight();
 				}
@@ -541,8 +357,7 @@ public class Main {
 				totalWeight += weight;
 				double fillRate = Math.round(volume/crate.getVolume()*10000)/100;
 				myWriter2.write(counter+"\t"+fillRate+"\t"+weight+"\t");
-				for(Item item : items)
-				{
+				for(Item item : items) {
 					int id = (int) item.getItemId();
 					if(id>=0)myWriter2.write(id+" ");
 				}
@@ -559,23 +374,95 @@ public class Main {
 		System.out.println("Average weight: "+averageWeight/1000);
 	}
 
+	/**
+	 * Method that computes lower bound and compares with BF solution
+	 * @param orders
+	 * @param items
+	 * @throws IloException
+	 * @throws IOException
+	 */
+	@SuppressWarnings("unused")
+	private static void computeLowerBound(List<Order> orders, Map<Double,Item> items) throws IloException, IOException {
+		// Compute lower bound and write file
+		Long start = System.currentTimeMillis();
+		solveLP(orders, items);
+		double timeLB = System.currentTimeMillis()-start;
+		System.out.println("Solution time: "+timeLB/1000);
+		start = System.currentTimeMillis();
+		compare(new File("LB_solution_value.txt"), new File("BF_solution_value.txt"),orders);
+	}
 
+	/**
+	 * Method that compares lower bound with BF solution
+	 * @param sol1
+	 * @param sol2
+	 * @param orders
+	 * @throws FileNotFoundException
+	 */
+	private static void compare(File sol1, File sol2, List<Order> orders) throws FileNotFoundException {
+		Scanner s1 = new Scanner(sol1);
+		Scanner s2 = new Scanner(sol2);
+		s1.nextLine();
+		s2.nextLine();
+		double small = 23;
+		double large = 101;
+		double dif = 0.0;
+		double amountSmall = 0.0; 
+		double amountLarge = 0.0;
+		double amountMedium = 0.0;
+		double difSmall = 0.0;
+		double difMedium = 0.0;
+		double difLarge = 0.0;
+		for(int i = 0 ; i < 1000 ; i++) {
+			int order1 = s1.nextInt();
+			int order2 = s2.nextInt();
+			double difBin = s2.nextInt()-s1.nextInt();
+			if(order1 == order2 && difBin >= 0) {
+				dif += difBin;
+				int size = orders.get(order1).getItems().size();
+				if(size <= small) {
+					difSmall += difBin;
+					amountSmall++;
+				}
+				else if(small < size && size < large) {
+					difMedium += difBin;
+					amountMedium++;
+				}
+				else {
+					difLarge += difBin;
+					amountLarge++;
+				}
+			}
+			else {
+				System.out.println("fout opgetreden");
+				s1.close();s2.close();
+				return;
+			}
+		}
+		s1.close();s2.close();
+		System.out.println("Total:\t"+(int)dif+"\t"+dif/1000.0);
+		System.out.println("Small:\t"+(int)difSmall +"\t"+difSmall/amountSmall);
+		System.out.println("Medium:\t"+(int)difMedium+"\t"+difMedium/amountMedium);
+		System.out.println("Large:\t"+(int)difLarge+"\t"+difLarge/amountLarge);
+	}
 
-	public static void getPlotOutput(List<Crate> crates, int crateNumber) throws IOException
-	{
-		if(crateNumber > crates.size())
-		{
+	/**
+	 * Method that writes a file in order to make a visualisation
+	 * @param crates
+	 * @param crateNumber
+	 * @throws IOException
+	 */
+	public static void getPlotOutput(List<Crate> crates, int crateNumber) throws IOException {
+		if(crateNumber > crates.size()) {
 			System.out.println("Crate number not feasible");
 			return;
 		}
-		else
-		{
+		else {
 			FileWriter myWriter = new FileWriter("outputPlot_FF.txt");
 			Crate crate = crates.get(crateNumber-1);
 			List<Item> items  =crate.getItemList();
 			myWriter.write("id\tx\ty\tz\tw\tl\th\n");
-			for(int j = 6 ; j < items.size() ; j++)
-			{
+			for(int j = 6 ; j < items.size() ; j++) {
 				Item i = items.get(j);
 				int id = (int) i.getItemId();
 				int x = (int) i.getInsertedX();
@@ -590,20 +477,22 @@ public class Main {
 		}
 	}
 
+	/**
+	 * Method that checks whether items in a crate overlap
+	 * @param crates
+	 * @param order
+	 * @return
+	 */
 	public static int checkSolution(List<Crate> crates, int order) {
 		int counter = 1;
-		for(Crate c : crates)
-		{
+		for(Crate c : crates) {
 			List<Item> items = c.getItemList();
-			for(int i = 0 ; i < items.size() ; i++)
-			{
+			for(int i = 0 ; i < items.size() ; i++) {
 				Item itemi = items.get(i);
-				for(int j = 0 ; j < items.size() ; j++)
-				{
+				for(int j = 0 ; j < items.size() ; j++) {
 					Item itemj = items.get(j);
 					if(i==j) continue;
-					if(isOverlapping(itemi,itemj))
-					{
+					if(isOverlapping(itemi,itemj)) {
 						return counter;
 					}
 				}
@@ -612,26 +501,51 @@ public class Main {
 		}
 		return 0;
 	}
-	
-	private static boolean isOverlapping(Item item1, Item item2)
-	{
+
+	/**
+	 * Method that checks whether 2 items overlap
+	 * @param item1
+	 * @param item2
+	 * @return True if items overlap, false otherwise
+	 */
+	private static boolean isOverlapping(Item item1, Item item2) {
 		double x1min = item1.getInsertedX();
 		double x1max = x1min + item1.getWidth();
 		double y1min = item1.getInsertedY();
 		double y1max = y1min + item1.getLength();
 		double z1min = item1.getInsertedZ();
 		double z1max = z1min + item1.getHeight();
-
 		double x2min = item2.getInsertedX();
 		double x2max = x2min + item2.getWidth();
 		double y2min = item2.getInsertedY();
 		double y2max = y2min + item2.getLength();
 		double z2min = item2.getInsertedZ();
 		double z2max = z2min + item2.getHeight();
+		if(x1min < x2max && x2min < x1max && y1min < y2max && y2min < y1max && z1min < z2max && z2min < z1max)
+			return true;
+		return false;
+	}
 
-		if(x1min < x2max && x2min < x1max 
-				&& y1min < y2max && y2min < y1max
-				&& z1min < z2max && z2min < z1max)return true;
-		else return false;
+	/**
+	 * Read items
+	 * @return Map containing items
+	 * @throws FileNotFoundException
+	 */
+	private static Map<Double, Item> readItems() throws FileNotFoundException {
+		File itemFile = new File("items.csv");
+		Map<Double, Item> items = Item.readItems(itemFile);
+		return items;	
+	}
+
+	/**
+	 * Read orders
+	 * @param items
+	 * @return List of orders
+	 * @throws FileNotFoundException
+	 */
+	private static List<Order> readOrders(Map<Double, Item> items) throws FileNotFoundException {
+		File orderFile = new File("orders.csv");
+		List<Order> orders = Order.readOrder(orderFile, items);
+		return orders;
 	}
 }
