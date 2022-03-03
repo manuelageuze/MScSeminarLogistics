@@ -202,6 +202,7 @@ public class FF_paper {
 			}
 
 			// Add new extreme points (algorithm 1)
+			@SuppressWarnings("unused")
 			List<EP> newEP = new ArrayList<EP>();
 			double[] maxbound = new double[6];
 			EP[] newEpMat = new EP[6];

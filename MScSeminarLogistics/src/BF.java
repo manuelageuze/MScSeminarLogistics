@@ -343,6 +343,7 @@ public class BF {
 	}
 
 
+	@SuppressWarnings("unused")
 	private boolean itemfits(EP ep, List<Item> itemList, Item nItem) {
 		// This method should display if there is another item in this box that would block the placement of the new item
 		int test = 0;
@@ -369,6 +370,7 @@ public class BF {
 			Item item2 = items.get(i);
 			if(item2.getItemId()==69)
 			{
+				@SuppressWarnings("unused")
 				boolean test = false;
 				test =false;
 			}
