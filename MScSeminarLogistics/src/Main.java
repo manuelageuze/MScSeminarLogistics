@@ -36,8 +36,94 @@ public class Main {
 			}
 		}
 		
-		solveExtension2Heuristic(crates, graph);
-		
+//		solveExtension2Heuristic(crates, graph);
+		List<OrderPicker> orderpickers = greedyHeuristic(crates);
+		int totalNumAisle = 0;
+		for(OrderPicker i : orderpickers)
+		{
+			totalNumAisle += getNumAisle(i.getCrates(),new Crate(),false);
+		}
+		System.out.println("Total pickers:\t"+orderpickers.size());
+		System.out.println("Total aisle:\t"+totalNumAisle);
+	}
+	private static List<OrderPicker> greedyHeuristic(List<Crate> crates)
+	{
+		Collections.sort(crates);
+		List<OrderPicker> pickers = new ArrayList<>();
+		Crate[] bins = new Crate[crates.size()];
+		boolean[] visited = new boolean[crates.size()];
+		for(int i = 0 ; i < crates.size() ; i++)
+		{
+			bins[i] = crates.get(i);
+			visited[i] = false;
+		}
+		for(int b = 0 ; b < crates.size() ; b++)
+		{
+			if(visited[b])continue;
+			List<Crate> k = new ArrayList<>();
+			k.add(bins[b]);
+			visited[b] = true;
+			while(k.size() < 8)
+			{
+				int best = -1;
+				int costBest = 10000000;
+				int numAisleBest=0;
+				for(int i = b+1 ; i < crates.size() ; i++)
+				{
+					if(visited[i])continue;
+					int cost = getNumAisle(k,bins[i],true);
+					int num = 0;
+					for(boolean j : bins[i].getAisles())if(j)num++;
+					if(cost < costBest)
+					{
+						best = i;
+						costBest = cost;
+						numAisleBest = num;
+					}
+					else if(cost == costBest && num > numAisleBest)
+					{
+						best = i;
+						costBest = cost;
+						numAisleBest = num;
+					}
+				}
+				if(best == -1)
+				{
+					break;
+				}
+				k.add(bins[best]);
+				visited[best] = true;
+			}
+			pickers.add(new OrderPicker(pickers.size(),k));
+		}
+		return pickers;
+	}
+	public static int getNumAisle(List<Crate> crates, Crate bin, boolean extra)
+	{
+		boolean[] aisle = new boolean[8];
+		int left = 0;
+		int right= 0;
+		if(extra)
+		{
+			for(int i = 0 ; i < 8 ;i++)
+			{
+				if(bin.getAisles()[i])aisle[i]=true;
+			}
+		}
+		for(Crate i : crates)
+		{
+			for(int j = 0 ; j < 8 ; j++)
+			{
+				
+				if(i.getAisles()[j])aisle[j] = true;
+			}
+		}
+		for(int i = 0 ; i < 8 ; i++)
+		{
+			if(i == 0 || i == 2 || i == 4 || i==6)if(aisle[i])left++;
+			else if(i==1 || i == 3 || i==5 || i==7)if(aisle[i])right++;
+		}
+		return (Math.max(left, right))*2;
 	}
 	
 	private static void solveExtension2Heuristic(List<Crate> crates, Graph graph) {
