@@ -20,9 +20,18 @@ public class ShortestPath {
 		this.pathSizeOneCrate = 0;
 	}
 
+ 	/**
+ 	 * Method that returns the length of the shortest path for each crate
+ 	 * @return
+ 	 */
 	public List<Integer> getPathSizes(){
 		return this.pathSizes;
 	}
+	
+	/**
+	 * Method that returns the crates
+	 * @return
+	 */
 	public List<Crate> getCrates() {
 		return this.crates;
 	}
@@ -44,21 +53,6 @@ public class ShortestPath {
 			aisles.add(aisle);
 		}
 		return aisles;
-	}
-	
-	/**
-	 * Method that returns the number of aisles that a crate must to go through, for each crate
-	 * @return
-	 */
-	public List<Integer> computeShortestPathListLength(){
-		List<Integer> list = new ArrayList<Integer>();
-		for(int i = 0; i < crates.size(); i++) {
-			int value = shortestPathList.get(i).size();
-			list.add(value);
-			pathSizes.add(value);
-			crates.get(i).setShortestPathLength(value);
-		}
-		return list;
 	}
 	
 	/**
@@ -107,6 +101,33 @@ public class ShortestPath {
 		return list;
 	}
 	
+	/**
+	 * Method that returns the number of aisles that a crate must to go through, for each crate
+	 * @return
+	 */
+	public List<Integer> computeShortestPathListLength(){
+		List<Integer> list = new ArrayList<Integer>();
+		for(int i = 0; i < crates.size(); i++) {
+			int value = shortestPathList.get(i).size();
+			list.add(value);
+			pathSizes.add(value);
+			crates.get(i).setShortestPathLength(value);
+		}
+		return list;
+	}
+	
+	/**
+	 * Compute total number of paths passed over all crates
+	 * @return
+	 */
+	public int computeTotalPathLength(List<Crate> crates, Graph graph) {
+		int totalPathLength = 0;
+		for (int i=0; i < pathSizes.size(); i++) {
+			totalPathLength += pathSizes.get(i);
+		}
+		return totalPathLength;
+	}
+		
 	public Integer computeShortestPathOneCrate(List<Integer> aisles) {
 		int length = 0;
 		// Add length from s to first aisle

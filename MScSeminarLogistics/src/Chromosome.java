@@ -1,4 +1,3 @@
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -10,7 +9,6 @@ public class Chromosome implements Comparable<Chromosome> {
 	private double[] BPS;
 	private double[] VBO;
 	private List<Crate> crates;
-	private ArrayList<ArrayList<Integer>> openCrates;
 	private List<Item> items;
 	private double fitness;
 	private int numCrates;
@@ -23,11 +21,10 @@ public class Chromosome implements Comparable<Chromosome> {
 	 * @param fitness Fitness value aNB: adjusted number of bins
 	 * @param numCrates Number of crates
 	 */
-	public Chromosome(double[] BPS, double[] VBO, List<Crate> crates, ArrayList<ArrayList<Integer>> openCrates, List<Item> items, double fitness, int numCrates, double orderId) {
+	public Chromosome(double[] BPS, double[] VBO, List<Crate> crates, List<Item> items, double fitness, int numCrates, double orderId) {
 		this.BPS = BPS;
 		this.VBO = VBO;
 		this.crates = crates;
-		this.openCrates = openCrates;
 		this.items = items;
 		this.fitness = fitness;
 		this.numCrates = numCrates;
@@ -76,20 +73,6 @@ public class Chromosome implements Comparable<Chromosome> {
 	 */
 	public void setCrates(List<Crate> crates) {
 		this.crates = crates;
-	}
-	
-	/** Get open crates: element is 1 if item is in bin, 0 o.w.
-	 * @return openCrates
-	 */
-	public ArrayList<ArrayList<Integer>> getOpenCrates() {
-		return openCrates;
-	}
-
-	/** Set open crates: element is 1 if item is in bin, 0 o.w.
-	 * @param openCrates the openCrates to set
-	 */
-	public void setOpenCrates(ArrayList<ArrayList<Integer>> openCrates) {
-		this.openCrates = openCrates;
 	}
 	
 	/**
