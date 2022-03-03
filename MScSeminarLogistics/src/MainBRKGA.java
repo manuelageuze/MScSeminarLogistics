@@ -3,7 +3,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -22,23 +21,20 @@ public class MainBRKGA {
 		List<Order> orders = readOrders(items);
 		Graph graph = Graph.createGraph();
 		Crate crate = new Crate();
-		int choiceSplit = 2; // Choice for order splitting or not: 1 for no splitting, 2 for splitting
-		int choiceAisles = 2; // Choice for incorporating number of aisles or not: 1 for not incorporating, 2 for incorporating
-		int numExecutions = 1;
-		double totalNumBins = 0.0;
-		int[] numCrates = new int[numExecutions];
-		int[] numAisles = new int[numExecutions];
-		double[] avVolume = new double[numExecutions];
-		double[] avWeight = new double[numExecutions];
-		double[] avFillRate = new double[numExecutions];
-		double[] avWeightRate = new double[numExecutions];
-		double totalAvVolume = 0.0;
-		double totalAvWeight = 0.0;
-		double totalAvFillRate = 0.0;
-		double totalAvWeightRate = 0.0;
+		int choiceSplit = 1; // Choice for order splitting or not: 1 for no splitting, 2 for splitting
+		int choiceAisles = 2; // Choice for incorporating number of aisles or not: 1 for not incorporating, 2 for only incorporating aisles, 3 for incorporating aisles and fill rate
+		int choiceAlgorithm = 1; // Choice for original algorithm: 1 for BRKGA, 2 for BF
+		// Results
+		double totalNumCrates = 0.0;
+		int totalNumAislesBefore = 0;
+		int totalNumAislesAfter = 0;
+		double avVolume = 0.0;
+		double avWeight = 0.0;
+		double avFillRate = 0.0;
+		double avWeightRate = 0.0;
 		long totalRunTime = 0;
 		List<Chromosome> chromosomes = new ArrayList<Chromosome>();
-		
+
 		double[] lowerBound = new double[orders.size()];
 		for(int i=0; i < orders.size(); i++) {
 			double lowerbound = LowerBoundModel.setCoveringLB(orders.get(i), items);
@@ -66,11 +62,14 @@ public class MainBRKGA {
 			}
 		}
 
-		for (int j=0; j < numExecutions; j++) {
-			int[] thisNumCrates = new int[orders.size()];
-			int[] thisNumAisles = new int[orders.size()];
-			long startTime = System.nanoTime();
-
+		// Variables
+		int[] numCrates = new int[orders.size()];
+		int[] numAisles = new int[orders.size()];
+		long startTime = System.nanoTime();
+		long endTime = 0;
+		long totalTime = 0; // seconds
+		switch(choiceAlgorithm) {
+		case 1: 
 			// Create tasks
 			List<Runnable> runnables = new ArrayList<>();
 			for(int i=0; i < orders.size(); i++) {
@@ -85,81 +84,75 @@ public class MainBRKGA {
 			}
 			awaitTerminationAfterShutdown(pool);
 			//pool.shutdown();
-			long endTime = System.nanoTime();
-			long totalTime = (endTime - startTime)/1000000000; // seconds
+			endTime = System.nanoTime();
+			totalTime = (endTime - startTime)/1000000000; // seconds
 
-			int numAislesJ = 0;	
 			for (int i=0; i < runnables.size(); i++) {
 				Chromosome chrom = ((MultiThread) runnables.get(i)).getChromosome();
 				chromosomes.add(chrom);
-				thisNumCrates[i] = chrom.getNumCrates();
+				numCrates[i] = chrom.getNumCrates();
+				totalNumCrates += numCrates[i];
 				List<Crate> crates = chrom.getCrates();
 				ShortestPath shortestPath = new ShortestPath(crates, graph);
-				List<Integer> pathSizes = shortestPath.getPathSizes();
-				for (Integer integer : pathSizes) {
-					thisNumAisles[i] = integer;
-					numAislesJ += integer;
-				}	
+				int thisNumAisles = shortestPath.computeTotalPathLength(crates, graph);
+				numAisles[i] = thisNumAisles;
+				totalNumAislesBefore += thisNumAisles;
 			}
-			numAisles[j] = numAislesJ;
-			System.out.println("Num aisles original: ");
-			System.out.println(Arrays.toString(thisNumAisles));
-			System.out.println("Total num aisles original: " + numAisles[j]);
-			
-			if (choiceAisles == 2) {
-				optAisles(orders, chromosomes, lowerBound, thisNumCrates);
-				endTime = System.nanoTime();
-				totalTime = (endTime - startTime)/1000000000; // seconds
+			break;
+		case 2: 
+			for (int i=0; i < orders.size(); i++) {
+				// Get original solution
+				List<Order> order = new ArrayList<Order>();
+				order.add(orders.get(i));
+				FF ff = new FF(orders.get(i));
+				List<Crate> crates = ff.computeFF();
+				// Save original solution
+				numCrates[i] = crates.size();
+				totalNumCrates += numCrates[i];
+				ShortestPath shortestPath = new ShortestPath(crates, graph);
+				int thisNumAisles = shortestPath.computeTotalPathLength(crates, graph);
+				numAisles[i] = thisNumAisles;
+				totalNumAislesBefore += thisNumAisles;
+				chromosomes.add(new Chromosome(new double[0], new double[0], crates, orders.get(i).getItems(), BRKGA.getAdjustedNumberBins(crates), numCrates[i], orders.get(i).getOrderId()));
 			}
-			
-			numAislesJ = 0;
+			endTime = System.nanoTime();
+			totalTime = (endTime - startTime)/1000000000; // seconds
+			break;	
+		}
+
+		if (choiceAisles == 2) {
+			optAisles(orders, graph, chromosomes, lowerBound, numCrates, numAisles);
+			endTime = System.nanoTime();
+			totalTime = (endTime - startTime)/1000000000; // seconds
 			for (int i=0; i < chromosomes.size(); i++) {
 				List<Crate> crates = chromosomes.get(i).getCrates();
 				ShortestPath shortestPath = new ShortestPath(crates, graph);
-				List<Integer> pathSizes = shortestPath.getPathSizes();
-				for (Integer integer : pathSizes) {
-					thisNumAisles[i] = integer;
-					numAislesJ += integer;
-				}
+				int thisNumAisles = shortestPath.computeTotalPathLength(crates, graph);
+				numAisles[i] = thisNumAisles;
+				totalNumAislesAfter += thisNumAisles;
 			}
-			numAisles[j] = numAislesJ;
-			System.out.println("Num aisles after optimizing: ");
-			System.out.println(Arrays.toString(thisNumAisles));
-			System.out.println("Total num aisles after optimizing: " + numAisles[j]);
-			
-			// Write solution
-			int numCratesJ = 0;
-			switch (choiceSplit) {
-			case 1: numCratesJ = writeSolNoSplit(orders, lowerBound, chromosomes);
-			break;
-			case 2: numCratesJ = writeSolSplit(orders, lowerBound, chromosomes);
-			break;
-			}
-			totalNumBins += numCratesJ;
-			numCrates[j] = numCratesJ;
-			avVolume[j] = totalVolume/numCratesJ;
-			avWeight[j] = totalWeight/numCratesJ;
-			avFillRate[j] = avVolume[j]/crate.getVolume();
-			avWeightRate[j] = avWeight[j]/crate.getMaxWeight();
-			totalAvVolume += avVolume[j];
-			totalAvWeight += avWeight[j];
-			totalAvFillRate += avFillRate[j];
-			totalAvWeightRate += avWeightRate[j];
-			totalRunTime += totalTime;
-			System.out.println("Total runtime MULTITHREAD execution " + j + ": " + totalTime + " s");
 		}
 
-		double avTotalNumBins = totalNumBins/numExecutions;
-		double gap = (avTotalNumBins-1748)/1748;
-		double avTotalVolume = totalAvVolume/numExecutions;
-		double avTotalWeight = totalAvWeight/numExecutions;
-		double avTotalFillRate = totalAvFillRate/numExecutions;
-		double avTotalWeightRate = totalAvWeightRate/numExecutions;
-		double avRunTime = (double) totalRunTime/numExecutions;
-		System.out.println("Average total number of bins over " + numExecutions + " executions: " + avTotalNumBins + ", gap: " + gap);
-		System.out.println("Average volume: " + avTotalVolume + ", average fill rate: " + avTotalFillRate);
-		System.out.println("Average weight: " + avTotalWeight + ", average weight rate: " + avTotalWeightRate);
-		System.out.println("Average runtime: " + avRunTime);
+		// Write solution
+		//		switch (choiceSplit) {
+		//		case 1: totalNumCrates = writeSolNoSplit(orders, lowerBound, chromosomes); // zit nog een fout in
+		//		break;
+		//		case 2: totalNumCrates = writeSolSplit(orders, lowerBound, chromosomes);
+		//		break;
+		//		}
+		avVolume = totalVolume/totalNumCrates;
+		avWeight = totalWeight/totalNumCrates;
+		avFillRate = avVolume/crate.getVolume();
+		avWeightRate = avWeight/crate.getMaxWeight();
+		totalRunTime += totalTime;
+		double gap = (totalNumCrates-1748)/1748;
+
+		System.out.println("Total number of crates: " + totalNumCrates + ", gap: " + gap);
+		System.out.println("Total num aisles original: " + totalNumAislesBefore);
+		System.out.println("Total num aisles after optimizing: " + totalNumAislesAfter);
+		System.out.println("Average volume: " + avVolume + ", average fill rate: " + avFillRate);
+		System.out.println("Average weight: " + avWeight + ", average weight rate: " + avWeightRate);
+		System.out.println("Runtime: " + totalRunTime);
 
 		// 		int instance = 88;
 		//		double lowerbound = LowerBoundModel.setCoveringLB(orders.get(instance), items);
@@ -169,11 +162,11 @@ public class MainBRKGA {
 
 	}
 
-	private static void optAisles(List<Order> orders, List<Chromosome> chromosomes, double[] lowerBound, int[] thisNumCrates) throws FileNotFoundException {
+	private static void optAisles(List<Order> orders, Graph graph, List<Chromosome> chromosomes, double[] lowerBound, int[] numCrates, int[] numAislesOriginal) throws FileNotFoundException {
 		// Create tasks
 		List<Runnable> runnables = new ArrayList<>();
 		for(int i=0; i < orders.size(); i++) {
-			Runnable runnable = new MultiThread(i, orders.get(i), lowerBound[i], 2, thisNumCrates[i]);
+			Runnable runnable = new MultiThread(i, orders.get(i), lowerBound[i], 2, numCrates[i]);
 			runnables.add(runnable);
 		}
 		// Creates a thread pool with MAX_T nr of threads as the fixed pool size
@@ -183,15 +176,17 @@ public class MainBRKGA {
 			pool.execute(runnable);
 		}
 		awaitTerminationAfterShutdown(pool);
-		
+
 		// Check if number of crates is equal to original. If so, take new solution. If not, keep original solution
 		int numOrdersImproved = 0;
 		for (int i=0; i < runnables.size(); i++) {
 			Chromosome chrom = ((MultiThread) runnables.get(i)).getChromosome();
-			if (chrom.getNumCrates() <= thisNumCrates[i]) {
-				System.out.println("lekker bezig in thread " + ((MultiThread) runnables.get(i)).getThreadNumber());
-				numOrdersImproved++;
+			List<Crate> crates = chrom.getCrates();
+			ShortestPath shortestPath = new ShortestPath(crates, graph);
+			int numAisles = shortestPath.computeTotalPathLength(crates, graph); // Number of aisles in chromosome: in 1 order (or order split)
+			if (chrom.getNumCrates() <= numCrates[i] && numAisles < numAislesOriginal[i]) {
 				chromosomes.set(i, chrom);
+				numOrdersImproved++;
 			}
 		}
 		System.out.println("Number of orders improved: " + numOrdersImproved);
@@ -216,6 +211,7 @@ public class MainBRKGA {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private static int writeSolNoSplit(List<Order> orders, double[] lowerBound, List<Chromosome> chromosomes) throws FileNotFoundException {
 		File info = new File("GA_solution_info_multi.txt"); 
 		File sol = new File("GA_solution_multi.txt");
@@ -238,12 +234,10 @@ public class MainBRKGA {
 			outInfo.println(i + "\t" + chrom.getNumCrates() + "\t" + chrom.getFitness() + "\t" + lowerBound[i] + "\t" + avFillRate + "\t" + avWeight + "\t");
 			outSol.println("Order: " + i);
 			outSol.println("Crates: " + chrom.getNumCrates());
-			for (int k=0; k < chrom.getOpenCrates().size(); k++) {
-				List<Integer> openCrate = chrom.getOpenCrates().get(k);
+			for (int k=0; k < chrom.getCrates().size(); k++) {
 				String output = k + "\t";
-				for (int j=0; j < openCrate.size(); j++) {
-					if (openCrate.get(j) == 1)
-						output += (int) chrom.getItems().get(j).getItemId() + " ";
+				for (int j=0; j < chrom.getCrates().size(); j++) {
+					output += (int) chrom.getCrates().get(k).getItemList().get(j).getItemId() + " ";
 				}
 				outSol.println(output);
 			}
@@ -254,6 +248,7 @@ public class MainBRKGA {
 		return totalNumBins;
 	}
 
+	@SuppressWarnings("unused")
 	private static int writeSolSplit(List<Order> orders, double[] lowerBound, List<Chromosome> chromosomes) throws FileNotFoundException {
 		File info = new File("GA_solution_info_multi.txt"); 
 		File sol = new File("GA_solution_multi.txt");
@@ -290,22 +285,18 @@ public class MainBRKGA {
 			outInfo.println(i + "\t" + numCrates + "\t" + fitness + "\t" + lowerBound[i] + "\t" + avFillRate + "\t" + avWeight + "\t");
 			outSol.println("Order: " + (double) ((int) chrom.getOrderId()));
 			outSol.println("Crates: " + numCrates);
-			for (int k=0; k < chrom.getOpenCrates().size(); k++) {
-				List<Integer> openCrate = chrom.getOpenCrates().get(k);
+			for (int k=0; k < chrom.getCrates().size(); k++) {
 				String output = k + "\t";
-				for (int j=0; j < openCrate.size(); j++) {
-					if (openCrate.get(j) == 1)
-						output += (int) chrom.getItems().get(j).getItemId() + " ";
+				for (int j=0; j < chrom.getCrates().size(); j++) {
+					output += (int) chrom.getCrates().get(k).getItemList().get(j).getItemId() + " ";
 				}
 				outSol.println(output);
 			}
 			if (chrom2 != null) {
-				for (int k=0; k < chrom2.getOpenCrates().size(); k++) {
-					List<Integer> openCrate = chrom2.getOpenCrates().get(k);
+				for (int k=0; k < chrom2.getCrates().size(); k++) {
 					String output = k+chrom.getNumCrates() + "\t";
-					for (int j=0; j < openCrate.size(); j++) {
-						if (openCrate.get(j) == 1)
-							output += (int) chrom2.getItems().get(j).getItemId() + " ";
+					for (int j=0; j < chrom.getCrates().size(); j++) {
+						output += (int) chrom2.getCrates().get(k).getItemList().get(j).getItemId() + " ";
 					}
 					outSol.println(output);
 				}
@@ -321,7 +312,7 @@ public class MainBRKGA {
 	private static void awaitTerminationAfterShutdown(ExecutorService threadPool) {
 		threadPool.shutdown();
 		try {
-			if (!threadPool.awaitTermination(1, TimeUnit.HOURS)) {
+			if (!threadPool.awaitTermination(1, TimeUnit.DAYS)) {
 				threadPool.shutdownNow();
 			}
 		} catch (InterruptedException ex) {

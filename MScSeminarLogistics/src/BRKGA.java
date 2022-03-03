@@ -31,10 +31,12 @@ public class BRKGA {
 		Random rand = new Random();
 		double aNB = 0.0;
 		int numSameANB = 0;
+		int boundSameANB = choiceAisles == 1? 10 : 25;
+		Graph graph = new Graph();
 		// Initialize population chromosomes
 		ArrayList<Chromosome> population = new ArrayList<Chromosome>();
 		for (int p=0; p < numPop; p++) {
-			population.add(createMutation(order, rand, numItems, choiceAisles, numCrates));
+			population.add(createMutation(order, rand, numItems, numCrates, choiceAisles, graph));
 		}
 		// Start algorithm
 		for (int g=1; g < numGeneration; g++) {
@@ -43,7 +45,7 @@ public class BRKGA {
 			if (choiceAisles == 1 && population.get(0).getNumCrates() == lowerBound) break;
 			if (Math.abs(newANB-aNB) <= 1E-6) {
 				numSameANB++;
-				if (numSameANB == 10) break;
+				if (numSameANB == boundSameANB) break;
 			}
 			else numSameANB = 0;
 			aNB = newANB;
@@ -53,7 +55,7 @@ public class BRKGA {
 				populationG.add(population.get(p));
 			}
 			for (int p=0; p < numPopMutant; p++) { // Create mutations
-				populationG.add(createMutation(order, rand, numItems, choiceAisles, numCrates));
+				populationG.add(createMutation(order, rand, numItems, numCrates, choiceAisles, graph));
 			}
 			for (int p=0; p < numPop - numPopElite - numPopMutant; p++) { // Create offspring
 				double[] BPS = new double[numItems];
@@ -74,16 +76,23 @@ public class BRKGA {
 					}
 				}
 				List<Item> items = new ArrayList<>(order.getItems());
-				List<Crate> crates = new ArrayList<Crate>();
-				switch (choiceAisles) {
-				case 1: crates = placement(order, items, BPS, VBO);
+				List<Crate> crates = placement(order, items, BPS, VBO);
+//				switch (choiceAisles) {
+//				case 1: crates = placement(order, items, BPS, VBO);
+//				break;
+//				case 2: crates = placementOptAisles(order, items, BPS, VBO, numCrates);
+//				break;
+//				}
+				double adjNumBins = 0;
+				switch(choiceAisles) {
+				case 1: adjNumBins = getAdjustedNumberBins(crates);
 				break;
-				case 2: crates = placementOptAisles(order, items, BPS, VBO, numCrates);
+				case 2: adjNumBins = getAdjustedNumberBinsOptAisles(crates, graph);
+				break;
+				case 3: adjNumBins = getAdjustedNumberBinsFillRateOptAisles(crates, graph);
 				break;
 				}
-				ArrayList<ArrayList<Integer>> openCrates = getOpenCrates(crates);
-				double adjNumBins = getAdjustedNumberBins(order, openCrates);
-				populationG.add(new Chromosome(BPS, VBO, crates, openCrates, items, adjNumBins, (int) adjNumBins, order.getOrderId()));
+				populationG.add(new Chromosome(BPS, VBO, crates, items, adjNumBins, (int) adjNumBins, order.getOrderId()));
 			}
 			// Replace by new population
 			population.clear();
@@ -105,7 +114,6 @@ public class BRKGA {
 	private static List<Crate> placement(Order order, List<Item> items, double[] BPS, double[] VBO) {
 		// Initialization
 		List<Crate> crates = new ArrayList<Crate>(); // List of bins
-		ArrayList<ArrayList<Integer>> openCrates = new ArrayList<ArrayList<Integer>>(); // Let element be 1 if item is in bin, 0 o.w.
 		int numCrates = 0; // Number of open bins
 		List<Item> itemsToPack = new ArrayList<Item>(items);
 		items.clear();
@@ -143,14 +151,8 @@ public class BRKGA {
 				newCrate.addEPToCrate(newEMS);
 				crateSelected = newCrate;
 				crates.add(crateSelected);
-				ArrayList<Integer> openCrate = new ArrayList<Integer>();
-				for (int j=0; j < BPS.length; j++) {
-					openCrate.add(0);
-				}
-				crateSelected.setOpenCrate(openCrate);
-				openCrates.add(openCrate);
 				numCrates++;
-				crateIndex = openCrates.size()-1;
+				crateIndex = crates.size()-1;
 				EMS = newEMS;
 			}
 			// Box Orientation Selection
@@ -163,8 +165,6 @@ public class BRKGA {
 			}
 			List<Double> orient = new ArrayList<Double>(boxOrientations.get((int) Math.ceil(VBO[mapBPSIndex.get(sortedBPS[i])]*boxOrientations.size()-1)));
 			// Item packing
-			crates.get(crateIndex).getOpenCrate().set(mapBPSIndex.get(sortedBPS[i]), 1);
-			openCrates.get(crateIndex).set(mapBPSIndex.get(sortedBPS[i]), 1);
 			crateSelected.addItemToCrate(itemToPack);
 			itemsToPack.remove(itemToPack);
 			items.add(new Item(itemToPack.getItemId(), orient.get(0), orient.get(1), orient.get(2), itemToPack.getWeight(), EMS.getX(), EMS.getY(), EMS.getZ(), crateIndex, itemToPack.getAisle()));
@@ -181,22 +181,16 @@ public class BRKGA {
 	 * @param VBO Vector of Box Orientations of choromose of order to pack
 	 * @return a_ij with size numItems*numCrates, value is 1 if item i is in crate j, 0 otherwise
 	 */
+	@SuppressWarnings("unused")
 	private static List<Crate> placementOptAisles(Order order, List<Item> items, double[] BPS, double[] VBO, int numCrates) {
 		// Initialization
 		ArrayList<Crate> crates = new ArrayList<Crate>(); // List of bins
-		ArrayList<ArrayList<Integer>> openCrates = new ArrayList<ArrayList<Integer>>(); // Let element be 1 if item is in bin, 0 o.w.
 		List<boolean[]> isAislesVisited = new ArrayList<boolean[]>();
 		for (int i=0; i < numCrates; i++) { // Set initial open crates
 			Crate newCrate = new Crate();
 			EP newEMS = new EP(0, 0, 0);
 			newCrate.addEPToCrate(newEMS);
 			crates.add(newCrate);
-			ArrayList<Integer> openCrate = new ArrayList<Integer>();
-			for (int j=0; j < BPS.length; j++) {
-				openCrate.add(0);
-			}
-			newCrate.setOpenCrate(openCrate);
-			openCrates.add(openCrate);
 			isAislesVisited.add(new boolean[8]);
 		}
 		List<Item> itemsToPack = new ArrayList<Item>(items);
@@ -249,15 +243,9 @@ public class BRKGA {
 				newCrate.addEPToCrate(newEMS);
 				crateSelected = newCrate;
 				crates.add(crateSelected);
-				ArrayList<Integer> openCrate = new ArrayList<Integer>();
-				for (int j=0; j < BPS.length; j++) {
-					openCrate.add(0);
-				}
-				crateSelected.setOpenCrate(openCrate);
-				openCrates.add(openCrate);
 				isAislesVisited.add(new boolean[8]);
 				numCrates++;
-				crateIndex = openCrates.size()-1;
+				crateIndex = crates.size()-1;
 				EMS = newEMS;
 			}
 			// Box Orientation Selection
@@ -270,8 +258,6 @@ public class BRKGA {
 			}
 			List<Double> orient = new ArrayList<Double>(boxOrientations.get((int) Math.ceil(VBO[mapBPSIndex.get(sortedBPS[i])]*boxOrientations.size()-1)));
 			// Item packing
-			crates.get(crateIndex).getOpenCrate().set(mapBPSIndex.get(sortedBPS[i]), 1);
-			openCrates.get(crateIndex).set(mapBPSIndex.get(sortedBPS[i]), 1);
 			crateSelected.addItemToCrate(itemToPack);
 			isAislesVisited.get(crateIndex)[itemToPack.getAisle()] = true;
 			itemsToPack.remove(itemToPack);
@@ -315,25 +301,59 @@ public class BRKGA {
 	}
 
 	/**
-	 * Returns fitness value of a chromosome
-	 * @param order
-	 * @param openCrates
+	 * Returns fitness value of a chromosome, based on NB + fill rate least loaded bin
+	 * @param crates
 	 * @return fitness value
 	 */
-	private static double getAdjustedNumberBins(Order order, ArrayList<ArrayList<Integer>> openCrates) {
+	public static double getAdjustedNumberBins(List<Crate> crates) {
 		double leastLoad = Double.POSITIVE_INFINITY;
-		Crate crate = new Crate();
-		double crateCapacity = crate.getVolume();
-		for (int k=0; k < openCrates.size(); k++) {
+		for (int k=0; k < crates.size(); k++) {
 			double loadCrate = 0;
-			for (int l=0; l < openCrates.get(k).size(); l++) {
-				if (openCrates.get(k).get(l) == 1)
-					loadCrate += order.getItems().get(l).getVolume();
+			for (int l=0; l < crates.get(k).getItemList().size(); l++) {
+				loadCrate += crates.get(k).getItemList().get(l).getVolume();
 			}
 			if (loadCrate < leastLoad)
 				leastLoad = loadCrate;
 		}
-		return openCrates.size() + leastLoad/crateCapacity;
+		return crates.size() + leastLoad/crates.get(0).getVolume();
+	}
+	
+	/**
+	 * Returns fitness value of a chromosome, based on NB + number of aisles. 
+	 * 	= NB + 0.005 * numAisles 
+	 * @param crates
+	 * @param graph
+	 * @return
+	 */
+	private static double getAdjustedNumberBinsOptAisles(List<Crate> crates, Graph graph) {
+		ShortestPath sp = new ShortestPath(crates, graph);
+		double aNBA = (double) crates.size();
+		double penaltyAisle = 0.005;
+		aNBA += penaltyAisle*sp.computeTotalPathLength(crates, graph);
+		return aNBA;
+	}
+	
+	/**
+	 * Returns fitness value of a chromosome, based on NB + fill rate least loaded bin (LLB) + number of aisles
+	 *  = NB + fill rate LLB + 0.005 * numAisles
+	 * @param crates
+	 * @param graph
+	 * @return
+	 */
+	private static double getAdjustedNumberBinsFillRateOptAisles(List<Crate> crates, Graph graph) {
+		double leastLoad = Double.POSITIVE_INFINITY;
+		for (int k=0; k < crates.size(); k++) {
+			double loadCrate = 0;
+			for (int l=0; l < crates.get(k).getItemList().size(); l++) {
+				loadCrate += crates.get(k).getItemList().get(l).getVolume();
+			}
+			if (loadCrate < leastLoad)
+				leastLoad = loadCrate;
+		}
+		leastLoad = Math.round(leastLoad*10)/10.0; // Round to 1 decimal
+		ShortestPath sp = new ShortestPath(crates, graph);
+		double penaltyAisle = 0.005;
+		return (double) crates.size() + leastLoad/crates.get(0).getVolume() + penaltyAisle * sp.computeTotalPathLength(crates, graph);
 	}
 
 	/**
@@ -489,7 +509,7 @@ public class BRKGA {
 	 * @param choice_D2_VBO
 	 * @return Chromosome
 	 */
-	private static Chromosome createMutation(Order order, Random rand, int numItems, int choiceAisles, int numCrates) {
+	private static Chromosome createMutation(Order order, Random rand, int numItems, int numCrates, int choiceAisles, Graph graph) {
 		double[] BPS = new double[numItems]; // Box Packing Sequence BPS
 		double[] VBO = new double[numItems]; // Vector Box Orientation VBO
 		for (int i=0; i < numItems; i++) { 
@@ -497,16 +517,23 @@ public class BRKGA {
 			VBO[i] = rand.nextDouble();
 		}
 		List<Item> items = new ArrayList<>(order.getItems());
-		List<Crate> crates = new ArrayList<Crate>();
-		switch (choiceAisles) {
-		case 1: crates = placement(order, items, BPS, VBO);
+		List<Crate> crates = placement(order, items, BPS, VBO);
+//		switch (choiceAisles) {
+//		case 1: crates = placement(order, items, BPS, VBO);
+//		break;
+//		case 2: crates = placementOptAisles(order, items, BPS, VBO, numCrates);
+//		break;
+//		}
+		double adjNumBins = 0;
+		switch(choiceAisles) {
+		case 1: adjNumBins = getAdjustedNumberBins(crates);
 		break;
-		case 2: crates = placementOptAisles(order, items, BPS, VBO, numCrates);
+		case 2: adjNumBins = getAdjustedNumberBinsOptAisles(crates, graph);
+		break;
+		case 3: adjNumBins = getAdjustedNumberBinsFillRateOptAisles(crates, graph);
 		break;
 		}
-		ArrayList<ArrayList<Integer>> openCrates = getOpenCrates(crates);
-		double adjNumBins = getAdjustedNumberBins(order, openCrates);
-		return new Chromosome(BPS, VBO, crates, openCrates, items, adjNumBins, (int) adjNumBins, order.getOrderId());
+		return new Chromosome(BPS, VBO, crates, items, adjNumBins, (int) adjNumBins, order.getOrderId());
 	}
 
 	/**
@@ -555,11 +582,4 @@ public class BRKGA {
 		return 2*Math.max(left, right);
 	}
 	
-	private static ArrayList<ArrayList<Integer>> getOpenCrates(List<Crate> crates) {
-		ArrayList<ArrayList<Integer>> openCrates = new ArrayList<ArrayList<Integer>>();
-		for (Crate crate : crates) {
-			openCrates.add(crate.getOpenCrate());
-		}
-		return openCrates;
-	}
 }
