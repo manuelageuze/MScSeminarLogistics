@@ -13,6 +13,7 @@ public class Model {
 	}
 
 	public List<ArrayList<Crate>> solveModel(List<Crate> crates) throws IloException {
+		@SuppressWarnings("unused")
 		int crateSize = crates.size();
 		int jSize = 12;
 

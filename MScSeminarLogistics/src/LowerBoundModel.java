@@ -6,7 +6,9 @@ import ilog.concert.IloNumVar;
 import ilog.cplex.IloCplex;
 
 public class LowerBoundModel {
+	@SuppressWarnings("unused")
 	private final Order order;
+	@SuppressWarnings("unused")
 	private final Map<Double,Item> items;
 //
 	public LowerBoundModel(Order order, Map<Double,Item> items) throws IloException {
@@ -70,6 +72,7 @@ public class LowerBoundModel {
 		
 		if(cplex.isPrimalFeasible()) {
 			System.out.println("Solution value: " + cplex.getObjValue());
+			cplex.close();
 			return cplex.getObjValue();
 			
 		}
