@@ -18,7 +18,7 @@ public class Main {
 		List<Order> orders = readOrders(items);
 		Graph graph = Graph.createGraph();
 		int choiceOriginal = 2; // Choice for initial algorithm: 1 for FF, 2 for BF, 3 for BRKGA
-		
+
 		// computeLowerBound(orders,items); // Computes lowerbound
 
 		List<Crate> crates = new ArrayList<Crate>();
@@ -35,19 +35,91 @@ public class Main {
 				crates.addAll(chromosomes.get(i).getCrates());
 			}
 		}
-		
-//		solveExtension2Heuristic(crates, graph);
-		List<OrderPicker> orderpickers = greedyHeuristic(crates);
-		int totalNumAisle = 0;
-		for(OrderPicker i : orderpickers)
+
+		// Create order pickers randomly
+		List<OrderPicker> randomPickers = RandomIndeling(crates);
+		// Compute shortest path for al pickers
+		int numAislesRandom = shortestPathPickers(randomPickers, graph);
+		System.out.println("Total aisles random is: " + numAislesRandom);
+
+		// Find order pickers with heuristics
+		//List<OrderPicker> orderPickers = solveExtension2Heuristic(crates, graph); // The simple heuristic, with the last ones random
+		List<OrderPicker> orderPickers = greedyHeuristic(crates, graph);
+		// Compute shortest path of each order picker
+		int numAislesHeuristics = shortestPathPickers(orderPickers, graph);		
+		System.out.println("Total aisles after greedy :\t"+numAislesHeuristics);
+
+		// Perform Local search
+		LocalSearch ls = new LocalSearch();
+		ls.performLocalSearch(orderPickers, graph);
+		int totalNumAisle2 = 0;
+		for(OrderPicker i : orderPickers)
 		{
-			totalNumAisle += getNumAisle(i.getCrates(),new Crate(),false);
+			//totalNumAisle2 += getNumAisle(i.getCrates(),new Crate(),false);
+			totalNumAisle2 = i.getShortestPath();
 		}
-		System.out.println("Total pickers:\t"+orderpickers.size());
-		System.out.println("Total aisle:\t"+totalNumAisle);
+		System.out.println("Total pickers:\t"+orderPickers.size());
+		System.out.println("Total aisle after LS:\t"+totalNumAisle2);	
 	}
-	private static List<OrderPicker> greedyHeuristic(List<Crate> crates)
-	{
+
+	/**
+	 * computes for all order pickers the shortest path, and returns the lenght of all shortestpaths together
+	 * @param orderPickers input is list of orderpickers
+	 * @param graph
+	 * @return
+	 */
+	public static int shortestPathPickers(List<OrderPicker> orderPickers, Graph graph) {
+		int totalLength = 0;
+		for(int i = 0; i < orderPickers.size(); i++) {			
+			ShortestPath sp = new ShortestPath(orderPickers.get(i).getCrates(), graph);
+			int total = sp.computeTotalPathLength(orderPickers.get(i).getCrates(), graph);
+			orderPickers.get(i).setShortestPath(total);
+			totalLength = totalLength + total;
+		}
+		return totalLength;
+	}
+
+	/**
+	 * Computes a list of order pickers when setcovering all crates 'Random' (a.k.a group first 8 etc)
+	 * @param crates
+	 * @return
+	 */
+	public static List<OrderPicker> RandomIndeling(List<Crate> crat){
+		List<Crate> crates = new ArrayList<Crate>(crat);		
+		double numPickers = Math.ceil(crates.size()/8.0);
+		Iterator<Crate> iterator = crates.iterator();
+		List<OrderPicker> orderpickers = new ArrayList<OrderPicker>();
+		for(int j = 0; j < numPickers; j++) {
+			List<Crate> cr = new ArrayList<Crate>();
+			for(int i = 0; i < 8; i++) {
+				if(iterator.hasNext() == false) {
+					break;
+				}
+				Crate c = iterator.next();
+				cr.add(c);
+				iterator.remove();
+			}
+			boolean[] testaisles = new boolean[8];
+			for(Crate crate : cr) {
+				for(int z = 0; z < 8; z++) {
+					if(crate.getAisles()[z] == true) {
+						testaisles[z] = true;;
+					}
+				}	
+			}
+			List<Integer> aislesToVisit = new ArrayList<Integer>();
+			for(int z = 0; z < 8 ; z++) {
+				if(testaisles[z] == true) {
+					aislesToVisit.add(z);
+				}
+			}
+			OrderPicker picker = new OrderPicker(j, cr, aislesToVisit.size(), aislesToVisit);
+			orderpickers.add(picker);
+		}
+		return orderpickers;
+	}
+
+	private static List<OrderPicker> greedyHeuristic(List<Crate> crates, Graph g) {
 		Collections.sort(crates);
 		List<OrderPicker> pickers = new ArrayList<>();
 		Crate[] bins = new Crate[crates.size()];
@@ -71,15 +143,15 @@ public class Main {
 				for(int i = b+1 ; i < crates.size() ; i++)
 				{
 					if(visited[i])continue;
-					int cost = getNumAisle(k,bins[i],true);
-					int num = 0;
-					for(boolean j : bins[i].getAisles())if(j)num++;
+					int cost = computeTotalPathLength(k,g);
+					int num = bins[i].getAisleList().size();
 					if(cost < costBest)
 					{
 						best = i;
 						costBest = cost;
 						numAisleBest = num;
 					}
+
 					else if(cost == costBest && num > numAisleBest)
 					{
 						best = i;
@@ -98,35 +170,8 @@ public class Main {
 		}
 		return pickers;
 	}
-	public static int getNumAisle(List<Crate> crates, Crate bin, boolean extra)
-	{
-		boolean[] aisle = new boolean[8];
-		int left = 0;
-		int right= 0;
-		if(extra)
-		{
-			for(int i = 0 ; i < 8 ;i++)
-			{
-				if(bin.getAisles()[i])aisle[i]=true;
-			}
-		}
-		for(Crate i : crates)
-		{
-			for(int j = 0 ; j < 8 ; j++)
-			{
-				
-				if(i.getAisles()[j])aisle[j] = true;
-			}
-		}
-		for(int i = 0 ; i < 8 ; i++)
-		{
-			if(i == 0 || i == 2 || i == 4 || i==6)if(aisle[i])left++;
-			else if(i==1 || i == 3 || i==5 || i==7)if(aisle[i])right++;
-		}
-		return (Math.max(left, right))*2;
-	}
-	
-	private static void solveExtension2Heuristic(List<Crate> crates, Graph graph) {
+
+	private static List<OrderPicker> solveExtension2Heuristic(List<Crate> crates, Graph graph) {
 		// Maak nieuwe lijst
 		List<Crate> cratesToPick = new ArrayList<>(crates);
 		Collections.sort(cratesToPick); // Sorteer je lijst met kratten gebaseerd op shortestpath length
@@ -210,12 +255,13 @@ public class Main {
 		double total = 0.0;
 		for(int i = 0; i < orderpickers.size(); i++) {
 			ShortestPath spath = new ShortestPath(orderpickers.get(i).getCrates(), graph);
-			int value = spath.computeShortestPathOneCrate(orderpickers.get(i).getAislesToVisist());
+			int value = spath.computeShortestPathOneCrate(orderpickers.get(i).getAislesToVisit());
 			orderpickers.get(i).setShortestPath(value);
 			total = total + value;
 			System.out.println(value);
 		}
 		System.out.println("Total number of aisles needed: " + total);
+		return orderpickers;
 
 		/*
 		// Voor set van 8 kratten
@@ -229,6 +275,7 @@ public class Main {
 		 */
 	}
 
+	
 	/**
 	 * Method that solves LP problem for the lower bound
 	 * @param orders
@@ -633,5 +680,63 @@ public class Main {
 		File orderFile = new File("orders.csv");
 		List<Order> orders = Order.readOrder(orderFile, items);
 		return orders;
+	}
+
+	/**
+	 * Compute total number of paths passed over all crates
+	 * @return
+	 */
+	public static int computeTotalPathLength(List<Crate> crates, Graph graph) {
+
+		// Compute all aisles that are visited in this list of crates
+		List<Integer> aislesToVisit = new ArrayList<Integer>();
+		boolean[] testaisles = new boolean[8];	
+		for(Crate crate : crates) {
+			for(int z = 0; z < 8; z++) {
+				if(crate.getAisles()[z] == true) {
+					testaisles[z] = true;;
+				}
+			}	
+		}
+		for(int z = 0; z < 8 ; z++) {
+			if(testaisles[z] == true) {
+				aislesToVisit.add(z);
+			}
+		}
+
+		ArrayList<Integer> a = new ArrayList<Integer>();
+
+		for(int j = 0; j < aislesToVisit.size(); j++) {
+			int index = aislesToVisit.get(j);
+			if(j == 0) {
+				if(index % 2 == 0) {
+					// Dan is het goed
+					a.add(index);
+				} 
+				else {
+					a.add(index - 1);
+					a.add(index);
+				}
+			}
+			else {
+				int prevIndex = aislesToVisit.get(j - 1);
+				int space = index - prevIndex;
+				if(space % 2 != 0) { // dan is het goed
+					a.add(index);
+				}
+				else {
+					a.add(index - 1);
+					a.add(index);
+				}
+			}
+			if(j == aislesToVisit.size() - 1) {
+				// Als laatste Isle oneven is, kan je meteen naar eindpunt. Doe niets. Laatste ail al toegevoegd in vorige if statement
+				if(index % 2 == 0) { 
+					// Als laatste aisle even is, moet je nog terug door een aisle
+					a.add(index + 1);
+				}
+			}		
+		}
+		return a.size();
 	}
 }
