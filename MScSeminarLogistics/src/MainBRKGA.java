@@ -15,15 +15,15 @@ public class MainBRKGA {
 
 	static final int MAX_T = 8; 
 
-	public static List<Chromosome> main(String[] args) throws IloException, IOException, InterruptedException {
+	public static void main(String[] args) throws IloException, IOException, InterruptedException {
 		// Variables, parameters and results
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
 		Graph graph = Graph.createGraph();
 		Crate crate = new Crate();
-		int choiceSplit = 1; // Choice for order splitting or not: 1 for no splitting, 2 for splitting
-		int choiceAisles = 2; // Choice for incorporating number of aisles or not: 1 for not incorporating, 2 for only incorporating aisles, 3 for incorporating aisles and fill rate
-		int choiceAlgorithm = 2; // Choice for original algorithm: 1 for BRKGA, 2 for BF
+		int choiceSplit = 2; // Choice for order splitting or not: 1 for no splitting, 2 for splitting
+		int choiceAisles = 1; // Choice for incorporating number of aisles or not: 1 for not incorporating, 2 for only incorporating aisles, 3 for incorporating aisles and fill rate
+		int choiceAlgorithm = 1; // Choice for original algorithm: 1 for BRKGA, 2 for BF
 		// Results
 		double totalNumCrates = 0.0;
 		int totalNumAislesBefore = 0;
@@ -153,13 +153,16 @@ public class MainBRKGA {
 		System.out.println("Average volume: " + avVolume + ", average fill rate: " + avFillRate);
 		System.out.println("Average weight: " + avWeight + ", average weight rate: " + avWeightRate);
 		System.out.println("Runtime: " + totalRunTime);
+		
+		writeFileCompetition(chromosomes);
 
 		// 		int instance = 88;
 		//		double lowerbound = LowerBoundModel.setCoveringLB(orders.get(instance), items);
 		//		System.out.println(lowerbound);
 		//		Chromosome chrom = BRKGA.solve(orders.get(instance), lowerbound, choice_D2_VBO);
 		//		printCrate(orders.get(instance), chrom);
-		return chromosomes;
+		
+//		return chromosomes;
 	}
 
 	private static void optAisles(List<Order> orders, Graph graph, List<Chromosome> chromosomes, double[] lowerBound, int[] numCrates, int[] numAislesOriginal) throws FileNotFoundException {
@@ -336,6 +339,31 @@ public class MainBRKGA {
 		}
 		out.close();
 	}	
+	
+	@SuppressWarnings("unused")
+	private static void writeFileCompetition(List<Chromosome> chromosomes) throws FileNotFoundException {
+		File competition = new File("competitionAnswersGroup5.csv");
+		PrintWriter out = new PrintWriter(competition);
+		out.println("crate_id,order_id,item_id,x_start,x_end,y_start,y_end,z_start,z_end");
+		int crate_id = 0;
+		for (int i=0; i < chromosomes.size(); i++) {
+			List<Crate> crates = chromosomes.get(i).getCrates();
+			for (int k=0; k < crates.size(); k++) {
+				List<Item> items = crates.get(k).getItemList();
+				for (int l=0; l < items.size(); l++) {
+					Item item = items.get(l);
+					int x_end = (int) (item.getInsertedY() + item.getLength());
+					int y_end = (int) (item.getInsertedX() + item.getWidth());
+					int z_end = (int) (item.getInsertedZ() + item.getHeight());
+					String line = crate_id + "," + (int) chromosomes.get(i).getOrderId() + "," + (int) item.getItemId() + ",";
+					line += (int) item.getInsertedY() + "," + x_end + "," + (int) item.getInsertedX() + "," + y_end + "," + (int) item.getInsertedZ() + "," + z_end;
+					out.println(line);
+				}
+				crate_id++;
+			}
+		}
+		out.close();
+	}
 
 	/**
 	 * Read items

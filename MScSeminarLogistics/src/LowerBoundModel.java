@@ -16,6 +16,7 @@ public class LowerBoundModel {
 		this.items = items;
 	}
 
+	@SuppressWarnings("resource")
 	public static double setCoveringLB(Order order, Map<Double, Item> items) throws IloException {
 		Crate crate = new Crate();
 		IloCplex cplex = new IloCplex();
@@ -72,7 +73,6 @@ public class LowerBoundModel {
 		
 		if(cplex.isPrimalFeasible()) {
 			System.out.println("Solution value: " + cplex.getObjValue());
-			cplex.close();
 			return cplex.getObjValue();
 			
 		}
