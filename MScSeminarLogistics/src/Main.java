@@ -38,26 +38,29 @@ public class Main {
 
 		// Create order pickers randomly
 		List<OrderPicker> randomPickers = RandomIndeling(crates);
-		// Compute shortest path for al pickers
+		
+		// Compute shortest path for all pickers
 		int numAislesRandom = shortestPathPickers(randomPickers, graph);
 		System.out.println("Total aisles random is: " + numAislesRandom);
-
+		
 		// Find order pickers with heuristics
-		//List<OrderPicker> orderPickers = solveExtension2Heuristic(crates, graph); // The simple heuristic, with the last ones random
+		Long start = System.currentTimeMillis();
+//		List<OrderPicker> orderPickers = solveExtension2Heuristic(crates, graph); // The simple heuristic, with the last ones random
 		List<OrderPicker> orderPickers = greedyHeuristic(crates, graph);
+		
 		// Compute shortest path of each order picker
 		int numAislesHeuristics = shortestPathPickers(orderPickers, graph);		
 		System.out.println("Total aisles after greedy :\t"+numAislesHeuristics);
+		System.out.println("Time: "+(System.currentTimeMillis()-start));
 
 		// Perform Local search
-		LocalSearch ls = new LocalSearch();
-		ls.performLocalSearch(orderPickers, graph);
+		List<OrderPicker> ls = (new LocalSearch()).performLocalSearch(orderPickers, graph);
 		int totalNumAisle2 = 0;
-		for(OrderPicker i : orderPickers)
+		for(int i = 0 ; i < ls.size() ; i++)
 		{
-			//totalNumAisle2 += getNumAisle(i.getCrates(),new Crate(),false);
-			totalNumAisle2 = i.getShortestPath();
+			totalNumAisle2 += ls.get(i).getShortestPath();
 		}
+		
 		System.out.println("Total pickers:\t"+orderPickers.size());
 		System.out.println("Total aisle after LS:\t"+totalNumAisle2);	
 	}
@@ -132,10 +135,10 @@ public class Main {
 		for(int b = 0 ; b < crates.size() ; b++)
 		{
 			if(visited[b])continue;
-			List<Crate> k = new ArrayList<>();
-			k.add(bins[b]);
+			List<Crate> pickerBoy = new ArrayList<>();
+			pickerBoy.add(bins[b]);
 			visited[b] = true;
-			while(k.size() < 8)
+			while(pickerBoy.size() < 8)
 			{
 				int best = -1;
 				int costBest = 10000000;
@@ -143,7 +146,8 @@ public class Main {
 				for(int i = b+1 ; i < crates.size() ; i++)
 				{
 					if(visited[i])continue;
-					int cost = computeTotalPathLength(k,g);
+					pickerBoy.add(bins[i]);
+					int cost = computeTotalPathLength(pickerBoy,g);
 					int num = bins[i].getAisleList().size();
 					if(cost < costBest)
 					{
@@ -151,22 +155,22 @@ public class Main {
 						costBest = cost;
 						numAisleBest = num;
 					}
-
 					else if(cost == costBest && num > numAisleBest)
 					{
 						best = i;
 						costBest = cost;
 						numAisleBest = num;
 					}
+					pickerBoy.remove(pickerBoy.size()-1);
 				}
 				if(best == -1)
 				{
 					break;
 				}
-				k.add(bins[best]);
+				pickerBoy.add(bins[best]);
 				visited[best] = true;
 			}
-			pickers.add(new OrderPicker(pickers.size(),k));
+			pickers.add(new OrderPicker(pickers.size(),pickerBoy));
 		}
 		return pickers;
 	}
@@ -258,7 +262,7 @@ public class Main {
 			int value = spath.computeShortestPathOneCrate(orderpickers.get(i).getAislesToVisit());
 			orderpickers.get(i).setShortestPath(value);
 			total = total + value;
-			System.out.println(value);
+//			System.out.println(value);
 		}
 		System.out.println("Total number of aisles needed: " + total);
 		return orderpickers;
