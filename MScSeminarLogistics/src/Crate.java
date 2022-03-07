@@ -222,11 +222,15 @@ public class Crate implements Comparable<Crate> {
 		// Sorteer op lengte shortest path, 8 eerst, 2 laatste
 		double spLength = this.shortestPathLength;
 		double oSpLength = o.shortestPathLength;
+//		double spLength = this.getAisleList().size();
+//		double oSpLength = o.getAisleList().size();
 		if(spLength > oSpLength) {
-			return -1;
+//			return -1;	// large -> small
+			return  1;	// small -> large
 		}
 		else if(spLength < oSpLength) {
-			return 1;
+//			return  1;	// large -> small
+			return -1;	// small -> large
 		}
 		return 0;
 	}
