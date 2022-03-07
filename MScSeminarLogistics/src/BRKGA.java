@@ -131,6 +131,7 @@ public class BRKGA {
 			Item itemToPack = mapBPS.get(sortedBPS[i]); // Item selection
 			Crate crateSelected = null; // Initialize with no bin/crate selected
 			EP EMS = null; // Initialize with no Empty Maximal Space selected
+			@SuppressWarnings("unused")
 			int crateIndex = -1;
 			double[] dim = {itemToPack.getWidth(), itemToPack.getLength(), itemToPack.getHeight()};
 			List<List<Double>> boxOrientations = boxOrientations(dim);
@@ -165,9 +166,12 @@ public class BRKGA {
 			}
 			List<Double> orient = new ArrayList<Double>(boxOrientations.get((int) Math.ceil(VBO[mapBPSIndex.get(sortedBPS[i])]*boxOrientations.size()-1)));
 			// Item packing
-			crateSelected.addItemToCrate(itemToPack);
 			itemsToPack.remove(itemToPack);
-			items.add(new Item(itemToPack.getItemId(), orient.get(0), orient.get(1), orient.get(2), itemToPack.getWeight(), EMS.getX(), EMS.getY(), EMS.getZ(), crateIndex, itemToPack.getAisle()));
+			itemToPack.setInsertedX(EMS.getX());
+			itemToPack.setInsertedY(EMS.getY());
+			itemToPack.setInsertedZ(EMS.getZ());
+			crateSelected.addItemToCrate(itemToPack);
+			items.add(itemToPack);
 			// Update EMSs of crate
 			crateSelected.setEPList(updateEMS(crateSelected, itemsToPack, EMS, orient));
 		}
