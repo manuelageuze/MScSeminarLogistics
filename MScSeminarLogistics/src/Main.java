@@ -16,7 +16,6 @@ public class Main {
 	public static void main(String[] args) throws IloException, IOException, InterruptedException {
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
-		Graph graph = Graph.createGraph();
 		int choiceOriginal = 2; // Choice for initial algorithm: 1 for FF, 2 for BF, 3 for BRKGA
 
 		// computeLowerBound(orders,items); // Computes lowerbound
@@ -40,21 +39,21 @@ public class Main {
 		List<OrderPicker> randomPickers = RandomIndeling(crates);
 		
 		// Compute shortest path for all pickers
-		int numAislesRandom = shortestPathPickers(randomPickers, graph);
+		int numAislesRandom = shortestPathPickers(randomPickers);
 		System.out.println("Total aisles random is: " + numAislesRandom);
 		
 		// Find order pickers with heuristics
 		Long start = System.currentTimeMillis();
 //		List<OrderPicker> orderPickers = solveExtension2Heuristic(crates, graph); // The simple heuristic, with the last ones random
-		List<OrderPicker> orderPickers = greedyHeuristic(crates, graph);
+		List<OrderPicker> orderPickers = greedyHeuristic(crates);
 		
 		// Compute shortest path of each order picker
-		int numAislesHeuristics = shortestPathPickers(orderPickers, graph);		
+		int numAislesHeuristics = shortestPathPickers(orderPickers);		
 		System.out.println("Total aisles after greedy :\t"+numAislesHeuristics);
 		System.out.println("Time: "+(System.currentTimeMillis()-start));
 
 		// Perform Local search
-		List<OrderPicker> ls = (new LocalSearch()).performLocalSearch(orderPickers, graph);
+		List<OrderPicker> ls = (new LocalSearch()).performLocalSearch(orderPickers);
 		int totalNumAisle2 = 0;
 		for(int i = 0 ; i < ls.size() ; i++)
 		{
@@ -71,11 +70,11 @@ public class Main {
 	 * @param graph
 	 * @return
 	 */
-	public static int shortestPathPickers(List<OrderPicker> orderPickers, Graph graph) {
+	public static int shortestPathPickers(List<OrderPicker> orderPickers) {
 		int totalLength = 0;
 		for(int i = 0; i < orderPickers.size(); i++) {			
-			ShortestPath sp = new ShortestPath(orderPickers.get(i).getCrates(), graph);
-			int total = sp.computeTotalPathLength(orderPickers.get(i).getCrates(), graph);
+			ShortestPath sp = new ShortestPath(orderPickers.get(i).getCrates());
+			int total = sp.computeTotalPathLength(orderPickers.get(i).getCrates());
 			orderPickers.get(i).setShortestPath(total);
 			totalLength = totalLength + total;
 		}
@@ -122,7 +121,7 @@ public class Main {
 		return orderpickers;
 	}
 
-	private static List<OrderPicker> greedyHeuristic(List<Crate> crates, Graph g) {
+	private static List<OrderPicker> greedyHeuristic(List<Crate> crates) {
 		Collections.sort(crates);
 		List<OrderPicker> pickers = new ArrayList<>();
 		Crate[] bins = new Crate[crates.size()];
@@ -147,7 +146,7 @@ public class Main {
 				{
 					if(visited[i])continue;
 					pickerBoy.add(bins[i]);
-					int cost = computeTotalPathLength(pickerBoy,g);
+					int cost = computeTotalPathLength(pickerBoy);
 					int num = bins[i].getAisleList().size();
 					if(cost < costBest)
 					{
@@ -258,7 +257,7 @@ public class Main {
 
 		double total = 0.0;
 		for(int i = 0; i < orderpickers.size(); i++) {
-			ShortestPath spath = new ShortestPath(orderpickers.get(i).getCrates(), graph);
+			ShortestPath spath = new ShortestPath(orderpickers.get(i).getCrates());
 			int value = spath.computeShortestPathOneCrate(orderpickers.get(i).getAislesToVisit());
 			orderpickers.get(i).setShortestPath(value);
 			total = total + value;
@@ -690,7 +689,7 @@ public class Main {
 	 * Compute total number of paths passed over all crates
 	 * @return
 	 */
-	public static int computeTotalPathLength(List<Crate> crates, Graph graph) {
+	public static int computeTotalPathLength(List<Crate> crates) {
 
 		// Compute all aisles that are visited in this list of crates
 		List<Integer> aislesToVisit = new ArrayList<Integer>();

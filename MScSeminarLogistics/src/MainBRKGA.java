@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -19,11 +20,10 @@ public class MainBRKGA {
 		// Variables, parameters and results
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
-		Graph graph = Graph.createGraph();
 		Crate crate = new Crate();
-		int choiceSplit = 2; // Choice for order splitting or not: 1 for no splitting, 2 for splitting
-		int choiceAisles = 1; // Choice for incorporating number of aisles or not: 1 for not incorporating, 2 for only incorporating aisles, 3 for incorporating aisles and fill rate
+		int choiceSplit = 1; // Choice for order splitting or not: 1 for no splitting, 2 for splitting
 		int choiceAlgorithm = 1; // Choice for original algorithm: 1 for BRKGA, 2 for BF
+		int choiceAisles = 1; // Choice for incorporating number of aisles or not: 1 for not incorporating, 2 for only incorporating aisles, 3 for incorporating aisles and fill rate
 		// Results
 		double totalNumCrates = 0.0;
 		int totalNumAislesBefore = 0;
@@ -93,8 +93,8 @@ public class MainBRKGA {
 				numCrates[i] = chrom.getNumCrates();
 				totalNumCrates += numCrates[i];
 				List<Crate> crates = chrom.getCrates();
-				ShortestPath shortestPath = new ShortestPath(crates, graph);
-				int thisNumAisles = shortestPath.computeTotalPathLength(crates, graph);
+				ShortestPath shortestPath = new ShortestPath(crates);
+				int thisNumAisles = shortestPath.computeTotalPathLength(crates);
 				numAisles[i] = thisNumAisles;
 				totalNumAislesBefore += thisNumAisles;
 			}
@@ -109,8 +109,8 @@ public class MainBRKGA {
 				// Save original solution
 				numCrates[i] = crates.size();
 				totalNumCrates += numCrates[i];
-				ShortestPath shortestPath = new ShortestPath(crates, graph);
-				int thisNumAisles = shortestPath.computeTotalPathLength(crates, graph);
+				ShortestPath shortestPath = new ShortestPath(crates);
+				int thisNumAisles = shortestPath.computeTotalPathLength(crates);
 				numAisles[i] = thisNumAisles;
 				totalNumAislesBefore += thisNumAisles;
 				chromosomes.add(new Chromosome(new double[0], new double[0], crates, orders.get(i).getItems(), BRKGA.getAdjustedNumberBins(crates), numCrates[i], orders.get(i).getOrderId()));
@@ -121,13 +121,13 @@ public class MainBRKGA {
 		}
 
 		if (choiceAisles == 2) {
-			optAisles(orders, graph, chromosomes, lowerBound, numCrates, numAisles);
+			optAisles(orders, chromosomes, lowerBound, numCrates, numAisles);
 			endTime = System.nanoTime();
 			totalTime = (endTime - startTime)/1000000000; // seconds
 			for (int i=0; i < chromosomes.size(); i++) {
 				List<Crate> crates = chromosomes.get(i).getCrates();
-				ShortestPath shortestPath = new ShortestPath(crates, graph);
-				int thisNumAisles = shortestPath.computeTotalPathLength(crates, graph);
+				ShortestPath shortestPath = new ShortestPath(crates);
+				int thisNumAisles = shortestPath.computeTotalPathLength(crates);
 				numAisles[i] = thisNumAisles;
 				totalNumAislesAfter += thisNumAisles;
 			}
@@ -153,7 +153,7 @@ public class MainBRKGA {
 		System.out.println("Average volume: " + avVolume + ", average fill rate: " + avFillRate);
 		System.out.println("Average weight: " + avWeight + ", average weight rate: " + avWeightRate);
 		System.out.println("Runtime: " + totalRunTime);
-		
+
 		writeFileCompetition(chromosomes);
 
 		// 		int instance = 88;
@@ -161,11 +161,11 @@ public class MainBRKGA {
 		//		System.out.println(lowerbound);
 		//		Chromosome chrom = BRKGA.solve(orders.get(instance), lowerbound, choice_D2_VBO);
 		//		printCrate(orders.get(instance), chrom);
-		
-//		return chromosomes;
+
+		//		return chromosomes;
 	}
 
-	private static void optAisles(List<Order> orders, Graph graph, List<Chromosome> chromosomes, double[] lowerBound, int[] numCrates, int[] numAislesOriginal) throws FileNotFoundException {
+	private static void optAisles(List<Order> orders, List<Chromosome> chromosomes, double[] lowerBound, int[] numCrates, int[] numAislesOriginal) throws FileNotFoundException {
 		// Create tasks
 		List<Runnable> runnables = new ArrayList<>();
 		for(int i=0; i < orders.size(); i++) {
@@ -185,8 +185,8 @@ public class MainBRKGA {
 		for (int i=0; i < runnables.size(); i++) {
 			Chromosome chrom = ((MultiThread) runnables.get(i)).getChromosome();
 			List<Crate> crates = chrom.getCrates();
-			ShortestPath shortestPath = new ShortestPath(crates, graph);
-			int numAisles = shortestPath.computeTotalPathLength(crates, graph); // Number of aisles in chromosome: in 1 order (or order split)
+			ShortestPath shortestPath = new ShortestPath(crates);
+			int numAisles = shortestPath.computeTotalPathLength(crates); // Number of aisles in chromosome: in 1 order (or order split)
 			if (chrom.getNumCrates() <= numCrates[i] && numAisles < numAislesOriginal[i]) {
 				chromosomes.set(i, chrom);
 				numOrdersImproved++;
@@ -324,25 +324,101 @@ public class MainBRKGA {
 		}
 	}
 
-	@SuppressWarnings("unused")
-	private static void printCrate(Order order, Chromosome chrom) throws FileNotFoundException {
-		List<Item> items = chrom.getItems();
-		File crate = new File("items_crate.txt");
-		PrintWriter out = new PrintWriter(crate);
-		out.println("id\tx\ty\tz\tw\tl\th");
-		int crateNumber = 0;
-		for (Item item : items) {
-			if (item.getCrateIndex() == crateNumber) {
-				String s = (int) item.getItemId() + "\t" + (int) item.getInsertedX() + "\t" + (int) item.getInsertedY() + "\t" + (int) item.getInsertedZ() + "\t" + (int) item.getWidth() + "\t" + (int) item.getLength() + "\t" + (int) item.getHeight();
-				out.println(s);
+	public static List<Chromosome> readFileOriginalGAChrom(File file, Map<Double, Item> items) throws FileNotFoundException {
+		try(Scanner s = new Scanner(file)) {
+			s.nextLine();
+			List<Chromosome> chromosomes = new ArrayList<Chromosome>();
+			List<Crate> cratesOrder = new ArrayList<Crate>();
+			List<Item> itemsCrate = new ArrayList<Item>();
+			List<Item> itemsOrder = new ArrayList<Item>();
+			int crateNumber = 0;
+			int orderNumber = 0;
+			Chromosome chrom = new Chromosome(new double[0], new double[0], cratesOrder, itemsOrder, Double.POSITIVE_INFINITY, 0, orderNumber);
+			while (s.hasNextLine()) {
+				String line = s.nextLine();
+				String[] lineArray = line.split(",");
+				int curCrateNumber = Integer.parseInt(lineArray[0]);
+				int curOrderNumber = Integer.parseInt(lineArray[1]);
+				int itemId = Integer.parseInt(lineArray[2]);
+				int insertedY = Integer.parseInt(lineArray[3]);
+				int insertedX = Integer.parseInt(lineArray[5]);
+				int insertedZ = Integer.parseInt(lineArray[7]);
+				Item item = items.get((double) itemId);
+				item.setInsertedX(insertedX);
+				item.setInsertedY(insertedY);
+				item.setInsertedZ(insertedZ);
+				if (curCrateNumber == crateNumber) { // Same crate, same order
+					itemsCrate.add(item);
+					itemsOrder.add(item);
+				}
+				else if (curOrderNumber == orderNumber) { // Different crate, same order
+					crateNumber++;
+					Crate crate = new Crate(itemsCrate);
+					crate.setOrderIndex(curOrderNumber);
+					cratesOrder.add(crate);
+					itemsCrate = new ArrayList<Item>();
+					itemsCrate.add(item);
+					itemsOrder.add(item);
+				}
+				else { // Different order
+					crateNumber++;
+					orderNumber++;
+					Crate crate = new Crate(itemsCrate);
+					crate.setOrderIndex(curOrderNumber);
+					cratesOrder.add(crate);
+					chrom.setFitness(BRKGA.getAdjustedNumberBins(cratesOrder));
+					chrom.setNumCrates(cratesOrder.size());
+					chromosomes.add(chrom);
+					cratesOrder = new ArrayList<Crate>();
+					itemsCrate = new ArrayList<Item>();
+					itemsOrder = new ArrayList<Item>();
+					chrom = new Chromosome(new double[0], new double[0], cratesOrder, itemsOrder, Double.POSITIVE_INFINITY, 0, orderNumber);
+					itemsCrate.add(item);
+					itemsOrder.add(item);
+				}
 			}
+			return chromosomes;
 		}
-		out.close();
-	}	
-	
+	}
+
+	public static List<Crate> readFileOriginalGACrates(File file, Map<Double, Item> items) throws FileNotFoundException {
+		try(Scanner s = new Scanner(file)) {
+			s.nextLine();
+			List<Crate> crates = new ArrayList<Crate>();
+			List<Item> itemsCrate = new ArrayList<Item>();
+			int crateNumber = 0;
+			while (s.hasNextLine()) {
+				String line = s.nextLine();
+				String[] lineArray = line.split(",");
+				int curCrateNumber = Integer.parseInt(lineArray[0]);
+				int curOrderNumber = Integer.parseInt(lineArray[1]);
+				int itemId = Integer.parseInt(lineArray[2]);
+				int insertedY = Integer.parseInt(lineArray[3]);
+				int insertedX = Integer.parseInt(lineArray[5]);
+				int insertedZ = Integer.parseInt(lineArray[7]);
+				Item item = items.get((double) itemId);
+				item.setInsertedX(insertedX);
+				item.setInsertedY(insertedY);
+				item.setInsertedZ(insertedZ);
+				if (curCrateNumber == crateNumber) { // Same crate, same order
+					itemsCrate.add(item);
+				}
+				else { // Different crate, same order
+					crateNumber++;
+					Crate crate = new Crate(itemsCrate);
+					crate.setOrderIndex(curOrderNumber);
+					crates.add(crate);
+					itemsCrate = new ArrayList<Item>();
+					itemsCrate.add(item);
+				}
+			}
+			return crates;
+		}
+	}
+
 	@SuppressWarnings("unused")
 	private static void writeFileCompetition(List<Chromosome> chromosomes) throws FileNotFoundException {
-		File competition = new File("competitionAnswersGroup5.csv");
+		File competition = new File("GA_original.csv");
 		PrintWriter out = new PrintWriter(competition);
 		out.println("crate_id,order_id,item_id,x_start,x_end,y_start,y_end,z_start,z_end");
 		int crate_id = 0;
@@ -360,6 +436,22 @@ public class MainBRKGA {
 					out.println(line);
 				}
 				crate_id++;
+			}
+		}
+		out.close();
+	}
+
+	@SuppressWarnings("unused")
+	private static void printCrate(Order order, Chromosome chrom) throws FileNotFoundException {
+		List<Item> items = chrom.getItems();
+		File crate = new File("items_crate.txt");
+		PrintWriter out = new PrintWriter(crate);
+		out.println("id\tx\ty\tz\tw\tl\th");
+		int crateNumber = 0;
+		for (Item item : items) {
+			if (item.getCrateIndex() == crateNumber) {
+				String s = (int) item.getItemId() + "\t" + (int) item.getInsertedX() + "\t" + (int) item.getInsertedY() + "\t" + (int) item.getInsertedZ() + "\t" + (int) item.getWidth() + "\t" + (int) item.getLength() + "\t" + (int) item.getHeight();
+				out.println(s);
 			}
 		}
 		out.close();
