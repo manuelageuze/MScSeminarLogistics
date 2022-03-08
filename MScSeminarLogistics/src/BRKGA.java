@@ -32,11 +32,10 @@ public class BRKGA {
 		double aNB = 0.0;
 		int numSameANB = 0;
 		int boundSameANB = choiceAisles == 1? 10 : 25;
-		Graph graph = new Graph();
 		// Initialize population chromosomes
 		ArrayList<Chromosome> population = new ArrayList<Chromosome>();
 		for (int p=0; p < numPop; p++) {
-			population.add(createMutation(order, rand, numItems, numCrates, choiceAisles, graph));
+			population.add(createMutation(order, rand, numItems, numCrates, choiceAisles));
 		}
 		// Start algorithm
 		for (int g=1; g < numGeneration; g++) {
@@ -55,7 +54,7 @@ public class BRKGA {
 				populationG.add(population.get(p));
 			}
 			for (int p=0; p < numPopMutant; p++) { // Create mutations
-				populationG.add(createMutation(order, rand, numItems, numCrates, choiceAisles, graph));
+				populationG.add(createMutation(order, rand, numItems, numCrates, choiceAisles));
 			}
 			for (int p=0; p < numPop - numPopElite - numPopMutant; p++) { // Create offspring
 				double[] BPS = new double[numItems];
@@ -87,9 +86,9 @@ public class BRKGA {
 				switch(choiceAisles) {
 				case 1: adjNumBins = getAdjustedNumberBins(crates);
 				break;
-				case 2: adjNumBins = getAdjustedNumberBinsOptAisles(crates, graph);
+				case 2: adjNumBins = getAdjustedNumberBinsOptAisles(crates);
 				break;
-				case 3: adjNumBins = getAdjustedNumberBinsFillRateOptAisles(crates, graph);
+				case 3: adjNumBins = getAdjustedNumberBinsFillRateOptAisles(crates);
 				break;
 				}
 				populationG.add(new Chromosome(BPS, VBO, crates, items, adjNumBins, (int) adjNumBins, order.getOrderId()));
@@ -326,14 +325,13 @@ public class BRKGA {
 	 * Returns fitness value of a chromosome, based on NB + number of aisles. 
 	 * 	= NB + 0.005 * numAisles 
 	 * @param crates
-	 * @param graph
 	 * @return
 	 */
-	private static double getAdjustedNumberBinsOptAisles(List<Crate> crates, Graph graph) {
-		ShortestPath sp = new ShortestPath(crates, graph);
+	private static double getAdjustedNumberBinsOptAisles(List<Crate> crates) {
+		ShortestPath sp = new ShortestPath(crates);
 		double aNBA = (double) crates.size();
 		double penaltyAisle = 0.005;
-		aNBA += penaltyAisle*sp.computeTotalPathLength(crates, graph);
+		aNBA += penaltyAisle*sp.computeTotalPathLength(crates);
 		return aNBA;
 	}
 	
@@ -341,10 +339,9 @@ public class BRKGA {
 	 * Returns fitness value of a chromosome, based on NB + fill rate least loaded bin (LLB) + number of aisles
 	 *  = NB + fill rate LLB + 0.005 * numAisles
 	 * @param crates
-	 * @param graph
 	 * @return
 	 */
-	private static double getAdjustedNumberBinsFillRateOptAisles(List<Crate> crates, Graph graph) {
+	private static double getAdjustedNumberBinsFillRateOptAisles(List<Crate> crates) {
 		double leastLoad = Double.POSITIVE_INFINITY;
 		for (int k=0; k < crates.size(); k++) {
 			double loadCrate = 0;
@@ -355,9 +352,9 @@ public class BRKGA {
 				leastLoad = loadCrate;
 		}
 		leastLoad = Math.round(leastLoad*10)/10.0; // Round to 1 decimal
-		ShortestPath sp = new ShortestPath(crates, graph);
+		ShortestPath sp = new ShortestPath(crates);
 		double penaltyAisle = 0.005;
-		return (double) crates.size() + leastLoad/crates.get(0).getVolume() + penaltyAisle * sp.computeTotalPathLength(crates, graph);
+		return (double) crates.size() + leastLoad/crates.get(0).getVolume() + penaltyAisle * sp.computeTotalPathLength(crates);
 	}
 
 	/**
@@ -513,7 +510,7 @@ public class BRKGA {
 	 * @param choice_D2_VBO
 	 * @return Chromosome
 	 */
-	private static Chromosome createMutation(Order order, Random rand, int numItems, int numCrates, int choiceAisles, Graph graph) {
+	private static Chromosome createMutation(Order order, Random rand, int numItems, int numCrates, int choiceAisles) {
 		double[] BPS = new double[numItems]; // Box Packing Sequence BPS
 		double[] VBO = new double[numItems]; // Vector Box Orientation VBO
 		for (int i=0; i < numItems; i++) { 
@@ -532,9 +529,9 @@ public class BRKGA {
 		switch(choiceAisles) {
 		case 1: adjNumBins = getAdjustedNumberBins(crates);
 		break;
-		case 2: adjNumBins = getAdjustedNumberBinsOptAisles(crates, graph);
+		case 2: adjNumBins = getAdjustedNumberBinsOptAisles(crates);
 		break;
-		case 3: adjNumBins = getAdjustedNumberBinsFillRateOptAisles(crates, graph);
+		case 3: adjNumBins = getAdjustedNumberBinsFillRateOptAisles(crates);
 		break;
 		}
 		return new Chromosome(BPS, VBO, crates, items, adjNumBins, (int) adjNumBins, order.getOrderId());

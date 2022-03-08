@@ -7,18 +7,18 @@ public class LocalSearch {
 
 	}
 
-	public List<OrderPicker> performLocalSearch(List<OrderPicker> orderPickers, Graph graph) {
+	public List<OrderPicker> performLocalSearch(List<OrderPicker> orderPickers) {
 		// Do neighborhood one
 		List<OrderPicker> best = orderPickers;
 		int iter = 0;
 		System.out.println();
 		while(iter < 100)
 		{
-			List<OrderPicker> curr = N1(best,graph);
+			List<OrderPicker> curr = N1(best);
 			if(curr == null)
 			{
 				System.out.println("Try N2");
-				List<OrderPicker> curr2 = N2(best,graph);
+				List<OrderPicker> curr2 = N2(best);
 				if(curr2 == null)break;
 				best = curr2;
 			}
@@ -65,10 +65,10 @@ public class LocalSearch {
 							changeCrates.set(d, basePicker.getCrates().get(c));
 							
 							// Changed solution
-							ShortestPath basePaths = new ShortestPath(baseCrates, graph);
-							int totalAislesBase = basePaths.computeTotalPathLength(baseCrates, graph);
-							ShortestPath possiblePaths = new ShortestPath(changeCrates, graph);
-							int totalAislesPos = possiblePaths.computeTotalPathLength(changeCrates, graph);
+							ShortestPath basePaths = new ShortestPath(baseCrates);
+							int totalAislesBase = basePaths.computeTotalPathLength(baseCrates);
+							ShortestPath possiblePaths = new ShortestPath(changeCrates);
+							int totalAislesPos = possiblePaths.computeTotalPathLength(changeCrates);
 							int newShortestPath = totalAislesBase + totalAislesPos;
 
 							if(newShortestPath < currentShortestPath) {
@@ -90,7 +90,7 @@ public class LocalSearch {
 		return orderPickers;
 	}
 	
-	public List<OrderPicker> N1(List<OrderPicker> orderPickers, Graph graph)
+	public List<OrderPicker> N1(List<OrderPicker> orderPickers)
 	{
 		List<OrderPicker> improved = new ArrayList<>();
 		OrderPicker improvedBase = orderPickers.get(0);
@@ -124,10 +124,10 @@ public class LocalSearch {
 //						baseCrates.set(c, change.getCrates().get(d));
 //						changeCrates.set(d, base.getCrates().get(c));
 						
-						ShortestPath basePaths = new ShortestPath(baseCrates, graph);
-						int totalAislesBase = basePaths.computeTotalPathLength(baseCrates, graph);
-						ShortestPath possiblePaths = new ShortestPath(changeCrates, graph);
-						int totalAislesPos = possiblePaths.computeTotalPathLength(changeCrates, graph);
+						ShortestPath basePaths = new ShortestPath(baseCrates);
+						int totalAislesBase = basePaths.computeTotalPathLength(baseCrates);
+						ShortestPath possiblePaths = new ShortestPath(changeCrates);
+						int totalAislesPos = possiblePaths.computeTotalPathLength(changeCrates);
 						int newShortestPath = totalAislesBase + totalAislesPos;
 						
 						if(currentShortestPath - newShortestPath > bestImprovement)
@@ -166,7 +166,7 @@ public class LocalSearch {
 		return null;
 	}
 	
-	public List<OrderPicker> N2(List<OrderPicker> orderPickers, Graph graph)
+	public List<OrderPicker> N2(List<OrderPicker> orderPickers)
 	{
 		List<OrderPicker> improved = new ArrayList<>();
 		OrderPicker improvedBase = orderPickers.get(0);
@@ -201,10 +201,10 @@ public class LocalSearch {
 									else if(p == d2)changeCrates.add(base.getCrates().get(c2));
 									else changeCrates.add(change.getCrates().get(p));
 								}
-								ShortestPath basePaths = new ShortestPath(baseCrates, graph);
-								int totalAislesBase = basePaths.computeTotalPathLength(baseCrates, graph);
-								ShortestPath possiblePaths = new ShortestPath(changeCrates, graph);
-								int totalAislesPos = possiblePaths.computeTotalPathLength(changeCrates, graph);
+								ShortestPath basePaths = new ShortestPath(baseCrates);
+								int totalAislesBase = basePaths.computeTotalPathLength(baseCrates);
+								ShortestPath possiblePaths = new ShortestPath(changeCrates);
+								int totalAislesPos = possiblePaths.computeTotalPathLength(changeCrates);
 								int newShortestPath = totalAislesBase + totalAislesPos;
 								
 								if(currentShortestPath - newShortestPath > bestImprovement)

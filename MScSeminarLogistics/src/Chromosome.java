@@ -76,6 +76,14 @@ public class Chromosome implements Comparable<Chromosome> {
 	}
 	
 	/**
+	 * Add a crate to the list of crates
+	 * @param crate the new crate
+	 */
+	public void addCrate(Crate crate) {
+		this.crates.add(crate);
+	}
+	
+	/**
 	 * @return the items
 	 */
 	public List<Item> getItems() {
