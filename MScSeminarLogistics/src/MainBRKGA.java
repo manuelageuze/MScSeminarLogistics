@@ -418,7 +418,7 @@ public class MainBRKGA {
 
 	@SuppressWarnings("unused")
 	private static void writeFileCompetition(List<Chromosome> chromosomes) throws FileNotFoundException {
-		File competition = new File("GA_original.csv");
+		File competition = new File("GA_original1.csv");
 		PrintWriter out = new PrintWriter(competition);
 		out.println("crate_id,order_id,item_id,x_start,x_end,y_start,y_end,z_start,z_end");
 		int crate_id = 0;
