@@ -23,7 +23,7 @@ public class MainBRKGA {
 		Crate crate = new Crate();
 		int choiceSplit = 1; // Choice for order splitting or not: 1 for no splitting, 2 for splitting
 		int choiceAlgorithm = 3; // Choice for original algorithm: 1 for BRKGA, 2 for BF, 3 for read file
-		int choiceAisles = 1; // Choice for incorporating number of aisles or not: 1 for not incorporating, 2 for only incorporating aisles, 3 for incorporating aisles and fill rate
+		int choiceAisles = 2; // Choice for incorporating number of aisles or not: 1 for not incorporating, 2 for only incorporating aisles, 3 for incorporating aisles and fill rate
 		// Results
 		double totalNumCrates = 0.0;
 		int totalNumAislesBefore = 0;
@@ -119,7 +119,7 @@ public class MainBRKGA {
 			totalTime = (endTime - startTime)/1000000000; // seconds
 			break;
 		case 3:
-			chromosomes = readFileOriginalGAChrom(new File("GA_aisle.csv"), items);
+			chromosomes = readFileOriginalGAChrom(new File("GA_original.csv"), items);
 			for (int i=0; i < chromosomes.size(); i++) {
 				List<Crate> crates = chromosomes.get(i).getCrates();
 				numCrates[i] = crates.size();
