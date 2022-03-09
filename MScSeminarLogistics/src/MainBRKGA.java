@@ -23,7 +23,7 @@ public class MainBRKGA {
 		Crate crate = new Crate();
 		int choiceSplit = 1; // Choice for order splitting or not: 1 for no splitting, 2 for splitting
 		int choiceAlgorithm = 3; // Choice for original algorithm: 1 for BRKGA, 2 for BF, 3 for read file
-		int choiceAisles = 2; // Choice for incorporating number of aisles or not: 1 for not incorporating, 2 for only incorporating aisles, 3 for incorporating aisles and fill rate
+		int choiceAisles = 1; // Choice for incorporating number of aisles or not: 1 for not incorporating, 2 for only incorporating aisles, 3 for incorporating aisles and fill rate
 		// Results
 		double totalNumCrates = 0.0;
 		int totalNumAislesBefore = 0;
@@ -93,10 +93,10 @@ public class MainBRKGA {
 				numCrates[i] = chrom.getNumCrates();
 				totalNumCrates += numCrates[i];
 				List<Crate> crates = chrom.getCrates();
-				ShortestPath shortestPath = new ShortestPath(crates);
-				int thisNumAisles = shortestPath.computeTotalPathLength(crates);
-				numAisles[i] = thisNumAisles;
-				totalNumAislesBefore += thisNumAisles;
+				for (Crate cr : crates) {
+					numAisles[i] += cr.getShortestPathLength();
+					totalNumAislesBefore += cr.getShortestPathLength();
+				}
 			}
 			break;
 		case 2: 
@@ -109,24 +109,24 @@ public class MainBRKGA {
 				// Save original solution
 				numCrates[i] = crates.size();
 				totalNumCrates += numCrates[i];
-				ShortestPath shortestPath = new ShortestPath(crates);
-				int thisNumAisles = shortestPath.computeTotalPathLength(crates);
-				numAisles[i] = thisNumAisles;
-				totalNumAislesBefore += thisNumAisles;
+				for (Crate cr : crates) {
+					numAisles[i] += cr.getShortestPathLength();
+					totalNumAislesBefore += cr.getShortestPathLength();
+				}
 				chromosomes.add(new Chromosome(new double[0], new double[0], crates, orders.get(i).getItems(), BRKGA.getAdjustedNumberBins(crates), numCrates[i], orders.get(i).getOrderId()));
 			}
 			endTime = System.nanoTime();
 			totalTime = (endTime - startTime)/1000000000; // seconds
 			break;
 		case 3:
-			chromosomes = readFileOriginalGAChrom(new File("GA_original.csv"), items);
+			chromosomes = readFileOriginalGAChrom(new File("GA_aisle.csv"), items);
 			for (int i=0; i < chromosomes.size(); i++) {
 				List<Crate> crates = chromosomes.get(i).getCrates();
 				numCrates[i] = crates.size();
-				ShortestPath shortestPath = new ShortestPath(crates);
-				int thisNumAisles = shortestPath.computeTotalPathLength(crates);
-				numAisles[i] = thisNumAisles;
-				totalNumAislesBefore += thisNumAisles;
+				for (Crate cr : crates) {
+					numAisles[i] += cr.getShortestPathLength();
+					totalNumAislesBefore += cr.getShortestPathLength();
+				}
 			}
 			endTime = System.nanoTime();
 			totalTime = (endTime - startTime)/1000000000; // seconds
@@ -139,10 +139,10 @@ public class MainBRKGA {
 			totalTime = (endTime - startTime)/1000000000; // seconds
 			for (int i=0; i < chromosomes.size(); i++) {
 				List<Crate> crates = chromosomes.get(i).getCrates();
-				ShortestPath shortestPath = new ShortestPath(crates);
-				int thisNumAisles = shortestPath.computeTotalPathLength(crates);
-				numAisles[i] = thisNumAisles;
-				totalNumAislesAfter += thisNumAisles;
+				for (Crate cr : crates) {
+					numAisles[i] += cr.getShortestPathLength();
+					totalNumAislesAfter += cr.getShortestPathLength();
+				}
 			}
 		}
 
@@ -198,8 +198,10 @@ public class MainBRKGA {
 		for (int i=0; i < runnables.size(); i++) {
 			Chromosome chrom = ((MultiThread) runnables.get(i)).getChromosome();
 			List<Crate> crates = chrom.getCrates();
-			ShortestPath shortestPath = new ShortestPath(crates);
-			int numAisles = shortestPath.computeTotalPathLength(crates); // Number of aisles in chromosome: in 1 order (or order split)
+			int numAisles = 0; // Number of aisles in chromosome: in 1 order (or order split)
+			for (Crate cr : crates) {
+				numAisles += cr.getShortestPathLength();
+			} 
 			if (chrom.getNumCrates() <= numCrates[i] && numAisles < numAislesOriginal[i]) {
 				chromosomes.set(i, chrom);
 				numOrdersImproved++;
