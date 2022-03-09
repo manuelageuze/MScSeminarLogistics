@@ -16,7 +16,7 @@ public class Main {
 	public static void main(String[] args) throws IloException, IOException, InterruptedException {
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
-		int choiceOriginal = 2; // Choice for initial algorithm: 1 for FF, 2 for BF, 3 for BRKGA
+		int choiceOriginal = 3; // Choice for initial algorithm: 1 for FF, 2 for BF, 3 for BRKGA
 
 		// computeLowerBound(orders,items); // Computes lowerbound
 
@@ -29,39 +29,45 @@ public class Main {
 			crates = solveBF(orders);
 			break;
 		case 3:
-			List<Chromosome> chromosomes = MainBRKGA.main(args);
+			List<Chromosome> chromosomes = MainBRKGA.readFileOriginalGAChrom(new File("GA_aisle.csv"), items);
 			for(int i=0; i < chromosomes.size(); i++) {
 				crates.addAll(chromosomes.get(i).getCrates());
 			}
 		}
 
-		// Create order pickers randomly
-		List<OrderPicker> randomPickers = SequentialIndeling(crates);
+		// Create order pickers sequential
+		long startTime = System.nanoTime();
+		List<OrderPicker> sequentialPickers = sequentialPickers(crates);
 		
 		// Compute shortest path for all pickers
-		int numAislesRandom = shortestPathPickers(randomPickers);
-		System.out.println("Total aisles random is: " + numAislesRandom);
+		int numAislesSequential = shortestPathPickers(sequentialPickers);
+		System.out.println("Total aisles sequential is:\t" + numAislesSequential);
+		System.out.println("Num pickers is:\t" + sequentialPickers.size());
+		System.out.println("Time:\t" + (System.nanoTime() - startTime)/1000000000);
 		
 		// Find order pickers with heuristics
-		Long start = System.currentTimeMillis();
+		startTime = System.nanoTime();
 //		List<OrderPicker> orderPickers = solveExtension2Heuristic(crates, graph); // The simple heuristic, with the last ones random
-		List<OrderPicker> orderPickers = greedyHeuristic(crates);
+		List<OrderPicker> greedyPickers = greedyHeuristic(crates);
 		
 		// Compute shortest path of each order picker
-		int numAislesHeuristics = shortestPathPickers(orderPickers);		
-		System.out.println("Total aisles after greedy :\t"+numAislesHeuristics);
-		System.out.println("Time: "+(System.currentTimeMillis()-start));
+		int numAislesGreedy = shortestPathPickers(greedyPickers);		
+		System.out.println("Total aisles after greedy :\t" + numAislesGreedy);
+		System.out.println("Num pickers is:\t" + greedyPickers.size());
+		System.out.println("Time:\t"+ (System.nanoTime()-startTime)/1000000000);
 
 		// Perform Local search
-		List<OrderPicker> ls = (new LocalSearch()).performLocalSearch(orderPickers);
+		startTime = System.nanoTime();
+		List<OrderPicker> ls = (new LocalSearch()).performLocalSearch(greedyPickers);
 		int totalNumAisle2 = 0;
 		for(int i = 0 ; i < ls.size() ; i++)
 		{
 			totalNumAisle2 += ls.get(i).getShortestPath();
 		}
 		
-		System.out.println("Total pickers:\t"+orderPickers.size());
-		System.out.println("Total aisle after LS:\t"+totalNumAisle2);	
+		System.out.println("Total pickers:\t" + greedyPickers.size());
+		System.out.println("Total aisle after LS:\t" + totalNumAisle2);	
+		System.out.println("Time:\t"+ (System.nanoTime()-startTime)/1000000000);
 	}
 
 	/**
@@ -70,7 +76,7 @@ public class Main {
 	 * @param graph
 	 * @return
 	 */
-	public static int shortestPathPickers(List<OrderPicker> orderPickers) {
+	private static int shortestPathPickers(List<OrderPicker> orderPickers) {
 		int totalLength = 0;
 		for(int i = 0; i < orderPickers.size(); i++) {			
 			ShortestPath sp = new ShortestPath(orderPickers.get(i).getCrates());
@@ -86,7 +92,7 @@ public class Main {
 	 * @param crates
 	 * @return
 	 */
-	public static List<OrderPicker> SequentialIndeling(List<Crate> crat){
+	private static List<OrderPicker> sequentialPickers(List<Crate> crat){
 		List<Crate> crates = new ArrayList<Crate>(crat);		
 		double numPickers = Math.ceil(crates.size()/8.0);
 		Iterator<Crate> iterator = crates.iterator();
@@ -174,6 +180,7 @@ public class Main {
 		return pickers;
 	}
 
+	@SuppressWarnings("unused")
 	private static List<OrderPicker> solveExtension2Heuristic(List<Crate> crates, Graph graph) {
 		// Maak nieuwe lijst
 		List<Crate> cratesToPick = new ArrayList<>(crates);
