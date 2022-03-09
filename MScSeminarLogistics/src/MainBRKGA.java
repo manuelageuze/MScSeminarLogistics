@@ -73,7 +73,7 @@ public class MainBRKGA {
 			// Create tasks
 			List<Runnable> runnables = new ArrayList<>();
 			for(int i=0; i < orders.size(); i++) {
-				Runnable runnable = new MultiThread(i, orders.get(i), lowerBound[i], 1, 0);
+				Runnable runnable = new MultiThread(i, orders.get(i), lowerBound[i], 2, 0);
 				runnables.add(runnable);
 			}
 			// Creates a thread pool with MAX_T nr of threads as the fixed pool size
@@ -418,7 +418,7 @@ public class MainBRKGA {
 
 	@SuppressWarnings("unused")
 	private static void writeFileCompetition(List<Chromosome> chromosomes) throws FileNotFoundException {
-		File competition = new File("GA_original1.csv");
+		File competition = new File("GA_aisle.csv");
 		PrintWriter out = new PrintWriter(competition);
 		out.println("crate_id,order_id,item_id,x_start,x_end,y_start,y_end,z_start,z_end");
 		int crate_id = 0;
