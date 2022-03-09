@@ -36,7 +36,7 @@ public class Main {
 		}
 
 		// Create order pickers randomly
-		List<OrderPicker> randomPickers = RandomIndeling(crates);
+		List<OrderPicker> randomPickers = SequentialIndeling(crates);
 		
 		// Compute shortest path for all pickers
 		int numAislesRandom = shortestPathPickers(randomPickers);
@@ -86,7 +86,7 @@ public class Main {
 	 * @param crates
 	 * @return
 	 */
-	public static List<OrderPicker> RandomIndeling(List<Crate> crat){
+	public static List<OrderPicker> SequentialIndeling(List<Crate> crat){
 		List<Crate> crates = new ArrayList<Crate>(crat);		
 		double numPickers = Math.ceil(crates.size()/8.0);
 		Iterator<Crate> iterator = crates.iterator();
