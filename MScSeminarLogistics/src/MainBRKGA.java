@@ -22,8 +22,8 @@ public class MainBRKGA {
 		List<Order> orders = readOrders(items);
 		Crate crate = new Crate();
 		int choiceSplit = 1; // Choice for order splitting or not: 1 for no splitting, 2 for splitting
-		int choiceAlgorithm = 1; // Choice for original algorithm: 1 for BRKGA, 2 for BF
-		int choiceAisles = 1; // Choice for incorporating number of aisles or not: 1 for not incorporating, 2 for only incorporating aisles, 3 for incorporating aisles and fill rate
+		int choiceAlgorithm = 3; // Choice for original algorithm: 1 for BRKGA, 2 for BF, 3 for read file
+		int choiceAisles = 2; // Choice for incorporating number of aisles or not: 1 for not incorporating, 2 for only incorporating aisles, 3 for incorporating aisles and fill rate
 		// Results
 		double totalNumCrates = 0.0;
 		int totalNumAislesBefore = 0;
@@ -60,7 +60,7 @@ public class MainBRKGA {
 				double lowerbound = LowerBoundModel.setCoveringLB(orders.get(i), items);
 				lowerBound[i] = lowerbound;
 			}
-		}
+		}		
 
 		// Variables
 		int[] numCrates = new int[orders.size()];
@@ -73,7 +73,7 @@ public class MainBRKGA {
 			// Create tasks
 			List<Runnable> runnables = new ArrayList<>();
 			for(int i=0; i < orders.size(); i++) {
-				Runnable runnable = new MultiThread(i, orders.get(i), lowerBound[i], 2, 0);
+				Runnable runnable = new MultiThread(i, orders.get(i), lowerBound[i], 1, 0);
 				runnables.add(runnable);
 			}
 			// Creates a thread pool with MAX_T nr of threads as the fixed pool size
@@ -114,6 +114,19 @@ public class MainBRKGA {
 				numAisles[i] = thisNumAisles;
 				totalNumAislesBefore += thisNumAisles;
 				chromosomes.add(new Chromosome(new double[0], new double[0], crates, orders.get(i).getItems(), BRKGA.getAdjustedNumberBins(crates), numCrates[i], orders.get(i).getOrderId()));
+			}
+			endTime = System.nanoTime();
+			totalTime = (endTime - startTime)/1000000000; // seconds
+			break;
+		case 3:
+			chromosomes = readFileOriginalGAChrom(new File("GA_original.csv"), items);
+			for (int i=0; i < chromosomes.size(); i++) {
+				List<Crate> crates = chromosomes.get(i).getCrates();
+				numCrates[i] = crates.size();
+				ShortestPath shortestPath = new ShortestPath(crates);
+				int thisNumAisles = shortestPath.computeTotalPathLength(crates);
+				numAisles[i] = thisNumAisles;
+				totalNumAislesBefore += thisNumAisles;
 			}
 			endTime = System.nanoTime();
 			totalTime = (endTime - startTime)/1000000000; // seconds
@@ -418,7 +431,7 @@ public class MainBRKGA {
 
 	@SuppressWarnings("unused")
 	private static void writeFileCompetition(List<Chromosome> chromosomes) throws FileNotFoundException {
-		File competition = new File("GA_aisle.csv");
+		File competition = new File("GA_aisle_after_original.csv");
 		PrintWriter out = new PrintWriter(competition);
 		out.println("crate_id,order_id,item_id,x_start,x_end,y_start,y_end,z_start,z_end");
 		int crate_id = 0;
