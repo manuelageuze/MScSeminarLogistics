@@ -29,10 +29,7 @@ public class Main {
 			crates = solveBF(orders);
 			break;
 		case 3:
-			List<Chromosome> chromosomes = MainBRKGA.readFileOriginalGAChrom(new File("GA_aisle.csv"), items);
-			for(int i=0; i < chromosomes.size(); i++) {
-				crates.addAll(chromosomes.get(i).getCrates());
-			}
+			crates = MainBRKGA.readFileOriginalGACrates(new File("GA_aisle.csv"), items);
 		}
 
 		// Create order pickers sequential

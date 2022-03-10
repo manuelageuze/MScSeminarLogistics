@@ -122,6 +122,7 @@ public class MainBRKGA {
 			chromosomes = readFileOriginalGAChrom(new File("GA_original.csv"), items);
 			for (int i=0; i < chromosomes.size(); i++) {
 				List<Crate> crates = chromosomes.get(i).getCrates();
+				totalNumCrates += crates.size();
 				numCrates[i] = crates.size();
 				for (Crate cr : crates) {
 					numAisles[i] += cr.getShortestPathLength();
@@ -392,6 +393,12 @@ public class MainBRKGA {
 					itemsOrder.add(item);
 				}
 			}
+			Crate crate = new Crate(itemsCrate);
+			crate.setOrderIndex(orderNumber);
+			cratesOrder.add(crate);
+			chrom.setFitness(BRKGA.getAdjustedNumberBins(cratesOrder));
+			chrom.setNumCrates(cratesOrder.size());
+			chromosomes.add(chrom);
 			return chromosomes;
 		}
 	}
@@ -402,6 +409,7 @@ public class MainBRKGA {
 			List<Crate> crates = new ArrayList<Crate>();
 			List<Item> itemsCrate = new ArrayList<Item>();
 			int crateNumber = 0;
+			int numOrders = 0;
 			while (s.hasNextLine()) {
 				String line = s.nextLine();
 				String[] lineArray = line.split(",");
@@ -426,7 +434,11 @@ public class MainBRKGA {
 					itemsCrate = new ArrayList<Item>();
 					itemsCrate.add(item);
 				}
+				if (!s.hasNextLine()) numOrders = curOrderNumber;
 			}
+			Crate crate = new Crate(itemsCrate);
+			crate.setOrderIndex(numOrders);
+			crates.add(crate);
 			return crates;
 		}
 	}
@@ -437,6 +449,7 @@ public class MainBRKGA {
 		PrintWriter out = new PrintWriter(competition);
 		out.println("crate_id,order_id,item_id,x_start,x_end,y_start,y_end,z_start,z_end");
 		int crate_id = 0;
+		System.out.println("chromosomes size: " + chromosomes.size());
 		for (int i=0; i < chromosomes.size(); i++) {
 			List<Crate> crates = chromosomes.get(i).getCrates();
 			for (int k=0; k < crates.size(); k++) {
