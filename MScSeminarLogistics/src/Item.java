@@ -12,9 +12,9 @@ import java.util.Scanner;
  */
 public class Item implements Comparable<Item> {
 	private final double itemId;
-	private final double width;
-	private final double length;
-	private final double height;
+	private double width;
+	private double length;
+	private double height;
 	private final double weight;
 	private final double volume;
 	private double insertedX;
@@ -90,13 +90,21 @@ public class Item implements Comparable<Item> {
 	public double getWidth() {
 		return this.width;
 	}
-
+	
+	public void setWidth(double width) {
+		this.width = width;
+	}
+ 
 	/**
 	 * Method to obtain the length of the item
 	 * @return length in mm
 	 */
 	public double getLength() {
 		return this.length;
+	}
+	
+	public void setLength(double length) {
+		this.length = length;
 	}
 
 	/**
@@ -105,6 +113,10 @@ public class Item implements Comparable<Item> {
 	 */
 	public double getHeight() {
 		return this.height;
+	}
+	
+	public void setHeight(double height) {
+		this.height = height;
 	}
 
 	/**

@@ -22,7 +22,7 @@ public class MainBRKGA {
 		List<Order> orders = readOrders(items);
 		Crate crate = new Crate();
 		int choiceSplit = 1; // Choice for order splitting or not: 1 for no splitting, 2 for splitting
-		int choiceAlgorithm = 3; // Choice for original algorithm: 1 for BRKGA, 2 for BF, 3 for read file
+		int choiceAlgorithm = 1; // Choice for original algorithm: 1 for BRKGA, 2 for BF, 3 for read file
 		int choiceAisles = 1; // Choice for incorporating number of aisles or not: 1 for not incorporating, 2 for only incorporating aisles, 3 for incorporating aisles and fill rate
 		// Results
 		double totalNumCrates = 0.0;
@@ -34,7 +34,7 @@ public class MainBRKGA {
 		double avWeightRate = 0.0;
 		long totalRunTime = 0;
 		List<Chromosome> chromosomes = new ArrayList<Chromosome>();
-
+		List<Crate> allCrates = new ArrayList<Crate>();
 		double[] lowerBound = new double[orders.size()];
 		for(int i=0; i < orders.size(); i++) {
 			double lowerbound = LowerBoundModel.setCoveringLB(orders.get(i), items);
@@ -93,6 +93,7 @@ public class MainBRKGA {
 				numCrates[i] = chrom.getNumCrates();
 				totalNumCrates += numCrates[i];
 				List<Crate> crates = chrom.getCrates();
+				allCrates.addAll(crates);
 				for (Crate cr : crates) {
 					numAisles[i] += cr.getShortestPathLength();
 					totalNumAislesBefore += cr.getShortestPathLength();
@@ -177,7 +178,8 @@ public class MainBRKGA {
 		System.out.println("Average weight: " + avWeight + ", average weight rate: " + avWeightRate);
 		System.out.println("Runtime: " + totalRunTime);
 
-//		writeFileCompetition(chromosomes);
+		System.out.println(Main.checkSolution(allCrates, 0));
+		writeFileCompetition(chromosomes);
 
 		// 		int instance = 88;
 		//		double lowerbound = LowerBoundModel.setCoveringLB(orders.get(instance), items);
@@ -454,7 +456,7 @@ public class MainBRKGA {
 
 	@SuppressWarnings("unused")
 	private static void writeFileCompetition(List<Chromosome> chromosomes) throws FileNotFoundException {
-		File competition = new File("GA_aisle_after_original.csv");
+		File competition = new File("CompetitionGroup5.csv");
 		PrintWriter out = new PrintWriter(competition);
 		out.println("crate_id,order_id,item_id,x_start,x_end,y_start,y_end,z_start,z_end");
 		int crate_id = 0;
@@ -479,7 +481,7 @@ public class MainBRKGA {
 	}
 
 	@SuppressWarnings("unused")
-	private static void printCrate(Order order, Chromosome chrom) throws FileNotFoundException {
+	private static void printCrate(Chromosome chrom) throws FileNotFoundException {
 		List<Item> items = chrom.getItems();
 		File crate = new File("items_crate.txt");
 		PrintWriter out = new PrintWriter(crate);
