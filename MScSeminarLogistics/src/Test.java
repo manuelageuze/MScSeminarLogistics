@@ -13,8 +13,6 @@ public class Test {
 		// Variables, parameters and results
 		Map<Double, Item> items = MainBRKGA.readItems();
 		List<Order> orders = MainBRKGA.readOrders(items);
-		Graph graph = Graph.createGraph();
-//		Crate crate = new Crate();
 //		int choiceSplit = 2; // Choice for order splitting or not: 1 for no splitting, 2 for splitting
 	//	int choiceAisles = 2; // Choice for incorporating number of aisles or not: 1 for not incorporating, 2 for only incorporating aisles, 3 for incorporating aisles and fill rate
 		
@@ -24,7 +22,6 @@ public class Test {
 		Chromosome chrom = BRKGA.solve(orders.get(instance), lowerbound, 1, 0);
 		int thisNumCrates = chrom.getNumCrates();
 		System.out.println("Num crates original GA: " + thisNumCrates);
-		List<Crate> crates = chrom.getCrates();
 //		
 //		Chromosome chrom2 = BRKGA.solve(orders.get(instance), lowerbound, choiceAisles, thisNumCrates);
 //		int thisNumCrates2 = chrom2.getNumCrates();
