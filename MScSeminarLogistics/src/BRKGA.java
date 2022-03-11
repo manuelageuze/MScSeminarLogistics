@@ -48,7 +48,7 @@ public class BRKGA {
 			}
 			else numSameANB = 0;
 			aNB = newANB;
-//			System.out.println("Min number of bins in generation g = " + g + " is " + population.get(0).getNumCrates());
+			//			System.out.println("Min number of bins in generation g = " + g + " is " + population.get(0).getNumCrates());
 			ArrayList<Chromosome> populationG = new ArrayList<Chromosome>();
 			for (int p=0; p < numPopElite; p++) { // Copy elite directly
 				populationG.add(population.get(p));
@@ -76,12 +76,12 @@ public class BRKGA {
 				}
 				List<Item> items = new ArrayList<>(order.getItems());
 				List<Crate> crates = placement(order, items, BPS, VBO);
-//				switch (choiceAisles) {
-//				case 1: crates = placement(order, items, BPS, VBO);
-//				break;
-//				case 2: crates = placementOptAisles(order, items, BPS, VBO, numCrates);
-//				break;
-//				}
+				//				switch (choiceAisles) {
+				//				case 1: crates = placement(order, items, BPS, VBO);
+				//				break;
+				//				case 2: crates = placementOptAisles(order, items, BPS, VBO, numCrates);
+				//				break;
+				//				}
 				double adjNumBins = 0;
 				switch(choiceAisles) {
 				case 1: adjNumBins = getAdjustedNumberBins(crates);
@@ -90,6 +90,7 @@ public class BRKGA {
 				break;
 				case 3: adjNumBins = getAdjustedNumberBinsFillRateOptAisles(crates);
 				break;
+				default: break;
 				}
 				populationG.add(new Chromosome(BPS, VBO, crates, items, adjNumBins, (int) adjNumBins, order.getOrderId()));
 			}
@@ -98,8 +99,8 @@ public class BRKGA {
 			population.addAll(populationG);
 		}
 		Collections.sort(population);
-//		int minNumberBins = population.get(0).getNumCrates();
-//		System.out.println("YOU DID IT!!!!!!! NUMBER OF BINS IS " + minNumberBins);
+		//		int minNumberBins = population.get(0).getNumCrates();
+		//		System.out.println("YOU DID IT!!!!!!! NUMBER OF BINS IS " + minNumberBins);
 		return population.get(0);
 	}
 
@@ -320,7 +321,7 @@ public class BRKGA {
 		}
 		return crates.size() + leastLoad/crates.get(0).getVolume();
 	}
-	
+
 	/**
 	 * Returns fitness value of a chromosome, based on NB + number of aisles. 
 	 * 	= NB + 0.005 * numAisles 
@@ -334,7 +335,7 @@ public class BRKGA {
 		aNBA += penaltyAisle*sp.computeTotalPathLength(crates);
 		return aNBA;
 	}
-	
+
 	/**
 	 * Returns fitness value of a chromosome, based on NB + fill rate least loaded bin (LLB) + number of aisles
 	 *  = NB + fill rate LLB + 0.005 * numAisles
@@ -519,12 +520,12 @@ public class BRKGA {
 		}
 		List<Item> items = new ArrayList<>(order.getItems());
 		List<Crate> crates = placement(order, items, BPS, VBO);
-//		switch (choiceAisles) {
-//		case 1: crates = placement(order, items, BPS, VBO);
-//		break;
-//		case 2: crates = placementOptAisles(order, items, BPS, VBO, numCrates);
-//		break;
-//		}
+		//		switch (choiceAisles) {
+		//		case 1: crates = placement(order, items, BPS, VBO);
+		//		break;
+		//		case 2: crates = placementOptAisles(order, items, BPS, VBO, numCrates);
+		//		break;
+		//		}
 		double adjNumBins = 0;
 		switch(choiceAisles) {
 		case 1: adjNumBins = getAdjustedNumberBins(crates);
@@ -533,6 +534,7 @@ public class BRKGA {
 		break;
 		case 3: adjNumBins = getAdjustedNumberBinsFillRateOptAisles(crates);
 		break;
+		default: break;
 		}
 		return new Chromosome(BPS, VBO, crates, items, adjNumBins, (int) adjNumBins, order.getOrderId());
 	}
@@ -572,7 +574,7 @@ public class BRKGA {
 			}
 		}
 	}
-	
+
 	private static int getNumAisles(boolean[] isAislesVisited, Item item) {
 		int left = 0;
 		int right = 0;
@@ -582,5 +584,5 @@ public class BRKGA {
 		}
 		return 2*Math.max(left, right);
 	}
-	
+
 }
