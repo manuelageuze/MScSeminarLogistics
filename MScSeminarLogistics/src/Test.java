@@ -18,16 +18,13 @@ public class Test {
 //		int choiceSplit = 2; // Choice for order splitting or not: 1 for no splitting, 2 for splitting
 	//	int choiceAisles = 2; // Choice for incorporating number of aisles or not: 1 for not incorporating, 2 for only incorporating aisles, 3 for incorporating aisles and fill rate
 		
-//		int instance = 124;
-//		double lowerbound = LowerBoundModel.setCoveringLB(orders.get(instance), items);
-//		System.out.println("Lower bound = " + lowerbound);
-//		Chromosome chrom = BRKGA.solve(orders.get(instance), lowerbound, 1, 0);
-//		int thisNumCrates = chrom.getNumCrates();
-//		System.out.println("Num crates original GA: " + thisNumCrates);
-//		List<Crate> crates = chrom.getCrates();
-//		ShortestPath shortestPath = new ShortestPath(crates, graph);
-//		int totalNumAisles = shortestPath.computeTotalPathLength(crates, graph);
-//		System.out.println("Num aisles original GA: " + totalNumAisles);
+		int instance = 124;
+		double lowerbound = LowerBoundModel.setCoveringLB(orders.get(instance), items);
+		System.out.println("Lower bound = " + lowerbound);
+		Chromosome chrom = BRKGA.solve(orders.get(instance), lowerbound, 1, 0);
+		int thisNumCrates = chrom.getNumCrates();
+		System.out.println("Num crates original GA: " + thisNumCrates);
+		List<Crate> crates = chrom.getCrates();
 //		
 //		Chromosome chrom2 = BRKGA.solve(orders.get(instance), lowerbound, choiceAisles, thisNumCrates);
 //		int thisNumCrates2 = chrom2.getNumCrates();

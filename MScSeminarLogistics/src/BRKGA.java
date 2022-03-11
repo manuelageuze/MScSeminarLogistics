@@ -74,7 +74,8 @@ public class BRKGA {
 						VBO[i] = population.get(nonElite).getVBO()[i];
 					}
 				}
-				List<Item> items = new ArrayList<>(order.getItems());
+				List<Item> items = new ArrayList<>();
+				items.addAll(order.getItems());
 				List<Crate> crates = placement(order, items, BPS, VBO);
 				//				switch (choiceAisles) {
 				//				case 1: crates = placement(order, items, BPS, VBO);
@@ -115,13 +116,14 @@ public class BRKGA {
 		// Initialization
 		List<Crate> crates = new ArrayList<Crate>(); // List of bins
 		int numCrates = 0; // Number of open bins
-		List<Item> itemsToPack = new ArrayList<Item>(items);
-		items.clear();
+		List<Item> itemsToPack = new ArrayList<Item>();
+		itemsToPack.addAll(items);
+		items = new ArrayList<Item>();
 		// Set Box Packing Sequence
 		Map<Double, Item> mapBPS = new HashMap<>(); // Pairs of items with random keys
 		Map<Double, Integer> mapBPSIndex = new HashMap<>(); // Pairs of items indices with random keys
 		for (int i=0; i < BPS.length; i++) {
-			mapBPS.put(BPS[i], order.getItems().get(i));
+			mapBPS.put(BPS[i], itemsToPack.get(i));
 			mapBPSIndex.put(BPS[i], i);
 		}
 		double[] sortedBPS = Arrays.copyOf(BPS, BPS.length);
@@ -164,14 +166,12 @@ public class BRKGA {
 					iter.remove();
 				}
 			}
-			List<Double> orient = new ArrayList<Double>(boxOrientations.get((int) Math.ceil(VBO[mapBPSIndex.get(sortedBPS[i])]*boxOrientations.size()-1)));
+			List<Double> orient = boxOrientations.get((int) Math.ceil(VBO[mapBPSIndex.get(sortedBPS[i])]*boxOrientations.size()-1));
 			// Item packing
 			itemsToPack.remove(itemToPack);
-			itemToPack.setInsertedX(EMS.getX());
-			itemToPack.setInsertedY(EMS.getY());
-			itemToPack.setInsertedZ(EMS.getZ());
-			crateSelected.addItemToCrate(itemToPack);
-			items.add(itemToPack);
+			Item newItem = new Item(itemToPack.getItemId(), orient.get(0), orient.get(1), orient.get(2), itemToPack.getWeight(), EMS.getX(), EMS.getY(), EMS.getZ(), crateIndex, itemToPack.getAisle());
+			crateSelected.addItemToCrate(newItem);
+			items.add(newItem);
 			// Update EMSs of crate
 			crateSelected.setEPList(updateEMS(crateSelected, itemsToPack, EMS, orient));
 		}
@@ -518,7 +518,8 @@ public class BRKGA {
 			BPS[i] = rand.nextDouble();
 			VBO[i] = rand.nextDouble();
 		}
-		List<Item> items = new ArrayList<>(order.getItems());
+		List<Item> items = new ArrayList<>();
+		items.addAll(order.getItems());
 		List<Crate> crates = placement(order, items, BPS, VBO);
 		//		switch (choiceAisles) {
 		//		case 1: crates = placement(order, items, BPS, VBO);
