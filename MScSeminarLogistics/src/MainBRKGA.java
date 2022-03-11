@@ -23,7 +23,7 @@ public class MainBRKGA {
 		Crate crate = new Crate();
 		int choiceSplit = 1; // Choice for order splitting or not: 1 for no splitting, 2 for splitting
 		int choiceAlgorithm = 3; // Choice for original algorithm: 1 for BRKGA, 2 for BF, 3 for read file
-		int choiceAisles = 2; // Choice for incorporating number of aisles or not: 1 for not incorporating, 2 for only incorporating aisles, 3 for incorporating aisles and fill rate
+		int choiceAisles = 1; // Choice for incorporating number of aisles or not: 1 for not incorporating, 2 for only incorporating aisles, 3 for incorporating aisles and fill rate
 		// Results
 		double totalNumCrates = 0.0;
 		int totalNumAislesBefore = 0;
@@ -132,6 +132,7 @@ public class MainBRKGA {
 			endTime = System.nanoTime();
 			totalTime = (endTime - startTime)/1000000000; // seconds
 			break;
+		default: break;
 		}
 
 		if (choiceAisles == 2) {
@@ -160,15 +161,23 @@ public class MainBRKGA {
 		avWeightRate = avWeight/crate.getMaxWeight();
 		totalRunTime += totalTime;
 		double gap = (totalNumCrates-1748)/1748;
+		
+		int numOrdersEqualLB = 0;
+		for (int i=0; i < chromosomes.size(); i++) {
+			if (chromosomes.get(i).getNumCrates() == lowerBound[i]) {
+				numOrdersEqualLB++;
+			}
+		}
 
 		System.out.println("Total number of crates: " + totalNumCrates + ", gap: " + gap);
+		System.out.println("Number of orders equal to LB: " + numOrdersEqualLB);
 		System.out.println("Total num aisles original: " + totalNumAislesBefore);
 		System.out.println("Total num aisles after optimizing: " + totalNumAislesAfter);
 		System.out.println("Average volume: " + avVolume + ", average fill rate: " + avFillRate);
 		System.out.println("Average weight: " + avWeight + ", average weight rate: " + avWeightRate);
 		System.out.println("Runtime: " + totalRunTime);
 
-		writeFileCompetition(chromosomes);
+//		writeFileCompetition(chromosomes);
 
 		// 		int instance = 88;
 		//		double lowerbound = LowerBoundModel.setCoveringLB(orders.get(instance), items);

@@ -18,8 +18,6 @@ public class Main {
 		List<Order> orders = readOrders(items);
 		int choiceOriginal = 3; // Choice for initial algorithm: 1 for FF, 2 for BF, 3 for BRKGA
 
-		// computeLowerBound(orders,items); // Computes lowerbound
-
 		List<Crate> crates = new ArrayList<Crate>();
 		switch(choiceOriginal) {
 		case 1:
@@ -30,28 +28,42 @@ public class Main {
 			break;
 		case 3:
 			crates = MainBRKGA.readFileOriginalGACrates(new File("GA_aisle.csv"), items);
+			break;
+		default: break;
 		}
 
 		// Create order pickers sequential
 		long startTime = System.nanoTime();
 		List<OrderPicker> sequentialPickers = sequentialPickers(crates);
-		
+
 		// Compute shortest path for all pickers
 		int numAislesSequential = shortestPathPickers(sequentialPickers);
 		System.out.println("Total aisles sequential is:\t" + numAislesSequential);
 		System.out.println("Num pickers is:\t" + sequentialPickers.size());
 		System.out.println("Time:\t" + (System.nanoTime() - startTime)/1000000000);
-		
-		// Find order pickers with heuristics
+
+		// Find order pickers with greedy
 		startTime = System.nanoTime();
-//		List<OrderPicker> orderPickers = solveExtension2Heuristic(crates, graph); // The simple heuristic, with the last ones random
+		List<OrderPicker> intuitivePickers = solveExtension2Heuristic(crates); // The simple heuristic, with the last ones random
+
+		// Compute shortest path for all pickers
+		int numAislesIntuitive = shortestPathPickers(intuitivePickers);		
+		System.out.println("Total aisles after intuitive :\t" + numAislesIntuitive);
+		System.out.println("Num pickers is:\t" + intuitivePickers.size());
+		System.out.println("Time:\t"+ (System.nanoTime()-startTime)/1000000000);
+
+
+		// Find order pickers with greedy
+		startTime = System.nanoTime();
 		List<OrderPicker> greedyPickers = greedyHeuristic(crates);
-		
-		// Compute shortest path of each order picker
+
+		// Compute shortest path for all pickers
 		int numAislesGreedy = shortestPathPickers(greedyPickers);		
 		System.out.println("Total aisles after greedy :\t" + numAislesGreedy);
 		System.out.println("Num pickers is:\t" + greedyPickers.size());
 		System.out.println("Time:\t"+ (System.nanoTime()-startTime)/1000000000);
+
+
 
 		// Perform Local search
 		startTime = System.nanoTime();
@@ -61,7 +73,7 @@ public class Main {
 		{
 			totalNumAisle2 += ls.get(i).getShortestPath();
 		}
-		
+
 		System.out.println("Total pickers:\t" + greedyPickers.size());
 		System.out.println("Total aisle after LS:\t" + totalNumAisle2);	
 		System.out.println("Time:\t"+ (System.nanoTime()-startTime)/1000000000);
@@ -178,7 +190,7 @@ public class Main {
 	}
 
 	@SuppressWarnings("unused")
-	private static List<OrderPicker> solveExtension2Heuristic(List<Crate> crates, Graph graph) {
+	private static List<OrderPicker> solveExtension2Heuristic(List<Crate> crates) {
 		// Maak nieuwe lijst
 		List<Crate> cratesToPick = new ArrayList<>(crates);
 		Collections.sort(cratesToPick); // Sorteer je lijst met kratten gebaseerd op shortestpath length
@@ -265,9 +277,9 @@ public class Main {
 			int value = spath.computeShortestPathOneCrate(orderpickers.get(i).getAislesToVisit());
 			orderpickers.get(i).setShortestPath(value);
 			total = total + value;
-//			System.out.println(value);
+			//			System.out.println(value);
 		}
-		System.out.println("Total number of aisles needed: " + total);
+		//		System.out.println("Total number of aisles needed: " + total);
 		return orderpickers;
 
 		/*
@@ -282,7 +294,7 @@ public class Main {
 		 */
 	}
 
-	
+
 	/**
 	 * Method that solves LP problem for the lower bound
 	 * @param orders
