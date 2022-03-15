@@ -16,8 +16,9 @@ public class Main {
 	public static void main(String[] args) throws IloException, IOException, InterruptedException {
 		Map<Double, Item> items = readItems();
 		List<Order> orders = readOrders(items);
-		int choiceOriginal = 3; // Choice for initial algorithm: 1 for FF, 2 for BF, 3 for BRKGA
+		int choiceOriginal = 1; // Choice for initial algorithm: 1 for FF, 2 for BF, 3 for BRKGA
 
+		long startTime = System.nanoTime();
 		List<Crate> crates = new ArrayList<Crate>();
 		switch(choiceOriginal) {
 		case 1:
@@ -27,20 +28,31 @@ public class Main {
 			crates = solveBF(orders);
 			break;
 		case 3:
-			crates = MainBRKGA.readFileOriginalGACrates(new File("GA_aisle.csv"), items);
+			crates = MainBRKGA.readFileOriginalGACrates(new File("GA_aisle_after_original.csv"), items);
 			break;
 		default: break;
 		}
 
+		long endTime = System.nanoTime();
+		int numAislesOriginal = 0;
+		for (Crate cr : crates) {
+			List<Crate> crate = new ArrayList<Crate>();
+			crate.add(cr);
+			ShortestPath sp = new ShortestPath(crate);
+			numAislesOriginal += sp.getPathSize(0);
+		}
+		System.out.println("Total aisles before optimizing is:\t" + numAislesOriginal);
+		System.out.println("Time:\t" + (endTime - startTime)/1000000);
+		
 		// Create order pickers sequential
-		long startTime = System.nanoTime();
+		startTime = System.nanoTime();
 		List<OrderPicker> sequentialPickers = sequentialPickers(crates);
 
 		// Compute shortest path for all pickers
 		int numAislesSequential = shortestPathPickers(sequentialPickers);
 		System.out.println("Total aisles sequential is:\t" + numAislesSequential);
 		System.out.println("Num pickers is:\t" + sequentialPickers.size());
-		System.out.println("Time:\t" + (System.nanoTime() - startTime)/1000000000);
+		System.out.println("Time:\t" + (System.nanoTime() - startTime)/1000000);
 
 		// Find order pickers with greedy
 		startTime = System.nanoTime();
@@ -50,7 +62,7 @@ public class Main {
 		int numAislesIntuitive = shortestPathPickers(intuitivePickers);		
 		System.out.println("Total aisles after intuitive :\t" + numAislesIntuitive);
 		System.out.println("Num pickers is:\t" + intuitivePickers.size());
-		System.out.println("Time:\t"+ (System.nanoTime()-startTime)/1000000000);
+		System.out.println("Time:\t"+ (System.nanoTime()-startTime)/1000000);
 
 
 		// Find order pickers with greedy
@@ -61,9 +73,7 @@ public class Main {
 		int numAislesGreedy = shortestPathPickers(greedyPickers);		
 		System.out.println("Total aisles after greedy :\t" + numAislesGreedy);
 		System.out.println("Num pickers is:\t" + greedyPickers.size());
-		System.out.println("Time:\t"+ (System.nanoTime()-startTime)/1000000000);
-
-
+		System.out.println("Time:\t"+ (System.nanoTime()-startTime)/1000000);
 
 		// Perform Local search
 		startTime = System.nanoTime();

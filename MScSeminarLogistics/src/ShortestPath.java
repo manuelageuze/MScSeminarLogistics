@@ -45,6 +45,11 @@ public class ShortestPath {
 		return this.pathSizes;
 	}
 	
+	/**
+	 * Method that returns length of shortest path of crate i
+	 * @param i
+	 * @return
+	 */
 	public Integer getPathSize(int i) {
 		return this.pathSizes.get(i);
 	}
